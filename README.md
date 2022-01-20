@@ -360,17 +360,17 @@ summary(fit.robustmap)$summary
 The Power Prior takes the form
 
 ![
-\\begin{align}
+\\begin{align\*}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta) \\right) \\\\
   \\pi(\\beta \| a_0) &\\propto L(\\beta \| y_0)^{a_0} \\pi_0(\\beta)
-\\end{align}
-](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%0A%5Cend%7Balign%7D%0A "
-\begin{align}
+\\end{align\*}
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%0A%5Cend%7Balign%2A%7D%0A "
+\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
-\end{align}
+\end{align*}
 ")
 
 where
@@ -421,19 +421,19 @@ obtain posterior samples of the normalized power prior.
 The NPP may be summarized as
 
 ![
-\\begin{align}
+\\begin{align\*}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta) \\right) \\\\
   \\pi(\\beta \| a_0) &\\propto \\frac{1}{Z(a_0)} L(\\beta \| y_0)^{a_0} \\pi_0(\\beta) \\\\
   \\pi(a_0)         &\\propto a_0^{\\alpha_0 - 1} (1 - a_0)^{\\gamma_0 - 1}
-\\end{align}
-](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20%5Cfrac%7B1%7D%7BZ%28a_0%29%7D%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20%5C%5C%0A%20%20%5Cpi%28a_0%29%20%20%20%20%20%20%20%20%20%26%5Cpropto%20a_0%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_0%29%5E%7B%5Cgamma_0%20-%201%7D%0A%5Cend%7Balign%7D%0A "
-\begin{align}
+\\end{align\*}
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20%5Cfrac%7B1%7D%7BZ%28a_0%29%7D%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20%5C%5C%0A%20%20%5Cpi%28a_0%29%20%20%20%20%20%20%20%20%20%26%5Cpropto%20a_0%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_0%29%5E%7B%5Cgamma_0%20-%201%7D%0A%5Cend%7Balign%2A%7D%0A "
+\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
   \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
-\end{align}
+\end{align*}
 ")
 
 The defaults in `hdbayes` are

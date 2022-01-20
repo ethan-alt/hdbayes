@@ -168,11 +168,11 @@ summary(fit.robustmap)$summary
 ### Power prior
 The Power Prior takes the form
 $$
-\begin{align}
+\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
-\end{align}
+\end{align*}
 $$
 where $L(\beta | y_0)$ is the likelihood of the GLM based on the historical data,
 $a_0 \in (0,1)$ is a fixed hyperaparameter controlling the effective
@@ -206,12 +206,12 @@ normalized power prior.
 
 The NPP may be summarized as
 $$
-\begin{align}
+\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
   \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
-\end{align}
+\end{align*}
 $$
 
 The defaults in `hdbayes` are
