@@ -93,7 +93,8 @@ We now utilize the functions in this package.
 ### Bayesian hierarchical model
 
 The Bayesian hierarchical model (BHM) is the following model:
-$$
+
+![
 \\begin{align\*}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta_0 &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta_0) \\right) \\\\
@@ -101,22 +102,42 @@ $$
   \\mu &\\sim N_p(\\mu_0, \\Sigma_0) \\\\
   \\Sigma &\\sim \\text{IW}\_p(\\nu_0, \\Psi_0)
 \\end{align\*}
-$$
-where *β* is the vector of regression coefficients of the current data
-set, *β*<sub>0</sub> is the vector of regression coefficients for the
-historical data set, *μ* is the common prior mean of *β* and
-*β*<sub>0</sub>, which is treated as random with a normal hyperprior
-having mean *μ*<sub>0</sub>, and covariance *Σ*<sub>0</sub>, and *Σ* is
-also treated as random, having an inverse-Wishart hyperprior with
-*ν*<sub>0</sub> degrees of freedom and scale matrix *Ψ*<sub>0</sub>.
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta%2C%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%20%5C%5C%0A%20%20%5CSigma%20%26%5Csim%20%5Ctext%7BIW%7D_p%28%5Cnu_0%2C%20%5CPsi_0%29%0A%5Cend%7Balign%2A%7D%0A "
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  \beta, \beta_0 &\sim N_p(\mu, \Sigma) \\
+  \mu &\sim N_p(\mu_0, \Sigma_0) \\
+  \Sigma &\sim \text{IW}_p(\nu_0, \Psi_0)
+\end{align*}
+")
+
+where ![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") is
+the vector of regression coefficients of the current data set,
+![\\beta_0](https://latex.codecogs.com/png.latex?%5Cbeta_0 "\beta_0") is
+the vector of regression coefficients for the historical data set,
+![\\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") is the common
+prior mean of
+![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") and
+![\\beta_0](https://latex.codecogs.com/png.latex?%5Cbeta_0 "\beta_0"),
+which is treated as random with a normal hyperprior having mean
+![\\mu_0](https://latex.codecogs.com/png.latex?%5Cmu_0 "\mu_0"), and
+covariance
+![\\Sigma_0](https://latex.codecogs.com/png.latex?%5CSigma_0 "\Sigma_0"),
+and ![\\Sigma](https://latex.codecogs.com/png.latex?%5CSigma "\Sigma")
+is also treated as random, having an inverse-Wishart hyperprior with
+![\\nu_0](https://latex.codecogs.com/png.latex?%5Cnu_0 "\nu_0") degrees
+of freedom and scale matrix
+![\\Psi_0](https://latex.codecogs.com/png.latex?%5CPsi_0 "\Psi_0").
 
 The defaults in `hdbayes` are
 
--   *μ*<sub>0</sub> = 0
--   *Σ*<sub>0</sub> = *I*<sub>*p*</sub>
--   *ν*<sub>0</sub> = *p* + 10
--   *Ψ*<sub>0</sub> = *I*<sub>*p*</sub> where *p* is the number of
-    predictors (including the intercept if applicable).
+-   ![\\mu_0 = 0](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%200 "\mu_0 = 0")
+-   ![\\Sigma_0 = I_p](https://latex.codecogs.com/png.latex?%5CSigma_0%20%3D%20I_p "\Sigma_0 = I_p")
+-   ![\\nu_0 = p + 10](https://latex.codecogs.com/png.latex?%5Cnu_0%20%3D%20p%20%2B%2010 "\nu_0 = p + 10")
+-   ![\\Psi_0 = I_p](https://latex.codecogs.com/png.latex?%5CPsi_0%20%3D%20I_p "\Psi_0 = I_p")
+    where ![p](https://latex.codecogs.com/png.latex?p "p") is the number
+    of predictors (including the intercept if applicable).
 
 We fit this model as follows
 
@@ -184,19 +205,29 @@ We fit this model as follows
 ### Commensurate prior
 
 The commensurate prior assumes the following hierarchical model
-$$
+
+![
 \\begin{align\*}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta_0 &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta_0) \\right) \\\\
   \\beta_0 &\\sim N_p(\\mu_0, \\Sigma_0) \\\\
   \\beta_j &\\sim N_1\\left( \\beta\_{0j}, \\tau_j^{-1} \\right), j = 1, \\ldots, p
 \\end{align\*}
-$$
-where the *τ*<sub>*j*</sub>’s are elicited by the user. The defaults in
-`hdbayes` are
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%20%5C%5C%0A%20%20%5Cbeta_j%20%26%5Csim%20N_1%5Cleft%28%20%5Cbeta_%7B0j%7D%2C%20%5Ctau_j%5E%7B-1%7D%20%5Cright%29%2C%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D%0A "
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  \beta_0 &\sim N_p(\mu_0, \Sigma_0) \\
+  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
+\end{align*}
+")
 
--   *μ*<sub>0</sub> = 0
--   *Σ*<sub>0</sub> = 100 × *I*<sub>*p*</sub>
+where the
+![\\tau_j](https://latex.codecogs.com/png.latex?%5Ctau_j "\tau_j")’s are
+elicited by the user. The defaults in `hdbayes` are
+
+-   ![\\mu_0 = 0](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%200 "\mu_0 = 0")
+-   ![\\Sigma_0 = 100 \\times I_p](https://latex.codecogs.com/png.latex?%5CSigma_0%20%3D%20100%20%5Ctimes%20I_p "\Sigma_0 = 100 \times I_p")
 
 This method can be fit as follows
 
@@ -229,7 +260,7 @@ summary(fit.commensurate)$summary
 The Robust MAP prior is a generalization of the Bayesian Hierarchical
 Model (BHM), and takes the form
 
-$$
+![
 \\begin{align\*}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta_0 &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta_0) \\right) \\\\
@@ -238,12 +269,23 @@ $$
   \\mu &\\sim N_p(\\mu_0, \\Sigma_0) \\\\
   \\Sigma &\\sim \\text{IW}\_p(\\nu_0, \\Psi_0)
 \\end{align\*}
-$$
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%20%5C%5C%0A%20%20%5Cbeta%20%20%20%26%5Csim%20w%20%5Ctimes%20N_p%28%5Cmu%2C%20%5CSigma%29%20%2B%20%281%20-%20w%29%20N_p%28%5Cmu_v%2C%20%5CSigma_v%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%20%5C%5C%0A%20%20%5CSigma%20%26%5Csim%20%5Ctext%7BIW%7D_p%28%5Cnu_0%2C%20%5CPsi_0%29%0A%5Cend%7Balign%2A%7D%0A "
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  \beta_0 &\sim N_p(\mu, \Sigma) \\
+  \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
+  \mu &\sim N_p(\mu_0, \Sigma_0) \\
+  \Sigma &\sim \text{IW}_p(\nu_0, \Psi_0)
+\end{align*}
+")
 
-where *w* ∈ (0,1) controls for the level of borrowing of the historical
-data. Note that when *w* = 1, the robust MAP prior effectively becomes
-the BHM. The defaults are the same as in the BHM except the default
-value for w is 0.1.
+where
+![w \\in (0,1)](https://latex.codecogs.com/png.latex?w%20%5Cin%20%280%2C1%29 "w \in (0,1)")
+controls for the level of borrowing of the historical data. Note that
+when ![w = 1](https://latex.codecogs.com/png.latex?w%20%3D%201 "w = 1"),
+the robust MAP prior effectively becomes the BHM. The defaults are the
+same as in the BHM except the default value for w is 0.1.
 
 ``` r
 fit.robustmap = glm.robustmap(
@@ -316,23 +358,45 @@ summary(fit.robustmap)$summary
 ### Power prior
 
 The Power Prior takes the form
-$$
+
+![
 \\begin{align}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta) \\right) \\\\
   \\pi(\\beta \| a_0) &\\propto L(\\beta \| y_0)^{a_0} \\pi_0(\\beta)
 \\end{align}
-$$
-where *L*(*β*\|*y*<sub>0</sub>) is the likelihood of the GLM based on
-the historical data, *a*<sub>0</sub> ∈ (0,1) is a fixed hyperaparameter
-controlling the effective sample size contributed by the data (e.g.,
-*a*<sub>0</sub> = 1 borrows the whole sample size), and
-*π*<sub>0</sub>(*β*) is an “initial prior” on *β*.
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%0A%5Cend%7Balign%7D%0A "
+\begin{align}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
+  \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
+\end{align}
+")
 
-The default in `hdbayes` is a (noninformative) normal prior on *β*:
-*β* ∼ *N*<sub>*p*</sub>(0,100×*I*<sub>*p*</sub>)
+where
+![L(\\beta \| y_0)](https://latex.codecogs.com/png.latex?L%28%5Cbeta%20%7C%20y_0%29 "L(\beta | y_0)")
+is the likelihood of the GLM based on the historical data,
+![a_0 \\in (0,1)](https://latex.codecogs.com/png.latex?a_0%20%5Cin%20%280%2C1%29 "a_0 \in (0,1)")
+is a fixed hyperaparameter controlling the effective sample size
+contributed by the data (e.g.,
+![a_0 = 1](https://latex.codecogs.com/png.latex?a_0%20%3D%201 "a_0 = 1")
+borrows the whole sample size), and
+![\\pi_0(\\beta)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29 "\pi_0(\beta)")
+is an “initial prior” on
+![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta").
 
-The power prior (with *a*<sub>0</sub> = 0.5) may be fit as follows:
+The default in `hdbayes` is a (noninformative) normal prior on
+![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta"):
+
+![
+\\beta \\sim N_p(0, 100 \\times I_p)
+](https://latex.codecogs.com/png.latex?%0A%5Cbeta%20%5Csim%20N_p%280%2C%20100%20%5Ctimes%20I_p%29%0A "
+\beta \sim N_p(0, 100 \times I_p)
+")
+
+The power prior (with
+![a_0 = 0.5](https://latex.codecogs.com/png.latex?a_0%20%3D%200.5 "a_0 = 0.5"))
+may be fit as follows:
 
 ``` r
 fit.pp = glm.pp(
@@ -343,33 +407,48 @@ fit.pp = glm.pp(
 
 ### Normalized power prior (NPP)
 
-The NPP treats the hyperparameter *a*<sub>0</sub> as random, allowing
-the data to decide what is the best value. For non-Gaussian models, this
-requires estimating the normalizing constant
-*Z*(*a*<sub>0</sub>) = ∫*L*(*β*\|*y*<sub>0</sub>)<sup>*a*<sub>0</sub></sup>*π*<sub>0</sub>(*β*)*d**β*.
+The NPP treats the hyperparameter
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") as random,
+allowing the data to decide what is the best value. For non-Gaussian
+models, this requires estimating the normalizing constant
+![Z(a_0) = \\int L(\\beta \| y_0)^{a_0} \\pi_0(\\beta) d\\beta](https://latex.codecogs.com/png.latex?Z%28a_0%29%20%3D%20%5Cint%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20d%5Cbeta "Z(a_0) = \int L(\beta | y_0)^{a_0} \pi_0(\beta) d\beta").
 
 In `hdbayes`, there is one function to estimate the normalizing constant
-across a grid of values for *a*<sub>0</sub> and another to obtain
-posterior samples of the normalized power prior.
+across a grid of values for
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") and another to
+obtain posterior samples of the normalized power prior.
 
 The NPP may be summarized as
-$$
+
+![
 \\begin{align}
   y_i \| x_i, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x_i'\\beta) \\right) \\\\
   y\_{0i} \| x\_{0i}, \\beta &\\sim \\text{Bernoulli}\\left( \\text{logit}^{-1}(x\_{0i}'\\beta) \\right) \\\\
   \\pi(\\beta \| a_0) &\\propto \\frac{1}{Z(a_0)} L(\\beta \| y_0)^{a_0} \\pi_0(\\beta) \\\\
   \\pi(a_0)         &\\propto a_0^{\\alpha_0 - 1} (1 - a_0)^{\\gamma_0 - 1}
 \\end{align}
-$$
+](https://latex.codecogs.com/png.latex?%0A%5Cbegin%7Balign%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20%5Cfrac%7B1%7D%7BZ%28a_0%29%7D%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20%5C%5C%0A%20%20%5Cpi%28a_0%29%20%20%20%20%20%20%20%20%20%26%5Cpropto%20a_0%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_0%29%5E%7B%5Cgamma_0%20-%201%7D%0A%5Cend%7Balign%7D%0A "
+\begin{align}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
+  \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
+  \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
+\end{align}
+")
 
 The defaults in `hdbayes` are
 
--   *π*<sub>0</sub>(*β*) ∝ *N*(*β*\|0,100×*I*<sub>*p*</sub>)
--   *α*<sub>0</sub> = 1
--   *γ*<sub>0</sub> = 1
+-   ![\\pi_0(\\beta) \\propto N(\\beta \| 0, 100 \\times I_p)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29%20%5Cpropto%20N%28%5Cbeta%20%7C%200%2C%20100%20%5Ctimes%20I_p%29 "\pi_0(\beta) \propto N(\beta | 0, 100 \times I_p)")
+-   ![\\alpha_0 = 1](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%201 "\alpha_0 = 1")
+-   ![\\gamma_0 = 1](https://latex.codecogs.com/png.latex?%5Cgamma_0%20%3D%201 "\gamma_0 = 1")
 
-when *α*<sub>0</sub> = 1 and *γ*<sub>0</sub> = 1, the prior on
-*a*<sub>0</sub> is a *U*(0,1) prior.
+when
+![\\alpha_0 = 1](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%201 "\alpha_0 = 1")
+and
+![\\gamma_0 = 1](https://latex.codecogs.com/png.latex?%5Cgamma_0%20%3D%201 "\gamma_0 = 1"),
+the prior on ![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") is a
+![U(0,1)](https://latex.codecogs.com/png.latex?U%280%2C1%29 "U(0,1)")
+prior.
 
 ### Estimating the normalizing constant
 
@@ -410,16 +489,21 @@ head(a0.lognc)
 ```
 
 The provided function `glm.npp.lognc` estimates the logarithm of the
-normalizing constant, log *Z*(*a*<sub>0</sub>), for one specific value
-of *a*<sub>0</sub>. We created the function `logncfun` so that the first
-argument would be *a*<sub>0</sub>, allowing us to use the `parLapply`
-function in the `parallel` package.
+normalizing constant,
+![\\log Z(a_0)](https://latex.codecogs.com/png.latex?%5Clog%20Z%28a_0%29 "\log Z(a_0)"),
+for one specific value of
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0"). We created the
+function `logncfun` so that the first argument would be
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0"), allowing us to
+use the `parLapply` function in the `parallel` package.
 
-The `hdbayes` function `glm.npp.lognc` outputs *a*<sub>0</sub>,
-*Z*(*a*<sub>0</sub>), and the minimum effective sample size and maximum
-R-hat value of the MCMC sampling of the power prior. It is a good idea
-to check that the minimum effective sample size is at least 1,000 and
-the maximum R-hat value is less than 1.10
+The `hdbayes` function `glm.npp.lognc` outputs
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0"),
+![Z(a_0)](https://latex.codecogs.com/png.latex?Z%28a_0%29 "Z(a_0)"), and
+the minimum effective sample size and maximum R-hat value of the MCMC
+sampling of the power prior. It is a good idea to check that the minimum
+effective sample size is at least 1,000 and the maximum R-hat value is
+less than 1.10
 
 ``` r
 min(a0.lognc$min_n_eff) ## lowest effective sample size
@@ -439,11 +523,13 @@ plot(a0.lognc$a0, a0.lognc$lognc)
 ### Sampling the posterior distribution
 
 We can now sample from the posterior distribution. The function
-`glm.npp` takes, as input, values of *a*<sub>0</sub> and the estimated
+`glm.npp` takes, as input, values of
+![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") and the estimated
 logarithm of the normalizing constant. Linear interpolation is used to
-estimate *Z*(*a*<sub>0</sub>) for values not in the fine grid. Thus, it
-may be a good idea to conduct smoothing of the function such as using
-LOESS, but we ignore that here.
+estimate
+![Z(a_0)](https://latex.codecogs.com/png.latex?Z%28a_0%29 "Z(a_0)") for
+values not in the fine grid. Thus, it may be a good idea to conduct
+smoothing of the function such as using LOESS, but we ignore that here.
 
 ``` r
 fit.npp = glm.npp(
@@ -469,10 +555,20 @@ summary(fit.npp)$summary
 
 NAPP uses a large sample theory argument to formulate a normal
 approximation to the power prior, i.e., the prior is given by
-*β*\|*a*<sub>0</sub> ∼ *N*(*β̂*<sub>0</sub>,*a*<sub>0</sub><sup>−1</sup>\[*I*<sub>*n*</sub>(*β*)\]<sup>−1</sup>),
-where *β̂*<sub>0</sub> is the maximum likelihood estimate (MLE) of *β*
-based on the historical data and *I*<sub>*n*</sub>(*β*) is the
-associated information matrix (negative Hessian).
+
+![
+\\beta \| a_0 \\sim N(\\hat{\\beta}\_0, a_0^{-1} \[I_n(\\beta)\]^{-1}),
+](https://latex.codecogs.com/png.latex?%0A%5Cbeta%20%7C%20a_0%20%5Csim%20N%28%5Chat%7B%5Cbeta%7D_0%2C%20a_0%5E%7B-1%7D%20%5BI_n%28%5Cbeta%29%5D%5E%7B-1%7D%29%2C%0A "
+\beta | a_0 \sim N(\hat{\beta}_0, a_0^{-1} [I_n(\beta)]^{-1}),
+")
+
+where
+![\\hat{\\beta}\_0](https://latex.codecogs.com/png.latex?%5Chat%7B%5Cbeta%7D_0 "\hat{\beta}_0")
+is the maximum likelihood estimate (MLE) of
+![\\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") based on
+the historical data and
+![I_n(\\beta)](https://latex.codecogs.com/png.latex?I_n%28%5Cbeta%29 "I_n(\beta)")
+is the associated information matrix (negative Hessian).
 
 In this case, the normalizing constant is known, so we do not need to
 estimate the normalizing constant before sampling.
