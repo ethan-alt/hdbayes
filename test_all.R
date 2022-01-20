@@ -1,10 +1,4 @@
-
-
-## simulate logistic regression data
-set.seed(391)
-n  = 200
-n0 = 100
-N  = n + n0
+library(hdbayes)
 
 ## obtain number of cores
 ncores = max(1, parallel::detectCores() - 1)
@@ -12,7 +6,11 @@ warmup  = 1000
 total.samples = 10000   ## number of samples post warmup
 samples = ceiling(warmup + total.samples / ncores)  ## outputs approx total.samples samples
 
-
+## simulate logistic regression data
+set.seed(391)
+n  = 200
+n0 = 100
+N  = n + n0
 
 X    = cbind(1, 'z' = rbinom(N, 1, 0.5), 'x' = rnorm(N, mean = 1, sd = 1) )
 beta = c(1, 0.5, -1)
@@ -50,6 +48,8 @@ fit.robustmap = glm.robustmap(
   cores = ncores, chains = ncores, iter = samples, warmup = warmup
 )
 
+
+## normalized asymptotic power prior
 fit.napp = glm.napp(
   formula, family, data, histdata,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup
