@@ -4,3 +4,4 @@
 ^\.gitignore$
 ^hdbayes\.Rproj$
 ^README_files$
+^\.Rproj\.user$
