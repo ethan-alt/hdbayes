@@ -28,6 +28,16 @@
 #' @return             a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum effective sample size of
 #'                     the MCMC sampling, and the maximum Rhat.
 #'
+#' @examples
+#' data(actg036)
+#' ## take subset for speed purposes
+#' actg036 = actg036[1:50, ]
+#' glm.npp.lognc(
+#'   cd4 ~ treatment + age + race,
+#'   family = poisson(), histdata = actg036, a0 = 0.5,
+#'   chains = 1, warmup = 500, iter = 5000
+#' )
+#'
 #'
 
 glm.npp.lognc = function(
@@ -100,7 +110,6 @@ glm.npp.lognc = function(
     'min_n_eff' = min(summ[, 'n_eff']),
     'max_Rhat'  = max(summ[, 'Rhat'])
   )
-  print(res)
   if ( res['min_n_eff'] < 1000 )
     warning(
       paste0(

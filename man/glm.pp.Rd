@@ -52,3 +52,19 @@ glm.pp(
 Sample from the posterior distribution of a GLM using the power prior with
 a fixed power prior parameter (a0)
 }
+\examples{
+data(actg019)
+data(actg036)
+## take subset for speed purposes
+actg019 = actg019[1:100, ]
+actg036 = actg036[1:50, ]
+glm.pp(
+  cd4 ~ treatment + age + race,
+  family = poisson(), data = actg019, histdata = actg036,
+  a0 = 0.5,
+  chains = 1, warmup = 500, iter = 1000
+)
+
+
+
+}

@@ -66,3 +66,16 @@ and covariance equal to the inverse of a user-specified precision parameter (tau
 Dispersion parameters (if applicable) between the
 current and historical data sets are treated as independent.
 }
+\examples{
+data(actg019)
+data(actg036)
+## take subset for speed purposes
+actg019 = actg019[1:100, ]
+actg036 = actg036[1:50, ]
+glm.commensurate(
+  cd4 ~ treatment + age + race,
+  tau = rep(5, 4),    ## 4 parameters including intercept
+  family = poisson(), data = actg019, histdata = actg036,
+  chains = 1, warmup = 500, iter = 1000
+)
+}

@@ -31,8 +31,8 @@ model {
     target += a0 * glm_lp(y0, beta, 1.0, X0, dist, link, offset0);   // historical data likelihood
   }
   else {
-    dispersion  ~ inv_gamma(disp_shape,  disp_scale);                     // prior for dispersion
-    target += glm_lp(y0, beta, dispersion[1], X0, dist, link, offset0); // historical data likelihood
+    dispersion  ~ inv_gamma(disp_shape,  disp_scale);                        // prior for dispersion
+    target += a0 * glm_lp(y0, beta, dispersion[1], X0, dist, link, offset0); // historical data likelihood
   }
 }
 

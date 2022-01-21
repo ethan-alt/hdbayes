@@ -34,6 +34,8 @@ LinkingTo:
     StanHeaders (>= 2.18.0)
 SystemRequirements: GNU make
 Collate: 
+    'actg019-data.R'
+    'actg036-data.R'
     'data_checks.R'
     'glm_bhm.R'
     'glm_commensurate.R'
@@ -43,4 +45,6 @@ Collate:
     'glm_pp.R'
     'glm_robustmap.R'
     'hdbayes-package.R'
+    'lm_npp.R'
     'stanmodels.R'
+LazyData: true

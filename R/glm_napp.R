@@ -25,6 +25,18 @@
 #' @param ...          arguments passed to [rstan::sampling()] (e.g. iter, chains).
 #'
 #' @return             an object of class `stanfit` giving posterior samples
+#'
+#' @examples
+#' data(actg019)
+#' data(actg036)
+#' ## take subset for speed purposes
+#' actg019 = actg019[1:100, ]
+#' actg036 = actg036[1:50, ]
+#' glm.napp(
+#'   cd4 ~ treatment + age + race,
+#'   family = poisson(), data = actg019, histdata = actg036,
+#'   chains = 1, warmup = 500, iter = 1000
+#' )
 glm.napp = function(
   formula, family, data, histdata,
   a0.shape1    = 1.0,
@@ -51,7 +63,10 @@ glm.napp = function(
   histdata$offset0 = offset0
 
   ## Fit enriched GLM to get hessian
-  fit.glm    = stats::glm(formula = formula, family = family, data = histdata, offset = offset0)
+  fit.glm =
+    suppressWarnings(
+      stats::glm(formula = formula, family = family, data = histdata, offset = offset0)
+    )
   fit.glm    = enrichwith::enrich(fit.glm)
   theta.mean = fit.glm$coefficients
   theta.cov  = fit.glm$expected_information_mle

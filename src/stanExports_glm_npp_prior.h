@@ -433,7 +433,7 @@ public:
                 current_statement_begin__ = 71;
                 lp_accum__.add(inv_gamma_log<propto__>(dispersion, disp_shape, disp_scale));
                 current_statement_begin__ = 72;
-                lp_accum__.add(glm_lp(y0, beta, get_base1(dispersion, 1, "dispersion", 1), X0, dist, link, offset0, lp__, lp_accum__, pstream__));
+                lp_accum__.add((a0 * glm_lp(y0, beta, get_base1(dispersion, 1, "dispersion", 1), X0, dist, link, offset0, lp__, lp_accum__, pstream__)));
             }
         } catch (const std::exception& e) {
             stan::lang::rethrow_located(e, current_statement_begin__, prog_reader__());

@@ -1,0 +1,15 @@
+#' ACTG 036 Data
+#'
+#' @name actg036
+#' @docType data
+#' @author Joseph Ibrahim \email{ibrahim@@bios.unc.edu}
+#' @references \url{https://clinicaltrials.gov/ct2/show/NCT00001104}
+#' @keywords data
+#' @format A data frame with 183 rows and 4 variables:
+#' \describe{
+#'   \item{age}{age, in years}
+#'   \item{treatment}{treatment indicator, 0 = placebo, 1 = AZT}
+#'   \item{race}{race indicator, 0 = non-white, 1 = white}
+#'   \item{cd4}{CD4 count}
+#' }
+NULL

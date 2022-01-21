@@ -63,3 +63,43 @@ Sample from the posterior distribution of a GLM using the normalized power prior
 normalizing constant across a range of power prior parameters (a0), possibly
 smoothing techniques over a find grid.
 }
+\examples{
+\dontrun{
+  library(parallel)
+  ncores = parallel::detectCores()
+
+  warmup = 1000
+
+
+  ## function to parallelize estimation of log normalizing constant
+  logncfun = function(a0, ...)
+    hdbayes::glm.npp.lognc(
+      formula = cd4 ~ treatment + age + race, family = poisson(),
+      histdata = actg036, a0 = a0, ...
+    )
+
+  ## set up parallelization
+  cl = makeCluster(ncores)
+  clusterSetRNGStream(cl, 123)
+
+  ## estimate normalizing constant in parallel
+  a0.lognc = parLapply(
+    cl = cl, X = seq(0, 1, 4*ncores), fun = logncfun, iter = 5000, warmup = warmup, refresh = 0
+  )
+  stopCluster(cl)
+  a0.lognc = data.frame( do.call(rbind, a0.lognc) )
+
+  ## sample from normalized power prior
+  glm.npp(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson(),
+    data = actg019,
+    histdata = actg036,
+    a0 = a0.lognc$a0,
+    lognc = a0.lognc$lognc,
+    cores = ncores, chains = ncores, iter = samples,
+    warmup = warmup, refresh = 0
+  )
+}
+
+}

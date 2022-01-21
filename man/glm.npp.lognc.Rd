@@ -54,3 +54,15 @@ the historical data likelihood by a value a0 between 0 and 1. The initial prior
 is a multivariate-normal inverse-gamma prior on the regression coefficients
 (conditional on the dispersion) and the dispersion parameter (if applicable).
 }
+\examples{
+data(actg036)
+## take subset for speed purposes
+actg036 = actg036[1:50, ]
+glm.npp.lognc(
+  cd4 ~ treatment + age + race,
+  family = poisson(), histdata = actg036, a0 = 0.5,
+  chains = 1, warmup = 500, iter = 5000
+)
+
+
+}
