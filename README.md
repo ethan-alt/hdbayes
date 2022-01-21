@@ -1,12 +1,11 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
-
-## hdbayes
-
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/ethan-alt/hdbayes/workflows/R-CMD-check/badge.svg)](https://github.com/ethan-alt/hdbayes/actions)
 <!-- badges: end -->
+
+## hdbayes
 
 The goal of `hdbayes` is to make it easier for users to conduct Bayesian
 analysis methods that leverage historical data.
