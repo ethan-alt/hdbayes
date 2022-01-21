@@ -47,7 +47,11 @@ Defaults to a diagonal matrix of 1s.}
 matrix of the regression coefficients. Defaults to \code{num.predictors + 10}.}
 
 \item{iw.hp.scale}{scale matrix for inverse-Wishart prior on the covariance of the regression coefficients
-Defaults to a diagonal matrix of 1s.}
+Defaults to a diagonal matrix of 1s}
+
+\item{norm.vague.mean}{mean hyperparameter for vague normal prior on regression coefficients (second part of mixture). Defaults to a vector of 0s}
+
+\item{norm.vague.cov}{covariance hyperparameter for vague normal prior on regression coefficients (second part of mixture). Defaults to a diagonal matrix of 100s}
 
 \item{disp.shape}{shape parameter for inverse-gamma prior on dispersion parameter for current data set}
 
@@ -64,7 +68,7 @@ Defaults to a diagonal matrix of 1s.}
 \item{...}{arguments passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} (e.g. iter, chains).}
 }
 \value{
-\preformatted{        an object of class `stanfit` giving posterior samples
+\preformatted{           an object of class `stanfit` giving posterior samples
 }
 }
 \description{

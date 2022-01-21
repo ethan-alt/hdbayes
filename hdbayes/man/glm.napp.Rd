@@ -44,7 +44,7 @@ Sample from the posterior distribution of a GLM using the normalized
 asymptotic power prior. The regression coefficients and logarithm of the
 dispersion parameter are a multivariate normal distribution with mean
 equal to the maximum likelihood estimate of the historical data and
-covariance matrix equal to\math{a0^{-1}} multiplied by the inverse Fisher
+covariance matrix equal to \eqn{a0^{-1}} multiplied by the inverse Fisher
 information matrix of the historical data, where a0 is the power prior
 parameter (treated as random).
 }

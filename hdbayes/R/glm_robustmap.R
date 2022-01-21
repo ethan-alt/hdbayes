@@ -11,29 +11,31 @@
 #'
 #' @export
 #'
-#' @param formula      a two-sided formula giving the relationship between the response variable and covariates
-#' @param family       an object of class `family`. See \code{\link[stats:family]{?stats::family}}
-#' @param data         a `data.frame` giving the current data
-#' @param histdata     a `data.frame` giving the historical data
-#' @param w            a scalar between 0 and 1 giving how much weight to put on the historical data
-#' @param norm.hp.mean a vector whose dimension is equal to the number of regression coefficients giving the
-#'                     mean for the normal hyperprior on the regression coefficients. Defaults to a vector of zeros.
-#' @param norm.hp.cov  a covariance matrix whose dimension is equal to the number of regression coefficients
-#'                     that gives the covariance for the normal hyperprior on the regression coefficients.
-#'                     Defaults to a diagonal matrix of 1s.
-#' @param iw.hp.df     degrees of freedom for the inverse-wishart prior on the covariance
-#'                     matrix of the regression coefficients. Defaults to `num.predictors + 10`.
-#' @param iw.hp.scale  scale matrix for inverse-Wishart prior on the covariance of the regression coefficients
-#'                     Defaults to a diagonal matrix of 1s.
-#' @param disp.shape   shape parameter for inverse-gamma prior on dispersion parameter for current data set
-#' @param disp.scale   scale parameter for inverse-gamma prior on dispersion parameter for current data set
-#' @param disp0.shape  shape parameter for inverse-gamma prior on dispersion parameter for historical data set
-#' @param disp0.scale  scale parameter for inverse-gamma prior on dispersion parameter for historical data set
-#' @param offset       vector whose dimension is equal to the rows of the current data set giving an offset for the current data. Defaults to a vector of 0s
-#' @param offset0      vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s
-#' @param ...          arguments passed to [rstan::sampling()] (e.g. iter, chains).
+#' @param formula         a two-sided formula giving the relationship between the response variable and covariates
+#' @param family          an object of class `family`. See \code{\link[stats:family]{?stats::family}}
+#' @param data            a `data.frame` giving the current data
+#' @param histdata        a `data.frame` giving the historical data
+#' @param w               a scalar between 0 and 1 giving how much weight to put on the historical data
+#' @param norm.hp.mean    a vector whose dimension is equal to the number of regression coefficients giving the
+#'                        mean for the normal hyperprior on the regression coefficients. Defaults to a vector of zeros.
+#' @param norm.hp.cov     a covariance matrix whose dimension is equal to the number of regression coefficients
+#'                        that gives the covariance for the normal hyperprior on the regression coefficients.
+#'                        Defaults to a diagonal matrix of 1s.
+#' @param iw.hp.df        degrees of freedom for the inverse-wishart prior on the covariance
+#'                        matrix of the regression coefficients. Defaults to `num.predictors + 10`.
+#' @param iw.hp.scale     scale matrix for inverse-Wishart prior on the covariance of the regression coefficients
+#'                        Defaults to a diagonal matrix of 1s
+#' @param norm.vague.mean mean hyperparameter for vague normal prior on regression coefficients (second part of mixture). Defaults to a vector of 0s
+#' @param norm.vague.cov  covariance hyperparameter for vague normal prior on regression coefficients (second part of mixture). Defaults to a diagonal matrix of 100s
+#' @param disp.shape      shape parameter for inverse-gamma prior on dispersion parameter for current data set
+#' @param disp.scale      scale parameter for inverse-gamma prior on dispersion parameter for current data set
+#' @param disp0.shape     shape parameter for inverse-gamma prior on dispersion parameter for historical data set
+#' @param disp0.scale     scale parameter for inverse-gamma prior on dispersion parameter for historical data set
+#' @param offset          vector whose dimension is equal to the rows of the current data set giving an offset for the current data. Defaults to a vector of 0s
+#' @param offset0         vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s
+#' @param ...             arguments passed to [rstan::sampling()] (e.g. iter, chains).
 #'
-#' @return             an object of class `stanfit` giving posterior samples
+#' @return                an object of class `stanfit` giving posterior samples
 #'
 #'
 glm.robustmap = function(

@@ -10,13 +10,10 @@ glm.pp(
   data,
   histdata,
   a0,
-  lognc,
   beta.mean = NULL,
   beta.cov = NULL,
   disp.shape = 2.1,
   disp.scale = 1.1,
-  a0.shape1 = 1,
-  a0.shape2 = 1,
   offset = NULL,
   offset0 = NULL,
   ...
