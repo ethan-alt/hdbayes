@@ -1,2 +1,6 @@
 ^\.github$
 ^LICENSE\.md$
+^README\.md$
+^\.gitignore$
+^hdbayes\.Rproj$
+^README_files$
