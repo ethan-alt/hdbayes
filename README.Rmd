@@ -109,7 +109,7 @@ fit.bhm = glm.bhm(
   formula, family, data, histdata,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
-summary(fit.bhm)$summary
+round( summary(fit.bhm)$summary, 3 )
 ```
 
 ### Commensurate prior
@@ -133,7 +133,7 @@ fit.commensurate = glm.commensurate(
   formula, family, data, histdata, tau = rep(5, 3),
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
-summary(fit.commensurate)$summary
+round( summary(fit.commensurate)$summary, 3 )
 ```
 
 
@@ -160,7 +160,7 @@ fit.robustmap = glm.robustmap(
   formula, family, data, histdata,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
-summary(fit.robustmap)$summary
+round( summary(fit.robustmap)$summary, 3 )
 ```
 
 
@@ -190,6 +190,7 @@ fit.pp = glm.pp(
   formula, family, data, histdata, a0 = 0.5,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
+round( summary(fit.pp)$summary, 3 )
 ```
 
 
@@ -197,8 +198,8 @@ fit.pp = glm.pp(
 ### Normalized power prior (NPP)
 The NPP treats the hyperparameter $a_0$ as random, allowing the data to decide
 what is the best value. For non-Gaussian models, this requires estimating
-the normalizing constant 
-$Z(a_0) = \int L(\beta | y_0)^{a_0} \pi_0(\beta) d\beta$. 
+the normalizing constant
+$Z(a_0) = \int L(\beta | y_0)^{a_0} \pi_0(\beta) d\beta$.
 
 In `hdbayes`, there is one function to estimate the normalizing constant across
 a grid of values for $a_0$ and another to obtain posterior samples of the
@@ -220,7 +221,7 @@ The defaults in `hdbayes` are
 * $\alpha_0 = 1$
 * $\gamma_0 = 1$
 
-when $\alpha_0 = 1$ and $\gamma_0 = 1$, the prior on $a_0$ is a $U(0,1)$ 
+when $\alpha_0 = 1$ and $\gamma_0 = 1$, the prior on $a_0$ is a $U(0,1)$
 prior.
 
 ### Estimating the normalizing constant
@@ -242,7 +243,7 @@ logncfun = function(a0, ...)
 cl = makeCluster(ncores)
   clusterSetRNGStream(cl, 123)
   clusterExport(cl, varlist = c('formula', 'family', 'histdata'))
-  
+
   ## call created function
   a0.lognc = parLapply(
     cl = cl, X = a0, fun = logncfun, iter = 5000, warmup = warmup, refresh = 0
@@ -254,14 +255,14 @@ head(a0.lognc)
 ```
 
 The provided function `glm.npp.lognc` estimates the logarithm of the
-normalizing constant, $\log Z(a_0)$, for one specific value of $a_0$. We 
+normalizing constant, $\log Z(a_0)$, for one specific value of $a_0$. We
 created the function `logncfun` so that the first argument would be $a_0$,
 allowing us to use the `parLapply` function in the `parallel` package.
 
 The `hdbayes` function `glm.npp.lognc` outputs $a_0$, $Z(a_0)$, and the
 minimum effective sample size and maximum R-hat value of the MCMC sampling
 of the power prior. It is a good idea to check that the minimum
-effective sample size is at least 1,000 and the maximum R-hat value is 
+effective sample size is at least 1,000 and the maximum R-hat value is
 less than 1.10
 
 ```{r npp_lognc_2}
@@ -278,7 +279,7 @@ plot(a0.lognc$a0, a0.lognc$lognc)
 ### Sampling the posterior distribution
 We can now sample from the posterior distribution. The function
 `glm.npp` takes, as input, values of $a_0$ and the estimated logarithm
-of the normalizing constant. Linear interpolation is used to estimate 
+of the normalizing constant. Linear interpolation is used to estimate
 $Z(a_0)$ for values not in the fine grid. Thus, it may be a good idea to
 conduct smoothing of the function such as using LOESS, but we ignore that here.
 
@@ -288,7 +289,7 @@ fit.npp = glm.npp(
   formula, family, data, histdata, a0 = a0.lognc$a0, lognc = a0.lognc$lognc,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
-summary(fit.npp)$summary
+round( summary(fit.npp)$summary, 3 )
 ```
 
 
@@ -306,7 +307,7 @@ based on the historical data and $I_n(\beta)$ is the associated information
 matrix (negative Hessian).
 
 In this case, the normalizing constant is known, so we do not need to estimate
-the normalizing constant before sampling. 
+the normalizing constant before sampling.
 
 The following code analyzes the data set using the NAPP:
 ```{r napp}
@@ -314,7 +315,7 @@ fit.napp = glm.napp(
   formula, family, data, histdata,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
-summary(fit.napp)$summary
+round( summary(fit.napp)$summary, 3 )
 ```
 
 
@@ -352,10 +353,10 @@ post.sd = cbind(
 )
 
 ## posterior means
-post.mean
+round( post.mean, 3 )
 
 ## posterior std dev.
-post.sd
+round( post.sd, 3 )
 ```
 
 
