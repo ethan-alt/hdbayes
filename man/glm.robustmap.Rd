@@ -77,3 +77,17 @@ Predictive (MAP) Prior Of Schmidli. This prior is very similar to the
 Bayesian hierarchical model (BHM), except the prior is a mixture prior where
 one component is the BHM and the second is vague (noninformative) prior.
 }
+\examples{
+data(actg019)
+data(actg036)
+## take subset for speed purposes
+actg019 = actg019[1:100, ]
+actg036 = actg036[1:50, ]
+glm.robustmap(
+  cd4 ~ treatment + age + race,
+  family = poisson(), data = actg019, histdata = actg036,
+  w = 0.1,
+  chains = 1, warmup = 1000, iter = 2000
+)
+
+}

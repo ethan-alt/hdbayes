@@ -37,6 +37,18 @@
 #'
 #' @return                an object of class `stanfit` giving posterior samples
 #'
+#' @examples
+#' data(actg019)
+#' data(actg036)
+#' ## take subset for speed purposes
+#' actg019 = actg019[1:100, ]
+#' actg036 = actg036[1:50, ]
+#' glm.robustmap(
+#'   cd4 ~ treatment + age + race,
+#'   family = poisson(), data = actg019, histdata = actg036,
+#'   w = 0.1,
+#'   chains = 1, warmup = 1000, iter = 2000
+#' )
 #'
 glm.robustmap = function(
   formula,

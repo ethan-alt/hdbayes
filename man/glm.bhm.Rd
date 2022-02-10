@@ -71,3 +71,15 @@ The mean hyperparmater is multivariate normal and the covariance hyperparameter 
 inverse-Wishart.
 The dispersion parameters (if applicable) are independent.
 }
+\examples{
+data(actg019)
+data(actg036)
+## take subset for speed purposes
+actg019 = actg019[1:200, ]
+actg036 = actg036[1:100, ]
+glm.bhm(
+  cd4 ~ treatment + age + race,
+  family = poisson(), data = actg019, histdata = actg036,
+  chains = 1, warmup = 500, iter = 1000
+)
+}
