@@ -31,7 +31,7 @@ model {
 
   if ( dist <= 2 ) {
     target += glm_lp(y,  beta,  1.0, X,  dist, link, offset);   // current data likelihood
-    beta    ~ multi_normal(theta_hat, inv(a0) * theta_cov);     // asympt. power prior
+    // asympt. power prior
     target += multi_normal_lpdf(beta | theta_hat, inv(a0) * theta_cov);
   }
   else {
