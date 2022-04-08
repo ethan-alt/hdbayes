@@ -37,8 +37,9 @@ parameters {
 // and standard deviation 'sigma'.
 model {
   if ( a0_shape1 != 1 || a0_shape2 != 1)
-    a0 ~ beta(a0_shape1, a0_shape2);
+	  a0 ~ beta(a0_shape1, a0_shape2);
   beta ~ multi_normal(beta_mean, beta_cov);                                 // prior for beta
+
   if ( dist <= 2 ) {
     target += glm_lp(y,  beta,  1.0, X,  dist, link, offset);         // current data likelihood
     target += a0 * glm_lp(y0, beta, 1.0, X0, dist, link, offset0);   // historical data likelihood

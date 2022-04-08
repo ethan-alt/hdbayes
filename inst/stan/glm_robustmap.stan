@@ -38,9 +38,9 @@ parameters {
   real<lower=0>     dispersion0[(dist > 2) ? 1 :  0];
 }
 model {
-  beta0     ~ multi_normal(coef_mean, coef_cov);               // prior on beta0
   coef_mean ~ multi_normal(coef_hp_mean, coef_hp_cov);         // hyperprior for mean of coefficients
   coef_cov  ~ inv_wishart(iw_hp_df, iw_hp_scale);              // hyperprior for cov of coefficients
+  target += multi_normal_lpdf(beta0 | coef_mean, coef_cov);               // prior on beta0
   // robust MAP prior = w * hierarchical prior + (1 - w) * vague prior
   target   += log_sum_exp(
       logw   + multi_normal_lpdf(beta | coef_mean,       coef_cov)

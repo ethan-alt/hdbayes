@@ -45,7 +45,8 @@ model {
       ( a0 * sumy0sq + quad_b0 - quad_form(prec_a0, mean_a0) );
 
   // likelihood of current data
-  y_offset ~ normal_id_glm(X, 0.0, beta, sqrt(sigmasq));
+  // y_offset ~ normal_id_glm(X, 0.0, beta, sqrt(sigmasq));
+  target += normal_id_glm_lpdf(y_offset | X, 0.0, beta, sqrt(sigmasq));
 
   // power prior is normal-inverse Gamma
   target += inv_gamma_lpdf(sigmasq | shape_a0, scale_a0);
