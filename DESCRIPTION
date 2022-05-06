@@ -48,3 +48,7 @@ Collate:
     'lm_npp.R'
     'stanmodels.R'
 LazyData: true
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr
