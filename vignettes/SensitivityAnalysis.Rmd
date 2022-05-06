@@ -1,0 +1,293 @@
+---
+title: "Evaluating the sensitivity of informative priors based on historical data"
+output: rmarkdown::html_vignette
+bibliography: hdbayes.bib  
+vignette: >
+  %\VignetteIndexEntry{SensitivityAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+The power prior (PP) and the robust meta-analytic prior (RMAP) are two very 
+common choices for constructing informative priors by borrowing information from
+historical data.
+However, these modelling devices depend on tuning parameters that must be chosen
+in advance, and it is not clear which values should be picked.
+In this vignette we will use the data set in the
+[AIDS progression](Logistic_regression_HIV.html) to explore the choice of tuning
+parameter in a logistic regression setting.
+Please refer to that document for model, data and research question details.
+
+```{r prep, echo=FALSE}
+get_summaries <- function(x, name){
+  pars <- names(coef(fit.mle.cur))
+  out <- tibble::tibble(
+    parameter = pars,
+    mean = rstan::summary(x)$summary[pars, 'mean'],
+    sd = rstan::summary(x)$summary[pars, 'sd'],
+    lwr = rstan::summary(x)$summary[pars, '2.5%'],
+    upr = rstan::summary(x)$summary[pars, '97.5%'],
+  )
+  out$model <- name
+  return(out)
+} 
+```
+
+Let' setup
+```{r setup, cache=TRUE}
+library(hdbayes)
+
+data("actg019")
+data("actg036")
+
+actg019$age <- scale(actg019$age)
+actg019$cd4 <- scale(actg019$cd4)
+
+actg036$age <- scale(actg036$age)
+actg036$cd4 <- scale(actg036$cd4)
+
+ncores <- 4 # max(1, parallel::detectCores() - 2)
+nchains <- ncores
+warmup  <- 1000
+total.samples <- 10000   ## number of samples post warmup
+samples <- ceiling(warmup + total.samples / ncores)  ## outputs approx total.samples samples
+```
+
+And obtain some maximum likelihood estimates (MLE):
+
+```{r mle, cache = TRUE}
+formula <- outcome ~  age + race + treatment + cd4
+p <- length(attr(terms(formula), "term.labels")) # number of predictors
+family  <- binomial('logit')
+
+fit.mle.cur  <- glm(formula, family, actg036)
+fit.mle.hist <- glm(formula, family, actg019)
+
+mle.estimates.past <- data.frame(
+  parameter = names(coef(fit.mle.hist)),
+  value = coef(fit.mle.hist),
+  MLE = "Historical"
+)
+mle.estimates.curr <- data.frame(
+  parameter = names(coef(fit.mle.cur)),
+  value = coef(fit.mle.cur),
+  MLE = "Current"
+)
+
+mle.estimates <- rbind(mle.estimates.past,
+                       mle.estimates.curr)
+
+confint(fit.mle.hist)
+confint(fit.mle.cur)
+```
+
+# Robust Meta-analytic prior (RMAP)
+
+The RMAP (@Schmidli2014) is a (linear) mixture between the Bayesian hierarchical model (BHM) and 
+a vague prior.
+Conceptually, if $\theta$ is the parameter of interest, we have
+\begin{equation}
+ \pi_{\text{RMAP}}(\theta) = w\pi_{\text{BHM}}(\theta) + (1-w)\pi_{\text{Vague}}(\theta),
+\end{equation}
+where $w \in (0,1)$ is a mixture weight that controls for the level of borrowing of the historical data.
+Note that when $w = 1$, the robust MAP prior should collapse to the BHM.
+The defaults are the same as in the BHM and the default value for $w$ is 0.1.
+We will now fit the RMAP for a few values of $w$ and see what effect (if any)
+this has on the regression coefficients (hence $\theta = \boldsymbol{\beta}$ here).
+First, let us wrap the function to fit the RMAP,  `glm.robustmap()`, into a
+convenient function that takes a given $w$ and returns the output:
+```{r mapsetup, cache=TRUE}
+rmap_fit_and_report <- function(weight){
+  cat("Doing w=", weight, "\n")
+  fit.robustmap <- glm.robustmap(
+    formula, family,
+    data = actg036, histdata = actg019,
+    w = weight,
+    cores = ncores, chains = ncores,
+    iter = samples, warmup = warmup, refresh = 0
+  )
+  return(fit.robustmap)
+}
+```
+
+Now, we will do this for a small set of weights, just to see what is going on:
+```{r regularRMAP, cache=TRUE}
+
+ws.regular <- seq(0.1, 0.9, by = 0.1) 
+
+system.time(
+  all.fits.regular <- lapply(ws.regular, rmap_fit_and_report)
+)
+
+all.summaries.regular <- lapply(1:length(all.fits.regular),  function(i) {
+  get_summaries(x = all.fits.regular[[i]],
+                name = paste0("w=", ws.regular[i]))
+})
+
+results.regular <- do.call(rbind, all.summaries.regular) 
+results.regular$w <- as.numeric(gsub("w=", "", results.regular$model))
+```
+Next, we will produce a little plot to help us visualise things:
+
+```{r RMAPplot_regular, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+library(ggplot2)
+library(ggthemes)
+
+ggplot(data = results.regular,
+       aes(x = w, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(w), expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+As we can see, the actual posterior estimates do not seem to be very sensitive to
+the value of $w \in [0.1, 0.9]$.
+This might prompt the curious to ask whether this would change for small values
+of $w$.
+Let's investigate:
+```{r smallRMAP, cache=TRUE}
+
+ws.small <- c(10^{-(6:2)}, 2:9/100)
+
+system.time(
+  all.fits.small <- lapply(ws.small, rmap_fit_and_report)
+)
+
+all.summaries.small <- lapply(1:length(all.fits.small),  function(i) {
+  get_summaries(x = all.fits.small[[i]],
+                name = paste0("w=", ws.small[i]))
+})
+
+results.small <- do.call(rbind, all.summaries.small) 
+results.small$w <- as.numeric(gsub("w=", "", results.small$model))
+```
+Again, let's plot 
+```{r RMAPplot_small, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+library(scales)
+
+ggplot(data = results.small,
+       aes(x = w, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(w),
+                     trans = log_trans(),
+                     breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+and voilà!
+Now we do see that the posterior resulting from the RMAP is indeed sensitive
+to $w$, as long as that value is well below $0.1$.
+
+# Power prior (PP)
+
+We now turn our attention to the power prior (PP, @Ibrahim2000), which raises 
+the likelihood of the historical data to a discounting factor, $a_0$:
+\begin{equation}
+\pi_{\text{PP}}(\theta) \propto L(D_0 \mid \theta)^{a_0}\pi_0(\theta).
+\end{equation}
+
+```{r ppfits, cache=TRUE}
+
+pp_fit_and_report <- function(a){
+  cat("Doing a0=", a, "\n")
+  fit.pp <- glm.pp(
+    formula, family,
+    data = actg036, histdata = actg019,
+    a0 = a,
+    cores = ncores, chains = ncores,
+    iter = samples, warmup = warmup, refresh = 0
+  )
+  return(fit.pp)
+}
+
+as <- sort(c(ws.small, ws.regular))  
+
+system.time(
+  all.pp.fits <- lapply(as, pp_fit_and_report)
+)
+
+all.summaries.pp <- lapply(1:length(all.pp.fits),  function(i) {
+  get_summaries(x = all.pp.fits[[i]],
+                name = paste0("a_0=", as[i]))
+})
+
+results.pp <- do.call(rbind, all.summaries.pp) 
+results.pp$a0 <- as.numeric(gsub("a_0=", "", results.pp$model))
+```
+We can now plot the results:
+```{r PPplot_complete, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.pp,
+       aes(x = a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(a[0]),
+                     trans = log_trans(),
+                     breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+only to realise that the sensitivity is in the $(0.1, 1)$ interval.
+Let's slightly re-do the plot:
+
+```{r PPplot_small, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.pp,
+       aes(x = a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(a[0]),
+                      expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+
+Now we can clearly see that the posteriors seem to star converging when $a_0 > 0.3$,
+although the picture is not as clearcut as for the RMAP.
+
+# References {-}
+
+<div id="refs"></div>
+
+# Computing environment
+
+```{r env}
+sessionInfo()
+```
+
