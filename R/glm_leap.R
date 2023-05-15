@@ -32,7 +32,6 @@
 #' glm.leap(
 #'   cd4 ~ treatment + age + race,
 #'   family = poisson(), data = actg019, histdata = actg036,
-#'   a0 = 0.5,
 #'   chains = 1, warmup = 500, iter = 1000
 #' )
 #'

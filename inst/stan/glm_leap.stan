@@ -1,5 +1,6 @@
 functions{
 #include include/expfam_loglik.stan
+#include include/leap_helpers.stan
 }
 data {
   int<lower=0>          n;                 // sample size of current data
@@ -39,27 +40,32 @@ transformed parameters {
   vector[n0] contrib;                        // log probability summing over all components
   vector[K] probs;
   vector[K] logProbs;
+  matrix[n0, K] contribs;
+
   probs[1]   = gamma;
   probs[2:K] = (1 - gamma) * delta_raw;
   logProbs = log(probs);
   // Compute probability of being in first component and marginalized log probability
-  for ( i in 1:n0 ) {
-    vector[K] contrib_i;   // K-dim vector giving log contribution for each component of historical data; total log contribution is log(sum(exp(.)))
-    //row_vector[K] mean0i = X0[i, ] * betaMat;
-    vector[1] y0_i;
-    vector[1] offset0_i;
-    y0_i[1] = y0[i];
-    offset0_i[1] = offset0[i];
-    if ( dist <= 2 ) {
-      for ( k in 1:K )
-        contrib_i[k] = logProbs[k] + glm_lp(y0_i, betaMat[, k], 1.0, to_matrix(X0[i, ]), dist, link, offset0_i);//poisson_lpmf(y0[i] | mean0i[k]);
-    } else {
-      for ( k in 1:K )
-        contrib_i[k] = logProbs[k] + 0;//glm_lp(y0_i, betaMat[, k], dispersion[k], to_matrix(X0[i, ]), dist, link, offset0_i);
-    }
-    contrib[i]  = log_sum_exp(contrib_i);  // compute likelihood contribution of historical data
-    lp01[i] = contrib_i[1] - contrib[i];  // compute log probability of being classified to first group
-  }
+  // for ( i in 1:n0 ) {
+  //   vector[K] contrib_i;   // K-dim vector giving log contribution for each component of historical data; total log contribution is log(sum(exp(.)))
+  //   //row_vector[K] mean0i = X0[i, ] * betaMat;
+  //   vector[1] y0_i;
+  //   vector[1] offset0_i;
+  //   y0_i[1] = y0[i];
+  //   offset0_i[1] = offset0[i];
+  //   if ( dist <= 2 ) {
+  //     for ( k in 1:K )
+  //       contrib_i[k] = logProbs[k] + glm_lp(y0_i, betaMat[, k], 1.0, to_matrix(X0[i, ]), dist, link, offset0_i);//poisson_lpmf(y0[i] | mean0i[k]);
+  //   } else {
+  //     for ( k in 1:K )
+  //       contrib_i[k] = logProbs[k] + 0;//glm_lp(y0_i, betaMat[, k], dispersion[k], to_matrix(X0[i, ]), dist, link, offset0_i);
+  //   }
+  //   contrib[i]  = log_sum_exp(contrib_i);  // compute likelihood contribution of historical data
+  //   lp01[i] = contrib_i[1] - contrib[i];  // compute log probability of being classified to first group
+  // }
+  contribs = glm_mixture_contrib(y0, betaMat, dispersion, probs, X0, dist, link, offset0);
+
+  for (i in 1:n0) contrib[i] = log_sum_exp(contribs[i,]);
 }
 model {
   if ( dist <= 2 ) {
