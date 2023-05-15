@@ -54,7 +54,7 @@ data.checks = function(
 
 
 stack.data = function(
-    formula, family, data.list, include.intercept = TRUE
+    formula, data.list, include.intercept = TRUE
 ) {
   ## get stacked design matrix and response vector using formula
   X = sapply(data.list, function(s){
