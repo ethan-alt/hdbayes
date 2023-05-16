@@ -27,6 +27,7 @@ data.checks = function(
   varnames = all.vars(formula)
   if ( !( is.list(data.list) ) )
     stop("data.list must be a list of data.frames")
+  message("the first element in data.list is regarded as the current data")
   for( i in seq_len( length(data.list) ) ){
     if ( !( is.data.frame(data.list[[i]]) ) )
       stop("element ", i, " in data.list must be a data.frame")
@@ -49,7 +50,6 @@ data.checks = function(
         stop("the length of element ", i, " in offset.list must be equal to the number of rows in element ", i, " in data.list if offset.list is not NULL")
     }
   }
-  cat("reminder: the first element in data.list is regarded as the current data")
 }
 
 
