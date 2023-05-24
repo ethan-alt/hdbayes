@@ -13,8 +13,8 @@ data {
   vector<lower=0>[p]                  meta_mean_sd; // sd for the hyperprior for mean of each coefficient
   vector[p]                           meta_sd_mean; // mean for the hyperprior for sd of each coefficient
   vector<lower=0>[p]                  meta_sd_sd; // sd for the hyperprior for sd of each coefficient
-  vector[K]                           disp_mean; // mean for the half-normal prior for dispersion (same for all datasets)
-  vector<lower=0>[K]                  disp_sd; // sd for the half-normal prior for dispersion (same for all datasets)
+  vector[K]                           disp_mean; // mean for the half-normal prior for dispersion of each dataset
+  vector<lower=0>[K]                  disp_sd; // sd for the half-normal prior for dispersion of each dataset
   int<lower=1,upper=5>                dist;
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
