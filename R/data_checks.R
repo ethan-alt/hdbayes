@@ -81,3 +81,17 @@ stack.data = function(
 
   return(list(X = X, y = y, start.index = start.index, end.index = end.index))
 }
+
+
+to.vector = function(
+    param, default.value = 0, len = 1
+) {
+  if ( is.null(param) ){
+    param = rep(default.value, len)
+  }else if ( length(param) == 1 ){
+    param = rep(as.numeric(param), len)
+  }else {
+    param = as.numeric(param)
+  }
+  return(param)
+}
