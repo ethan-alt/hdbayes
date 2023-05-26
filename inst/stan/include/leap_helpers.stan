@@ -30,7 +30,7 @@ matrix lp2mean(matrix eta, int link) {
 //'
 //' @return n x K matrix of log likelihood contributions
 matrix normal_glm_mixture_contrib(
-  vector y, matrix X, matrix beta, vector disp, vector probs, int link, vector offs
+  vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
 ) {
   // compute logarithm of normalizing constant
   real log_2pi = 1.837877066409345483560659;  // log(2*pi)
@@ -44,7 +44,7 @@ matrix normal_glm_mixture_contrib(
   vector[n] y_sq = square(y);
 
   // Compute canonical parameter: theta = mu
-  theta = X * beta;
+  theta = X * beta + offs;
   if ( link != 1 )
     theta = lp2mean(theta, link);
 
@@ -77,7 +77,7 @@ matrix normal_glm_mixture_contrib(
 //'
 //' @return n x K matrix of log likelihood contributions
 matrix bernoulli_glm_mixture_contrib(
-  vector y, matrix X, matrix beta, vector disp, vector probs, int link, vector offs
+  vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
 ) {
   int n = rows(X);
   int p = cols(X);
@@ -87,7 +87,7 @@ matrix bernoulli_glm_mixture_contrib(
   matrix[n,K] contrib;
 
   // Compute canonical parameter: theta = logit(mu)
-  theta = X * beta;
+  theta = X * beta + offs;
   if ( link != 3)
     theta = logit( lp2mean(theta, link) );
 
@@ -115,7 +115,7 @@ matrix bernoulli_glm_mixture_contrib(
 //'
 //' @return n x K matrix of log likelihood contributions
 matrix poisson_glm_mixture_contrib(
-  vector y, matrix X, matrix beta, vector disp, vector probs, int link, vector offs
+  vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
 ) {
   int n = rows(X);
   int p = cols(X);
@@ -126,7 +126,7 @@ matrix poisson_glm_mixture_contrib(
   vector[n] log_y_factorial = lgamma(y+1);
 
   // Compute canonical parameter: theta = log(mu)
-  theta = X * beta;
+  theta = X * beta + offs;
   if ( link != 2)
     theta = log( lp2mean(theta, link) );
 
@@ -156,7 +156,7 @@ matrix poisson_glm_mixture_contrib(
 //'
 //' @return n x K matrix of log likelihood contributions
 matrix gamma_glm_mixture_contrib(
-  vector y, matrix X, matrix beta, vector disp, vector probs, int link, vector offs
+  vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
   ) {
   int K = rows(probs);
   int n = rows(y);
@@ -168,7 +168,7 @@ matrix gamma_glm_mixture_contrib(
   vector[K] inv_disp = inv(disp);
 
   // Compute canonical parameter: theta = 1 / mu
-  theta = X * beta;
+  theta = X * beta + offs;
   if ( link != 4 )
     theta = inv( lp2mean(theta, link) );
 
@@ -202,7 +202,7 @@ matrix gamma_glm_mixture_contrib(
 //'
 //' @return n x K matrix of log likelihood contributions
 matrix invgauss_glm_mixture_contrib(
-  vector y, matrix X, matrix beta, vector disp, vector probs, int link, vector offs
+  vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
 ) {
   int K = rows(probs);
   int n = rows(y);
@@ -217,7 +217,7 @@ matrix invgauss_glm_mixture_contrib(
 
   // Compute canonical parameter: theta = 1 / mu
   //  technically it is -1 / (2*mu^2), but negative can be absorbed in reg coefs
-  theta = X * beta;
+  theta = X * beta + offs;
   if ( link != 4 )
     theta = inv( lp2mean(theta, link) );
 
@@ -252,7 +252,7 @@ matrix invgauss_glm_mixture_contrib(
 //'   res[i, k] = log density for subject i in class k
 matrix glm_mixture_contrib(
   vector y, matrix beta, vector disp, vector probs
-  , matrix X, int dist, int link, vector offs
+  , matrix X, int dist, int link, matrix offs
 ) {
   if (dist == 1)
     return bernoulli_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
