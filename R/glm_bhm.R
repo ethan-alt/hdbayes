@@ -1,39 +1,48 @@
 #' Bayesian hierarchical model
 #'
-#' Sample from the posterior distribution of a GLM using the Bayesian Hierarchical
-#' Model (BHM). This model assumes that the regression coefficients of the
-#' historical and current data are different, but are correlated through a
-#' common distribution, whose hyperparameters (i.e., mean and covariance) are treated as random.
-#' The mean hyperparmater is multivariate normal and the covariance hyperparameter is
-#' inverse-Wishart.
+#' Sample from the posterior distribution of a GLM using the Bayesian Hierarchical Model (BHM). This model assumes that
+#' the regression coefficients of the historical and current data are different, but are correlated through a common
+#' distribution, whose hyperparameters (i.e., mean and standard deviation (the covariance is assumed to have a diagonal
+#' structure)) are treated as random.
+#' The mean hyperparmaters are independent normal and the standard deviation (sd) hyperparameters are independent half-normal.
 #' The dispersion parameters (if applicable) are independent.
 #'
 #' @include data_checks.R
 #'
 #' @export
 #'
-#' @param formula      a two-sided formula giving the relationship between the response variable and covariates
-#' @param family       an object of class `family`. See \code{\link[stats:family]{?stats::family}}
-#' @param data         a `data.frame` giving the current data
-#' @param histdata     a `data.frame` giving the historical data
-#' @param norm.hp.mean a vector whose dimension is equal to the number of regression coefficients giving the
-#'                     mean for the normal hyperprior on the regression coefficients. Defaults to a vector of zeros.
-#' @param norm.hp.cov  a covariance matrix whose dimension is equal to the number of regression coefficients
-#'                     that gives the covariance for the normal hyperprior on the regression coefficients.
-#'                     Defaults to a diagonal matrix of 1s.
-#' @param iw.hp.df     degrees of freedom for the inverse-wishart prior on the covariance
-#'                     matrix of the regression coefficients. Defaults to `num.predictors + 10`.
-#' @param iw.hp.scale  scale matrix for inverse-Wishart prior on the covariance of the regression coefficients
-#'                     Defaults to a diagonal matrix of 1s.
-#' @param disp.shape   shape parameter for inverse-gamma prior on dispersion parameter for current data set
-#' @param disp.scale   scale parameter for inverse-gamma prior on dispersion parameter for current data set
-#' @param disp0.shape  shape parameter for inverse-gamma prior on dispersion parameter for historical data set
-#' @param disp0.scale  scale parameter for inverse-gamma prior on dispersion parameter for historical data set
-#' @param offset       vector whose dimension is equal to the rows of the current data set giving an offset for the current data. Defaults to a vector of 0s
-#' @param offset0      vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s
-#' @param ...          arguments passed to [rstan::sampling()] (e.g. iter, chains).
+#' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
+#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
+#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rests
+#'                          are the historical datasets.
+#' @param include.intercept logical; if TRUE, an intercept will be included in the model.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
+#'                          the length of data.list. The length of each element of offset.list is equal to the number
+#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
+#' @param meta.mean.mean    a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the means for the normal hyperpriors on the mean hyperparameters of regression coefficients. If
+#'                          a scalar is provided, meta.mean.mean will be a vector of repeated elements of the given scalar.
+#'                          Defaults to a vector of 0s.
+#' @param meta.mean.sd      a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If a
+#'                          scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.
+#' @param meta.sd.mean      a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
+#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
+#' @param meta.sd.sd        a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
+#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
+#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of datasets (including the current
+#'                          data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a scalar
+#'                          is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
+#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of datasets (including the current
+#'                          data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
+#'                          is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
+#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
+#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. iter_warmup, iter_sampling, chains).
 #'
-#' @return             an object of class `stanfit` giving posterior samples
+#' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
 #' data(actg019)
@@ -41,95 +50,135 @@
 #' ## take subset for speed purposes
 #' actg019 = actg019[1:200, ]
 #' actg036 = actg036[1:100, ]
+#' data_list = list(currdata = actg019, histdata = actg036)
 #' glm.bhm(
-#'   cd4 ~ treatment + age + race,
-#'   family = poisson(), data = actg019, histdata = actg036,
-#'   chains = 1, warmup = 500, iter = 1000
+#'   formula = cd4 ~ treatment + age + race,
+#'   family = poisson('log'),
+#'   data.list = data_list,
+#'   chains = 1, iter_warmup = 500, iter_sampling = 1000
 #' )
 glm.bhm = function(
-  formula,
-  family,
-  data,
-  histdata,
-  norm.hp.mean    = NULL,
-  norm.hp.cov     = NULL,
-  iw.hp.df        = NULL,
-  iw.hp.scale     = NULL,
-  disp.shape      = 2.1,
-  disp.scale      = 1.1,
-  disp0.shape     = 2.1,
-  disp0.scale     = 1.1,
-  offset          = NULL,
-  offset0         = NULL,
-  ...
+    formula,
+    family,
+    data.list,
+    include.intercept = TRUE,
+    offset.list       = NULL,
+    meta.mean.mean    = NULL,
+    meta.mean.sd      = NULL,
+    meta.sd.mean      = NULL,
+    meta.sd.sd        = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL,
+    local.location    = NULL,
+    ...
 ) {
-  y  = data[, all.vars(formula)[1]]
-  y0 = histdata[, all.vars(formula)[1]]
-  n  = length(y)
-  n0 = length(y0)
-  X  = model.matrix(formula, data)
-  X0 = model.matrix(formula, histdata)
-  p  = ncol(X)
-  fam.indx = get.dist.link(family)
-  dist     = fam.indx[1]
-  link     = fam.indx[2]
-
   ## perform data checks
-  data.checks(
-    formula, family, data, histdata, offset, offset0, check.hist = TRUE
-  )
+  data.checks(formula, family, data.list, offset.list)
+  res          = stack.data(formula = formula,
+                            data.list = data.list,
+                            include.intercept = include.intercept)
+  y            = res$y
+  X            = res$X
+  start.index  = res$start.index
+  end.index    = res$end.index
+  p            = ncol(X)
+  N            = length(y)
+  K            = length(end.index)
+  fam.indx     = get.dist.link(family)
+  dist         = fam.indx[1]
+  link         = fam.indx[2]
 
-  ## Default offset is vector of 0s
-  if ( is.null(offset) )
-    offset = rep(0, n)
-  if ( is.null(offset0) )
-    offset0 = rep(0, n0)
+  ## Default offset for each dataset is a vector of 0s
+  if ( is.null(offset.list) ){
+    offset = rep(0, N)
+  }else {
+    offset = unlist(offset.list)
+  }
 
-  ## Default normal hyperprior on regression coefficients is N(0, 10)
-  if ( is.null(norm.hp.mean) )
-    norm.hp.mean = rep(0, ncol(X))
-  if ( is.null(norm.hp.cov) )
-    norm.hp.cov  = diag(1, ncol(X))
+  ## Default normal hyperprior on mean of regression coefficients is N(0, 1)
+  if ( !is.null(meta.mean.mean) ){
+    if ( !( is.vector(meta.mean.mean) & (length(meta.mean.mean) %in% c(1, p)) ) )
+      stop("meta.mean.mean must be a scalar or a vector of length ", p, " if meta.mean.mean is not NULL")
+  }
+  meta.mean.mean = to.vector(param = meta.mean.mean, default.value = 0, len = p)
+  if ( !is.null(meta.mean.sd) ){
+    if ( !( is.vector(meta.mean.sd) & (length(meta.mean.sd) %in% c(1, p)) ) )
+      stop("meta.mean.sd must be a scalar or a vector of length ", p, " if meta.mean.sd is not NULL")
+  }
+  meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 1, len = p)
 
-  ## Default IW hyperprior on regression coefficients is IW(p + 10, 1 * I_p)
-  if ( is.null(iw.hp.df) )
-    iw.hp.df = p + 10
-  if ( is.null(iw.hp.scale) )
-    iw.hp.scale = diag(1, p)
+  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 10)
+  if ( !is.null(meta.sd.mean) ){
+    if ( !( is.vector(meta.sd.mean) & (length(meta.sd.mean) %in% c(1, p)) ) )
+      stop("meta.sd.mean must be a scalar or a vector of length ", p, " if meta.sd.mean is not NULL")
+  }
+  meta.sd.mean = to.vector(param = meta.sd.mean, default.value = 0, len = p)
+  if ( !is.null(meta.sd.sd) ){
+    if ( !( is.vector(meta.sd.sd) & (length(meta.sd.sd) %in% c(1, p)) ) )
+      stop("meta.sd.sd must be a scalar or a vector of length ", p, " if meta.sd.sd is not NULL")
+  }
+  meta.sd.sd = to.vector(param = meta.sd.sd, default.value = 10, len = p)
+
+  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10)
+  if ( !is.null(disp.mean) ){
+    if ( !( is.vector(disp.mean) & (length(disp.mean) %in% c(1, K)) ) )
+      stop("disp.mean must be a scalar or a vector of length ", K, " if disp.mean is not NULL")
+  }
+  disp.mean = to.vector(param = disp.mean, default.value = 0, len = K)
+  if ( !is.null(disp.sd) ){
+    if ( !( is.vector(disp.sd) & (length(disp.sd) %in% c(1, K)) ) )
+      stop("disp.sd must be a scalar or a vector of length ", K, " if disp.sd is not NULL")
+  }
+  disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
+
 
   standat = list(
-    'n'               = n,
-    'n0'              = n0,
+    'K'               = K,
+    'N'               = N,
+    'start_idx'       = start.index,
+    'end_idx'         = end.index,
     'p'               = p,
     'y'               = y,
     'X'               = X,
-    'y0'              = y0,
-    'X0'              = X0,
-    'hp_norm_mean'    = norm.hp.mean,
-    'hp_norm_cov'     = norm.hp.cov,
-    'hp_iw_df'        = iw.hp.df,
-    'hp_iw_scale'     = iw.hp.scale,
-    'disp_shape'      = disp.shape,
-    'disp_scale'      = disp.scale,
-    'disp0_shape'     = disp0.shape,
-    'disp0_scale'     = disp0.scale,
+    'meta_mean_mean'  = meta.mean.mean,
+    'meta_mean_sd'    = meta.mean.sd,
+    'meta_sd_mean'    = meta.sd.mean,
+    'meta_sd_sd'      = meta.sd.sd,
+    'disp_mean'       = disp.mean,
+    'disp_sd'         = disp.sd,
     'dist'            = dist,
     'link'            = link,
-    'offset'          = offset,
-    'offset0'         = offset0
+    'offs'            = offset
   )
 
-  ## fit model in stan
-  fit = rstan::sampling(stanmodels$glm_bhm, data = standat, ...)
+  ## copy all the .stan model files to the specified local location
+  if( is.null(local.location) )
+    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
+
+  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
+    cli::cli_alert_info("Using cached Stan models")
+  } else {
+    cli::cli_alert_info("Copying Stan models to cache")
+    staninside::copy_models(pkgname = "hdbayes",
+                            local_location = local.location)
+    cli::cli_alert_success("Models copied!")
+  }
+
+  model_name      = "glm_bhm"
+  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
+  glm_bhm         = cmdstanr::cmdstan_model(model_file_path)
+
+  ## fit model in cmdstanr
+  fit = glm_bhm$sample(data = standat, ...)
+  d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
-  oldnames = fit@sim$fnames_oi
-  if ( family$family %in% c('binomial', 'poisson') ) {
-    newnames = c(colnames(X), paste0( colnames(X0), '_hist' ))
-  } else {
-    newnames = c(colnames(X), 'dispersion')
-    newnames = c( newnames, paste0(newnames, '_hist'))
+  oldnames = paste0("beta[", rep(1:p, K), ',', rep(1:K, each = p), "]")
+  newnames = c(colnames(X), paste0( colnames(X), '_hist_', rep(1:(K-1), each = p) ))
+  if ( !family$family %in% c('binomial', 'poisson') ) {
+    oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
+    newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
   }
-  fit@sim$fnames_oi[seq_along(newnames)] = newnames
-  return(fit)
+  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  return(d)
 }
