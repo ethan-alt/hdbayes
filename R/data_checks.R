@@ -15,9 +15,9 @@ get.dist.link = function(family) {
 data.checks = function(
     formula, family, data.list, offset.list
 ) {
-  if ( !( class(formula) == 'formula' ) )
+  if ( !inherits(formula, "formula") )
     stop('formula must be of type "formula"')
-  if ( class(family) != 'family' )
+  if ( !inherits(family, 'family') )
     stop('family must be of type "family" (e.g., cannot be a character--use binomial() instead of "binomial"). See help(family)')
   if ( !formula.tools::is.two.sided(formula) )
     stop('formula must be two-sided')
@@ -58,7 +58,7 @@ stack.data = function(
 ) {
   ## get stacked design matrix and response vector using formula
   X = sapply(data.list, function(s){
-    model.matrix(formula, s)
+    stats::model.matrix(formula, s)
   })
   X = do.call(rbind, X)
   if ( !include.intercept ) {
