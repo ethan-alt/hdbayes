@@ -90,7 +90,7 @@ real glm_lp(vector y, vector beta, real phi, matrix X, int dist, int link, vecto
 //' @param means matrix, the gth column giving means for the gth component of the mixture density
 //' @param precisions array of precision matrices
 real multi_normal_mix_lpdf(vector x, vector probs, matrix means, array[] matrix precisions) {
-  int G = size(x);
+  int G = size(probs);
   vector[G] log_contrib;
   for ( i in 1:G) {
     log_contrib[i] = log(probs[i]) + multi_normal_prec_lpdf(x | means[, i], precisions[i]);
