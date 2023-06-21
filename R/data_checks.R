@@ -57,14 +57,14 @@ stack.data = function(
     formula, data.list, include.intercept = TRUE
 ) {
   ## get stacked design matrix and response vector using formula
-  X = sapply(data.list, function(s){
+  X = lapply(data.list, function(s){
     stats::model.matrix(formula, s)
   })
   X = do.call(rbind, X)
   if ( !include.intercept ) {
     X = X[, -1, drop = F]
   }
-  y = sapply(data.list, function(s){
+  y = lapply(data.list, function(s){
     s[, all.vars(formula)[1]]
   })
   y = unlist(y)
