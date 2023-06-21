@@ -82,3 +82,18 @@ real glm_lp(vector y, vector beta, real phi, matrix X, int dist, int link, vecto
   else reject("Distribution not supported");
   return 0; // never reached;
 }
+
+//' Compute the density of a mixture of multivariate normal distributions
+//'
+//' @param x vector to evaluate density
+//' @param probs vector giving mixing proportions
+//' @param means matrix, the gth column giving means for the gth component of the mixture density
+//' @param precisions array of precision matrices
+real multi_normal_mix_lpdf(vector x, vector probs, matrix means, array[] matrix precisions) {
+  int G = size(x);
+  vector[G] log_contrib;
+  for ( i in 1:G) {
+    log_contrib[i] = log(probs[i]) + multi_normal_prec_lpdf(x | means[, i], precisions[i]);
+  }
+  return log_sum_exp(log_contrib);
+}
