@@ -71,21 +71,21 @@
 #'   chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #' )
 glm.rmap = function(
-  formula,
-  family,
-  curr.data,
-  include.intercept = TRUE,
-  curr.offset       = NULL,
-  probs,
-  means,
-  covs,
-  w                 = 0.1,
-  norm.vague.mean   = NULL,
-  norm.vague.sd     = NULL,
-  curr.disp.mean    = NULL,
-  curr.disp.sd      = NULL,
-  local.location    = NULL,
-  ...
+    formula,
+    family,
+    curr.data,
+    include.intercept = TRUE,
+    curr.offset       = NULL,
+    probs,
+    means,
+    covs,
+    w                 = 0.1,
+    norm.vague.mean   = NULL,
+    norm.vague.sd     = NULL,
+    curr.disp.mean    = NULL,
+    curr.disp.sd      = NULL,
+    local.location    = NULL,
+    ...
 ) {
   ## perform data checks
   if ( !is.null(curr.offset) ){
@@ -170,7 +170,14 @@ glm.rmap = function(
   d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
-  if ( !family$family %in% c('binomial', 'poisson') )
-    posterior::variables(d)[posterior::variables(d) == 'dispersion[1]'] = 'dispersion'
+  oldnames = paste0("beta[", 1:p, "]")
+  newnames = colnames(X)
+
+  if ( !family$family %in% c('binomial', 'poisson') ) {
+    oldnames = c(oldnames, 'dispersion[1]')
+    newnames = c(newnames, 'dispersion')
+  }
+  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+
   return(d)
 }
