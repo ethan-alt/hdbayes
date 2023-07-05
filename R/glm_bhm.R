@@ -15,7 +15,7 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rests
 #'                          are the historical datasets.
-#' @param include.intercept logical; if TRUE, an intercept will be included in the model.
+#' @param include.intercept logical; if TRUE, an intercept will be included in the model. Defaults to TRUE.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -72,8 +72,8 @@ glm.bhm = function(
     local.location    = NULL,
     ...
 ) {
-  ## perform data checks
   data.checks(formula, family, data.list, offset.list)
+
   res          = stack.data(formula = formula,
                             data.list = data.list,
                             include.intercept = include.intercept)
@@ -107,7 +107,7 @@ glm.bhm = function(
   }
   meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 1, len = p)
 
-  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 10)
+  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 10^2)
   if ( !is.null(meta.sd.mean) ){
     if ( !( is.vector(meta.sd.mean) & (length(meta.sd.mean) %in% c(1, p)) ) )
       stop("meta.sd.mean must be a scalar or a vector of length ", p, " if meta.sd.mean is not NULL")
@@ -119,7 +119,7 @@ glm.bhm = function(
   }
   meta.sd.sd = to.vector(param = meta.sd.sd, default.value = 10, len = p)
 
-  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10)
+  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10^2)
   if ( !is.null(disp.mean) ){
     if ( !( is.vector(disp.mean) & (length(disp.mean) %in% c(1, K)) ) )
       stop("disp.mean must be a scalar or a vector of length ", K, " if disp.mean is not NULL")
@@ -174,10 +174,18 @@ glm.bhm = function(
 
   ## rename parameters
   oldnames = paste0("beta[", rep(1:p, K), ',', rep(1:K, each = p), "]")
-  newnames = c(colnames(X), paste0( colnames(X), '_hist_', rep(1:(K-1), each = p) ))
+  if ( K == 1 ) {
+    newnames = colnames(X)
+  }else {
+    newnames = c(colnames(X), paste0( colnames(X), '_hist_', rep(1:(K-1), each = p) ))
+  }
   if ( !family$family %in% c('binomial', 'poisson') ) {
     oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
-    newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
+    if (K == 1) {
+      newnames = c(newnames, 'dispersion')
+    }else {
+      newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
+    }
   }
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
   return(d)
