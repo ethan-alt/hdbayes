@@ -74,11 +74,11 @@ glm.rmap = function(
     formula,
     family,
     curr.data,
-    include.intercept = TRUE,
-    curr.offset       = NULL,
     probs,
     means,
     covs,
+    include.intercept = TRUE,
+    curr.offset       = NULL,
     w                 = 0.1,
     norm.vague.mean   = NULL,
     norm.vague.sd     = NULL,
@@ -143,10 +143,6 @@ glm.rmap = function(
     'link'            = link,
     'offs1'           = curr.offset
   )
-
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
 
   ## copy all the .stan model files to the specified local location
   if( is.null(local.location) )
