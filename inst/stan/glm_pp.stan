@@ -2,38 +2,43 @@ functions{
 #include include/expfam_loglik.stan
 }
 data {
-  int<lower=0>          n;                 // sample size of current data
-  int<lower=0>          n0;                // sample size of historical data
-  int<lower=0>          p;                 // number of covariates (incl intercept)
-  vector[n]             y;                 // response vector for current data
-  matrix[n,p]           X;                 // design mtx for current data
-  vector[n0]            y0;                // response vector for historical data
-  matrix[n0,p]          X0;                // design mtx for historical data
-  vector[p]             mean_beta;         // mean for normal initial prior on coefficients
-  matrix[p,p]           cov_beta;          // covariance mtx for normal initial prior on coefficients
-  real<lower=0>         disp_shape;        // shape parameter for inv-gamma initial prior on dispersion
-  real<lower=0>         disp_scale;        // scale parameter for inv-gamma initial prior on dispersion
-  real<lower=0,upper=1> a0;                // power prior parameter (fixed)
-  int<lower=1,upper=5>  dist;
-  int<lower=1,upper=9>  link;
-  vector[n]             offset;
-  vector[n0]            offset0;
+  int<lower=0>                        K; // total number of datasets (including the current data)
+  int<lower=0>                        N; // total number of observations (including the current data)
+  array[K] int<lower=0, upper=N>      start_idx; // starting index of each data in the stacked version
+  array[K] int<lower=0, upper=N>      end_idx; // ending index of each data in the stacked version
+  int<lower=0>                        p;
+  vector[N]                           y; // response for the stacked data
+  matrix[N,p]                         X; // design matrix for the stacked data
+  vector[p]                           mean_beta; // mean for normal initial prior on coefficients
+  vector<lower=0>[p]                  sd_beta; //sd for normal initial prior on coefficients
+  vector<lower=0,upper=1>[K]          a0_vals; // power prior parameter (fixed) for each dataset (with first element = 1 for current data)
+  real                                disp_mean; // mean for the half-normal prior on dispersion parameter
+  real<lower=0>                       disp_sd; // sd for the half-normal prior on dispersion parameter
+  int<lower=1,upper=5>                dist;
+  int<lower=1,upper=9>                link;
+  vector[N]                           offs; // offset
 }
 parameters {
   vector[p]     beta;
-  real<lower=0> dispersion[(dist > 2) ? 1 :  0];
+  vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
 }
 model {
   if ( dist <= 2 ) {
-    target += glm_lp(y,  beta,  1.0, X,  dist, link, offset);       // current data likelihood
-    target += a0 * glm_lp(y0, beta,  1.0, X0, dist, link, offset0); // power prior
-    beta    ~ multi_normal(mean_beta, cov_beta);                    // initial prior beta ~ N(mu0, cov0)
+    for ( k in 1:K ) {
+      target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
+      beta, 1.0, X[ start_idx[k]:end_idx[k], ], dist, link,
+      offs[ start_idx[k]:end_idx[k] ]); // current data likelihood and power prior
+    }
+    beta    ~ normal(mean_beta, sd_beta); // initial prior beta ~ N(mu0, sd0)
   }
   else {
-    target     += glm_lp(y,  beta,  dispersion[1],  X,  dist, link, offset);       // current data likelihood
-    target     += a0 * glm_lp(y0, beta,  dispersion[1],  X0, dist, link, offset0); // historical data likelihood
-    beta        ~ multi_normal(mean_beta, dispersion[1] * cov_beta);               // initial prior beta | disp ~ N(mu0, disp * cov0)
-    dispersion  ~ inv_gamma(disp_shape, disp_scale);                                // initial prior disp ~ inv_gamma(shape0, scale0)
+    for ( k in 1:K ) {
+      target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
+      beta, dispersion[1], X[ start_idx[k]:end_idx[k], ], dist, link,
+      offs[ start_idx[k]:end_idx[k] ]);  // current data likelihood and power prior
+    }
+    beta        ~ normal(mean_beta, sqrt(dispersion[1]) * sd_beta); // initial prior beta | disp ~ N(mu0, sqrt(disp) * sd0)
+    dispersion  ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
   }
 }
 
