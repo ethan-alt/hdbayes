@@ -2,46 +2,55 @@ functions{
 #include include/expfam_loglik.stan
 }
 data {
-  int<lower=0>         n;
-  int<lower=0>         n0;
-  int<lower=0>         p;
-  vector[n]            y;
-  matrix[n,p]          X;
-  vector[n0]           y0;
-  matrix[n0,p]         X0;
-  vector[p]            beta0_mean;
-  matrix[p,p]          beta0_cov;
-  real<lower=0>        disp_shape;
-  real<lower=0>        disp_scale;
-  real<lower=0>        disp0_shape;
-  real<lower=0>        disp0_scale;
-  vector<lower=0>[p]   tau;
-  int<lower=1,upper=5> dist;
-  int<lower=1,upper=9> link;
-  vector[n]            offset;
-  vector[n0]           offset0;
+  int<lower=0>                        K; // total number of datasets (including the current data)
+  int<lower=0>                        N; // total number of observations (including the current data)
+  array[K] int<lower=0, upper=N>      start_idx; // starting index of each data in the stacked version
+  array[K] int<lower=0, upper=N>      end_idx; // ending index of each data in the stacked version
+  int<lower=0>                        p;
+  vector[N]                           y; // response for the stacked data
+  matrix[N,p]                         X; // design matrix for the stacked data
+  vector[p]                           beta0_mean;
+  vector<lower=0>[p]                  beta0_sd;
+  vector[K]                           disp_mean; // mean for the half-normal prior for dispersion of each dataset
+  vector<lower=0>[K]                  disp_sd; // sd for the half-normal prior for dispersion of each dataset
+  vector<lower=0>[p]                  tau; // commensurate prior parameter
+  int<lower=1,upper=5>                dist;
+  int<lower=1,upper=9>                link;
+  vector[N]                           offs; // offset
 }
 transformed data{
   vector[p] comm_sd = inv_sqrt(tau);   // sd hyperparameter for commensurate prior
 }
 parameters {
-  vector[p] beta;
-  real<lower=0> dispersion[(dist > 2) ? 1 :  0];
-  vector[p] beta0;
-  real<lower=0> dispersion0[(dist > 2) ? 1 :  0];
+  vector[p] beta;  // regression coefficients for current data
+  vector[p] beta0; // regression coefficients for historical datasets
+  vector<lower=0>[(dist > 2) ? K : 0] dispersion;
 }
 model {
-  beta0   ~ multi_normal(beta0_mean, beta0_cov);               // initial prior for beta
-  beta    ~ normal(beta0, comm_sd);                            // commensurate prior for beta
+  beta0   ~ normal(beta0_mean, beta0_sd); // initial prior for beta0
+  beta    ~ normal(beta0, comm_sd);       // commensurate prior for beta
   if ( dist <= 2 ) {
-    target += glm_lp(y,  beta,  1.0, X,  dist, link, offset);    // current data likelihood
-    target += glm_lp(y0, beta0, 1.0, X0, dist, link, offset0);   // historical data likelihood
+    target += glm_lp(y[ start_idx[1]:end_idx[1] ],
+    beta, 1.0, X[ start_idx[1]:end_idx[1], ], dist, link,
+    offs[ start_idx[1]:end_idx[1] ]);    // current data likelihood
+
+    for ( k in 2:K ) {
+      target += glm_lp(y[ start_idx[k]:end_idx[k] ],
+      beta0, 1.0, X[ start_idx[k]:end_idx[k], ], dist, link,
+      offs[ start_idx[k]:end_idx[k] ]); // historical data likelihood
+    }
   }
   else {
-    dispersion0 ~ inv_gamma(disp0_shape, disp0_scale);                    // prior for historical dispersion
-    dispersion  ~ inv_gamma(disp_shape,  disp_scale);                     // prior for dispersion
-    target += glm_lp(y,  beta,  dispersion[1],  X,  dist, link, offset);  // current data likelihood
-    target += glm_lp(y0, beta0, dispersion0[1], X0, dist, link, offset0); // historical data likelihood
+    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
+    target += glm_lp(y[ start_idx[1]:end_idx[1] ],
+    beta, dispersion[1], X[ start_idx[1]:end_idx[1], ], dist, link,
+    offs[ start_idx[1]:end_idx[1] ]);    // current data likelihood
+
+    for ( k in 2:K ) {
+      target += glm_lp(y[ start_idx[k]:end_idx[k] ],
+      beta0, dispersion[k], X[ start_idx[k]:end_idx[k], ], dist, link,
+      offs[ start_idx[k]:end_idx[k] ]); // historical data likelihood
+    }
   }
 }
 
