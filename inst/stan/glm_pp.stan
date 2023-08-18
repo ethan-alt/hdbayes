@@ -23,22 +23,21 @@ parameters {
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
 }
 model {
+  beta ~ normal(mean_beta, sd_beta); // initial prior beta ~ N(mu0, sd0)
   if ( dist <= 2 ) {
     for ( k in 1:K ) {
       target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, 1.0, X[ start_idx[k]:end_idx[k], ], dist, link,
       offs[ start_idx[k]:end_idx[k] ]); // current data likelihood and power prior
     }
-    beta    ~ normal(mean_beta, sd_beta); // initial prior beta ~ N(mu0, sd0)
   }
   else {
+    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
     for ( k in 1:K ) {
       target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, dispersion[1], X[ start_idx[k]:end_idx[k], ], dist, link,
       offs[ start_idx[k]:end_idx[k] ]);  // current data likelihood and power prior
     }
-    beta        ~ normal(mean_beta, sqrt(dispersion[1]) * sd_beta); // initial prior beta | disp ~ N(mu0, sqrt(disp) * sd0)
-    dispersion  ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
   }
 }
 
