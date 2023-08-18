@@ -1,32 +1,42 @@
-
 #'
 #' Estimate the logarithm of the normalizing constant for normalized power prior
 #'
 #' Uses Markov chain Monte Carlo and bridge sampling
 #' to estimate the logarithm of the normalizing
 #' constant for the normalized power prior for a fixed value of a0. The discounts
-#' the historical data likelihood by a value a0 between 0 and 1. The initial prior
-#' is a multivariate-normal inverse-gamma prior on the regression coefficients
-#' (conditional on the dispersion) and the dispersion parameter (if applicable).
+#' the historical data likelihood by a value a0 between 0 and 1. The initial priors
+#' are independent normal priors on the regression coefficients and a half-normal
+#' prior on the dispersion parameter (if applicable).
 #'
 #' @include data_checks.R
+#' @include expfam_loglik.R
 #'
 #' @export
 #'
-#' @param formula      a two-sided formula giving the relationship between the response variable and covariates
-#' @param family       an object of class `family`. See [stats::family()]
-#' @param histdata     a `data.frame` giving the historical data
-#' @param a0           the power prior parameter (a scalar between 0 and 1)
-#' @param beta.mean    mean parameter for the normal initial prior on the regression coefficients given the dispersion parameter. Defaults to a vector of 0s
-#' @param beta.cov     covariance parameter for the conditional multivariate normal initial prior on the regression coefficients. The covariance used is \code{dispersion * beta.cov}. Defaults to a diagonal matrix of 100s
-#' @param disp.shape   shape parameter for inverse-gamma initial prior on dispersion parameter
-#' @param disp.scale   scale parameter for inverse-gamma initial prior on dispersion parameter
-#' @param offset0      vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s
-#' @param bridge.args  <optional> a `list` giving arguments to pass onto [bridgesampling::bridge_sampler()]
-#' @param ...          arguments passed to [rstan::sampling()] (e.g. iter, chains)
+#' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
+#' @param family            an object of class `family`. See [stats::family()].
+#' @param histdata          a `data.frame` giving the historical data.
+#' @param a0                the power prior parameter (a scalar between 0 and 1).
+#' @param offset0           vector whose dimension is equal to the rows of the historical data set giving an offset for the
+#'                          historical data. Defaults to a vector of 0s.
+#' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the mean parameters for the normal initial prior on regression coefficients given the dispersion
+#'                          parameter. If a scalar is provided, beta.mean will be a vector of repeated elements of the given
+#'                          scalar. Defaults to a vector of 0s.
+#' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the sd parameters for the initial prior on regression coefficients. The sd used is
+#'                          \code{sqrt(dispersion) * beta.sd}. If a scalar is provided, same as for beta.mean. Defaults to
+#'                          a vector of 10s.
+#' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
+#' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
+#' @param bridge.args       <optional> a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
+#'                          onto [bridgesampling::bridge_sampler()].
+#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
+#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. iter_warmup, iter_sampling, chains).
 #'
-#' @return             a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum effective sample size of
-#'                     the MCMC sampling, and the maximum Rhat.
+#' @return                  a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
+#'                          estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
 #'
 #' @examples
 #' data(actg036)
@@ -35,24 +45,31 @@
 #' glm.npp.lognc(
 #'   cd4 ~ treatment + age + race,
 #'   family = poisson(), histdata = actg036, a0 = 0.5,
-#'   chains = 1, warmup = 500, iter = 5000
+#'   chains = 1, iter_warmup = 500, iter_sampling = 5000
 #' )
 #'
 #'
 
 glm.npp.lognc = function(
-  formula,
-  family,
-  histdata,
-  a0,
-  beta.mean   = NULL,
-  beta.cov    = NULL,
-  disp.shape  = 2.1,
-  disp.scale  = 1.1,
-  offset0     = NULL,
-  bridge.args = NULL,
-  ...
+    formula,
+    family,
+    histdata,
+    a0,
+    offset0           = NULL,
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL,
+    bridge.args       = NULL,
+    local.location    = NULL,
+    ...
 ) {
+  if( !( is.null(offset0) ) ){
+    data.checks(formula, family, list(histdata), list(offset0))
+  }else{
+    data.checks(formula, family, list(histdata), NULL)
+  }
+
   y0 = histdata[, all.vars(formula)[1]]
   n0 = length(y0)
   X0 = model.matrix(formula, histdata)
@@ -71,10 +88,29 @@ glm.npp.lognc = function(
     offset0 = rep(0, n0)
 
   ## Default prior on regression coefficients is N(0, 10^2)
-  if ( is.null(beta.mean) )
-    beta.mean = rep(0, ncol(X0))
-  if ( is.null(beta.cov) )
-    beta.cov  = diag(100, ncol(X0))
+  if ( !is.null(beta.mean) ){
+    if ( !( is.vector(beta.mean) & (length(beta.mean) %in% c(1, p)) ) )
+      stop("beta.mean must be a scalar or a vector of length ", p, " if beta.mean is not NULL")
+  }
+  beta.mean = to.vector(param = beta.mean, default.value = 0, len = p)
+  if ( !is.null(beta.sd) ){
+    if ( !( is.vector(beta.sd) & (length(beta.sd) %in% c(1, p)) ) )
+      stop("beta.sd must be a scalar or a vector of length ", p, " if beta.sd is not NULL")
+  }
+  beta.sd = to.vector(param = beta.sd, default.value = 10, len = p)
+
+  ## Default half-normal prior on dispersion parameters (if exist) is N^{+}(0, 10^2)
+  if ( !is.null(disp.mean) ){
+    if ( !( is.vector(disp.mean) & (length(disp.mean) == 1) ) )
+      stop("disp.mean must be a scalar if disp.mean is not NULL")
+  }
+  disp.mean = to.vector(param = disp.mean, default.value = 0, len = 1)
+  if ( !is.null(disp.sd) ){
+    if ( !( is.vector(disp.sd) & (length(disp.sd) == 1) ) )
+      stop("disp.sd must be a scalar if disp.sd is not NULL")
+  }
+  disp.sd = to.vector(param = disp.sd, default.value = 10, len = 1)
+
 
   standat = list(
     'n0'          = n0,
@@ -82,39 +118,90 @@ glm.npp.lognc = function(
     'y0'          = y0,
     'X0'          = X0,
     'beta_mean'   = beta.mean,
-    'beta_cov'    = beta.cov,
-    'disp_shape'  = disp.shape,
-    'disp_scale'  = disp.scale,
+    'beta_sd'     = beta.sd,
+    'disp_mean'   = disp.mean,
+    'disp_sd'     = disp.sd,
     'a0'          = a0,
     'dist'        = dist,
     'link'        = link,
-    'offset0'     = offset0
+    'offs0'       = offset0
   )
 
-  ## perform data checks
-  data.checks(
-    formula, family, data = histdata, histdata = NULL, offset = offset0, offset0 = NULL, check.hist = FALSE
-  )
+  ## copy all the .stan model files to the specified local location
+  if( is.null(local.location) )
+    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
 
-  ## fit in rstan; obtain max Rhat and min n_eff
-  fit  = rstan::sampling(stanmodels$glm_npp_prior, data = standat, ...)
-  summ = rstan::summary(fit)$summary
+  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
+    cli::cli_alert_info("Using cached Stan models")
+  } else {
+    cli::cli_alert_info("Copying Stan models to cache")
+    staninside::copy_models(pkgname = "hdbayes",
+                            local_location = local.location)
+    cli::cli_alert_success("Models copied!")
+  }
+
+  model_name      = "glm_npp_prior"
+  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
+  glm_npp_prior   = cmdstanr::cmdstan_model(model_file_path)
+
+  ## fit model in cmdstanr
+  fit  = glm_npp_prior$sample(data = standat, ...)
+  d    = fit$draws(format = 'draws_matrix')
+  summ = posterior::summarise_draws(d)
 
   ## estimate log normalizing constant
-  bs = do.call(what = bridgesampling::bridge_sampler, args = c('samples' = fit, as.list(bridge.args)))
+  log_density = function(pars, data){
+    beta       = pars[paste0("beta[", 1:data$p,"]")]
+    prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) )
+    dist       = data$dist
+    link       = data$link
+    dispersion = 1.0
+    if ( dist > 2 ) {
+      dispersion = pars[["dispersion[1]"]]
+      prior_lp   = prior_lp +
+        dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) -
+        pnorm(0, mean = data$disp_mean, sd = data$disp_sd, lower.tail = F, log.p = T)
+    }
+    hist_lp = glm_lp(data$y0, beta, data$X0, dist, link, data$offs0, dispersion)
+    return(data$a0 * hist_lp + prior_lp)
+  }
+
+  post_samples = as.matrix(d[, -1, drop=F])
+  lb           = rep(-Inf, p)
+  ub           = rep(Inf, p)
+  if( dist > 2 ) {
+    lb = c(lb, 0)
+    ub = c(ub, Inf)
+  }
+  names(ub) = colnames(post_samples)
+  names(lb) = names(ub)
+
+  bs = do.call(
+    what = bridgesampling::bridge_sampler,
+    args = append(
+      list(
+        "samples" = post_samples,
+        'log_posterior' = log_density,
+        'data' = standat,
+        'lb' = lb,
+        'ub' = ub),
+      bridge.args
+    )
+  )
 
   ## Return vector of a0, lognc, min_n_eff, max_Rhat
   res = c(
-    'a0'        = a0,
-    'lognc'     = bs$logml,
-    'min_n_eff' = min(summ[, 'n_eff']),
-    'max_Rhat'  = max(summ[, 'Rhat'])
+    'a0'           = a0,
+    'lognc'        = bs$logml,
+    'min_ess_bulk' = min(summ[, 'ess_bulk']),
+    'max_Rhat'     = max(summ[, 'rhat'])
   )
-  if ( res['min_n_eff'] < 1000 )
+
+  if ( res['min_ess_bulk'] < 1000 )
     warning(
       paste0(
-        'The minimum effective sample size of the MCMC sampling is ',
-        res['min_n_eff'],
+        'The minimum bulk effective sample size of the MCMC sampling is ',
+        res['min_ess_bulk'],
         ' for a0 = ',
         round(a0, 4),
         '. It is recommended to have at least 1000. Try increasing the number of iterations.'
@@ -132,5 +219,3 @@ glm.npp.lognc = function(
     )
   return(res)
 }
-
-
