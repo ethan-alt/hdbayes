@@ -15,7 +15,6 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param curr.data         a `data.frame` giving the current data.
-#' @param include.intercept logical; if TRUE, an intercept will be included in the model.
 #' @param curr.offset       a vector whose dimension is equal to the rows of the current dataset giving an offset for
 #'                          the current data. Defaults to a vector of 0s.
 #' @param probs             a vector of mixing proportions in the mixture approximation to the prior induced by the BHM.
@@ -77,7 +76,6 @@ glm.rmap = function(
     probs,
     means,
     covs,
-    include.intercept = TRUE,
     curr.offset       = NULL,
     w                 = 0.1,
     norm.vague.mean   = NULL,
