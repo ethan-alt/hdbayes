@@ -15,7 +15,6 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rests
 #'                          are the historical datasets.
-#' @param include.intercept logical; if TRUE, an intercept will be included in the model. Defaults to TRUE.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -61,7 +60,6 @@ glm.bhm = function(
     formula,
     family,
     data.list,
-    include.intercept = TRUE,
     offset.list       = NULL,
     meta.mean.mean    = NULL,
     meta.mean.sd      = NULL,
@@ -75,8 +73,7 @@ glm.bhm = function(
   data.checks(formula, family, data.list, offset.list)
 
   res          = stack.data(formula = formula,
-                            data.list = data.list,
-                            include.intercept = include.intercept)
+                            data.list = data.list)
   y            = res$y
   X            = res$X
   start.index  = res$start.index
