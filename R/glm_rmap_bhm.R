@@ -13,7 +13,6 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param hist.data.list    a list of `data.frame`s. Each element in the list is a historical dataset.
-#' @param include.intercept logical; if TRUE, an intercept will be included in the model.
 #' @param hist.offset.list  a list of vectors giving the offsets for each historical data. The length of hist.offset.list is
 #'                          equal to the length of hist.data.list. The length of each element of hist.offset.list is equal
 #'                          to the number of rows in the corresponding element of hist.data.list. Defaults to a list of
@@ -57,19 +56,18 @@
 #'   chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #' )
 glm.rmap.bhm = function(
-  formula,
-  family,
-  hist.data.list,
-  include.intercept = TRUE,
-  hist.offset.list  = NULL,
-  meta.mean.mean    = NULL,
-  meta.mean.sd      = NULL,
-  meta.sd.mean      = NULL,
-  meta.sd.sd        = NULL,
-  hist.disp.mean    = NULL,
-  hist.disp.sd      = NULL,
-  local.location    = NULL,
-  ...
+    formula,
+    family,
+    hist.data.list,
+    hist.offset.list  = NULL,
+    meta.mean.mean    = NULL,
+    meta.mean.sd      = NULL,
+    meta.sd.mean      = NULL,
+    meta.sd.sd        = NULL,
+    hist.disp.mean    = NULL,
+    hist.disp.sd      = NULL,
+    local.location    = NULL,
+    ...
 ) {
   ## perform data checks
   suppressMessages(data.checks(formula, family, hist.data.list, hist.offset.list))
@@ -79,7 +77,6 @@ glm.rmap.bhm = function(
     formula           = formula,
     family            = family,
     data.list         = hist.data.list,
-    include.intercept = include.intercept,
     offset.list       = hist.offset.list,
     meta.mean.mean    = meta.mean.mean,
     meta.mean.sd      = meta.mean.sd,
@@ -110,8 +107,8 @@ glm.rmap.bhm = function(
   beta_pred           = as.matrix(beta_pred)
   colnames(beta_pred) = varnames[2:(1+p)]
   return(list(
-              beta_pred = beta_pred,
-              hist_bhm  = hist.bhm ## can be used for assessing MCMC convergence
-              )
-         )
+    beta_pred = beta_pred,
+    hist_bhm  = hist.bhm ## can be used for assessing MCMC convergence
+  )
+  )
 }
