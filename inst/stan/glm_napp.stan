@@ -2,37 +2,43 @@ functions{
 #include include/expfam_loglik.stan
 }
 data {
-  int<lower=0>                        n;
+  int<lower=0>                        K; // total number of historical datasets (excluding the current data)
+  int<lower=0>                        n; // number of observations in the current data
   int<lower=0>                        p;
-  int<lower=0,upper=1>                ind_disp;     // indicator for whether dispersion is included
-  vector[n]                           y;
-  matrix[n,p]                         X;
-  vector[p + ind_disp]                theta_hat;   // MLE for beta and LOG DISPERSION
-  matrix[p + ind_disp, p + ind_disp]  theta_cov;   // inverse fisher info for (beta, LOG PHI)
+  int<lower=0,upper=1>                ind_disp; // indicator for whether dispersion is included
+  vector[n]                           y; // response for the current data
+  matrix[n,p]                         X; // design matrix for the current data
+  matrix[p + ind_disp, K]             theta_hats; // the kth column consists of the MLE for beta and LOG DISPERSION for the kth dataset (the first dataset is the current data)
+  array[K] cov_matrix[p + ind_disp]   theta_covars; // the kth element is the inverse fisher info for (beta, LOG PHI) for the kth dataset (the first dataset is the current data)
   real<lower=0>                       a0_shape1;
   real<lower=0>                       a0_shape2;
   int<lower=1,upper=5>                dist;
   int<lower=1,upper=9>                link;
-  vector[n]                           offset;
+  vector[n]                           offs; // offset for current data
+
+
 }
 parameters {
   vector[p] beta;
-  real<lower=0> dispersion[(dist > 2) ? 1 :  0];
-  real<lower=0,upper=1> a0;
+  vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
+  vector<lower=0,upper=1>[K] a0s;
 }
 
 // The model to be estimated. We model the output
 // 'y' to be normally distributed with mean 'mu'
 // and standard deviation 'sigma'.
 model {
-  // prior of a0 is beta (uniform if 1's)
-  if ( a0_shape1 != 1 || a0_shape2 != 1 )
-    a0 ~ beta(a0_shape1, a0_shape2);
+  // prior of a0s is beta (uniform if 1's)
+  if ( a0_shape1 != 1 || a0_shape2 != 1)
+    a0s ~ beta(a0_shape1, a0_shape2);
 
   if ( dist <= 2 ) {
-    target += glm_lp(y,  beta,  1.0, X,  dist, link, offset);   // current data likelihood
+    target += glm_lp(y,  beta,  1.0, X,  dist, link, offs); // current data likelihood
+
     // asympt. power prior
-    target += multi_normal_lpdf(beta | theta_hat, inv(a0) * theta_cov);
+    for ( k in 1:K ) {
+      target += multi_normal_lpdf(beta | theta_hats[, k], inv(a0s[k]) * theta_covars[k]);
+    }
   }
   else {
     // change of variables:
@@ -41,11 +47,13 @@ model {
     //   log |det(Jacobian)| = -log(phi)
     real log_disp      = log(dispersion[1]);
     vector[p+1] theta  = append_row( beta, log_disp );  // theta = ( beta, log(phi) )'
-    target            += multi_normal_lpdf(theta | theta_hat, inv(a0) * theta_cov);
+    for ( k in 1:K ) {
+      target          += multi_normal_lpdf(theta | theta_hats[, k], inv(a0s[k]) * theta_covars[k]);
+    }
     target            += -log_disp;   // jacobian
 
     // likelihood of current data
-    target += glm_lp(y,  beta,  dispersion[1],  X,  dist, link, offset);
+    target += glm_lp(y,  beta,  dispersion[1],  X,  dist, link, offs);
   }
 }
 
