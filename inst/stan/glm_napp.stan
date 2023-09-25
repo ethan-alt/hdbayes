@@ -8,8 +8,8 @@ data {
   int<lower=0,upper=1>                ind_disp; // indicator for whether dispersion is included
   vector[n]                           y; // response for the current data
   matrix[n,p]                         X; // design matrix for the current data
-  matrix[p + ind_disp, K]             theta_hats; // the kth column consists of the MLE for beta and LOG DISPERSION for the kth dataset (the first dataset is the current data)
-  array[K] cov_matrix[p + ind_disp]   theta_covars; // the kth element is the inverse fisher info for (beta, LOG PHI) for the kth dataset (the first dataset is the current data)
+  matrix[p + ind_disp, K]             theta_hats; // the kth column consists of the MLE for beta and LOG DISPERSION for the kth historical dataset
+  array[K] cov_matrix[p + ind_disp]   theta_covars; // the kth element is the inverse fisher info for (beta, LOG PHI) for the kth historical dataset
   real<lower=0>                       a0_shape1;
   real<lower=0>                       a0_shape2;
   int<lower=1,upper=5>                dist;
