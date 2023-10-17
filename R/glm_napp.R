@@ -16,7 +16,7 @@
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rests
+#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                          are the historical datasets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
