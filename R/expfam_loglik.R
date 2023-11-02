@@ -1,4 +1,7 @@
-# Compute mean from linear predictor in a GLM
+#' Compute mean from linear predictor in a GLM
+#' @export
+#' @param eta  linear predictor
+#' @param link integer giving link function
 get_lp2mean = function(eta, link) {
   if (link == 1){
     return(eta) # identity link
@@ -23,6 +26,14 @@ get_lp2mean = function(eta, link) {
   }
 }
 
+#' compute density for normal GLM
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter (variance)
 normal_glm_lp = function(y, beta, X, link, offs, phi) {
   n = length(y)
   theta = X %*% beta + offs
@@ -32,6 +43,14 @@ normal_glm_lp = function(y, beta, X, link, offs, phi) {
   return( dnorm(y, mean = theta, sd = sqrt(phi), log = T) )
 }
 
+#' compute density for bernoulli GLM
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter (phi = 1)
 bernoulli_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   n = length(y)
   theta = X %*% beta + offs
@@ -41,6 +60,14 @@ bernoulli_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   return( sum( y*theta - log(1 + exp(theta)) ) ) # dot_product(y, theta) - sum( log1p_exp(theta) )
 }
 
+#' compute density for poisson GLM
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter (phi = 1)
 poisson_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   n = length(y)
   theta = X %*% beta + offs
@@ -50,6 +77,14 @@ poisson_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   return( sum( y*theta - exp(theta) - lgamma(y + 1) ) ) # dot_product(y, theta) - sum( exp(theta) + lgamma(y + 1) );
 }
 
+#' compute density for gamma GLM
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter
 gamma_glm_lp = function(y, beta, X, link, offs, phi) {
   n     = length(y)
   tau   = 1 / phi # shape parameter
@@ -60,6 +95,14 @@ gamma_glm_lp = function(y, beta, X, link, offs, phi) {
   return( dgamma(y, shape = tau, rate = tau * theta, log = T) ) # gamma_lpdf(y | tau, tau * theta );
 }
 
+#' compute density for inverse-gaussian GLM
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter
 invgauss_glm_lp = function(y, beta, X, link, offs, phi) {
   n       = length(y)
   tau     = 1 / phi # shape parameter
@@ -76,6 +119,15 @@ invgauss_glm_lp = function(y, beta, X, link, offs, phi) {
   # 0.5 * (n * (log(tau) - log_2pi) - 3 * sum(log(y)) - tau * dot_self( (y .* sqrt(theta) - 1) .* inv_sqrt(y) ) );
 }
 
+#' wrapper function compute density for a given link function and a given distribution
+#' @export
+#' @param y    response vector
+#' @param beta regression coefficients
+#' @param X    design matrix
+#' @param dist integer giving distribution
+#' @param link integer giving link function
+#' @param offs offset
+#' @param phi  dispersion parameter
 glm_lp = function(y, beta, X, dist, link, offs, phi) {
   # Compute likelihood
   if (dist == 1) {     # Bernoulli
