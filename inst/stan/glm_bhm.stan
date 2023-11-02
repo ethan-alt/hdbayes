@@ -20,16 +20,23 @@ data {
   vector[N]                           offs; // offset
 }
 parameters {
-  matrix[p, K]                        beta; // kth column is the vector of coefficients for the kth dataset
+  //matrix[p, K]                        beta; // kth column is the vector of coefficients for the kth dataset
+  matrix[p, K]                        beta_raw; // for non-centered parameterization
   vector[p]                           beta_mean;
   vector<lower=0>[p]                  beta_sd;
   vector<lower=0>[(dist > 2) ? K : 0] dispersion;
+}
+transformed parameters{
+  matrix[p, K]                        beta; // kth column is the vector of coefficients for the kth dataset
+  for ( j in 1:p ) {
+    beta[j, ] = beta_mean[j] + beta_sd[j] * beta_raw[j, ];
+  }
 }
 model {
   beta_mean       ~ normal(meta_mean_mean, meta_mean_sd); // hyperprior for mean of coefficients
   beta_sd         ~ normal(meta_sd_mean, meta_sd_sd); // hyperprior for sd of coefficients (half-normal)
   for ( j in 1:p ) {
-    beta[j, ]     ~ normal(beta_mean[j], beta_sd[j]);
+    beta_raw[j, ]   ~ std_normal(); // implies beta[j, ] ~ normal(beta_mean[j], beta_sd[j]);
   }
 
   if ( dist <= 2 ) {
