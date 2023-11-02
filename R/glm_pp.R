@@ -29,7 +29,12 @@
 #' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
 #'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
-#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. iter_warmup, iter_sampling, chains).
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
+#'                          [cmdstanr::sample()].
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in [cmdstanr::sample()].
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
@@ -59,6 +64,9 @@ glm.pp = function(
     disp.mean         = NULL,
     disp.sd           = NULL,
     local.location    = NULL,
+    iter_warmup       = 1000,
+    iter_sampling     = 1000,
+    chains            = 4,
     ...
 ) {
   data.checks(formula, family, data.list, offset.list)
@@ -152,7 +160,9 @@ glm.pp = function(
   glm_pp          = cmdstanr::cmdstan_model(model_file_path)
 
   ## fit model in cmdstanr
-  fit = glm_pp$sample(data = standat, ...)
+  fit = glm_pp$sample(data = standat,
+                      iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                      ...)
   d   = fit$draws(format = 'draws_df')
 
 

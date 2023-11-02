@@ -38,7 +38,12 @@
 #'                          as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
 #'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
-#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. iter_warmup, iter_sampling, chains).
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
+#'                          [cmdstanr::sample()].
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in [cmdstanr::sample()].
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
 #' @return                  a matrix of the samples of regression coefficients from the prior induced by the BHM. The number
 #'                          of columns is equal to the number of regression coefficients, and the number of rows is equal to
@@ -67,6 +72,9 @@ glm.rmap.bhm = function(
     hist.disp.mean    = NULL,
     hist.disp.sd      = NULL,
     local.location    = NULL,
+    iter_warmup       = 1000,
+    iter_sampling     = 1000,
+    chains            = 4,
     ...
 ) {
   ## perform data checks
@@ -85,6 +93,9 @@ glm.rmap.bhm = function(
     disp.mean         = hist.disp.mean,
     disp.sd           = hist.disp.sd,
     local.location    = local.location,
+    iter_warmup       = iter_warmup,
+    iter_sampling     = iter_sampling,
+    chains            = chains,
     ...
   )
 
