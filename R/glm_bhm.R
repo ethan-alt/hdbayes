@@ -39,7 +39,12 @@
 #'                          is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
 #'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
-#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. iter_warmup, iter_sampling, chains).
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
+#'                          [cmdstanr::sample()].
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in [cmdstanr::sample()].
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
@@ -68,6 +73,9 @@ glm.bhm = function(
     disp.mean         = NULL,
     disp.sd           = NULL,
     local.location    = NULL,
+    iter_warmup       = 1000,
+    iter_sampling     = 1000,
+    chains            = 4,
     ...
 ) {
   data.checks(formula, family, data.list, offset.list)
@@ -166,8 +174,10 @@ glm.bhm = function(
   glm_bhm         = cmdstanr::cmdstan_model(model_file_path)
 
   ## fit model in cmdstanr
-  fit = glm_bhm$sample(data = standat, ...)
-  d   = fit$draws(format = 'draws_df')
+  fit = glm_bhm$sample(data = standat,
+                       iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                       ...)
+  pars = fit$metadata()$model_params
 
   ## rename parameters
   oldnames = paste0("beta[", rep(1:p, K), ',', rep(1:K, each = p), "]")
@@ -184,6 +194,9 @@ glm.bhm = function(
       newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
     }
   }
+  ## reorder parameters so that regression coefficients appear at the top
+  pars = c(pars[1], pars[pars %in% oldnames], (pars[!pars %in% oldnames])[-1])
+  d   = fit$draws(format = 'draws_df', variables = pars)
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
   return(d)
 }
