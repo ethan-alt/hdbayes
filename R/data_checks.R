@@ -1,5 +1,3 @@
-library(formula.tools)
-
 get.dist.link = function(family) {
   fams  = c('binomial', 'poisson', 'gaussian', 'Gamma', 'inverse.gaussian')
   links = c(
