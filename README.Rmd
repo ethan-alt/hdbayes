@@ -1,9 +1,15 @@
 ---
 output:
   github_document:
+    math_method:
+      engine: webtex
+      url: http://chart.apis.google.com/chart?cht=tx&chl=
+---
+---
+output:
+  github_document:
     pandoc_args: --webtex
 ---
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 ```{r, include = FALSE}
@@ -15,7 +21,6 @@ knitr::opts_chunk$set(
 library(hdbayes)
 library(rstan)
 ```
-
 
 <!-- badges: start -->
   [![R-CMD-check](https://github.com/ethan-alt/hdbayes/workflows/R-CMD-check/badge.svg)](https://github.com/ethan-alt/hdbayes/actions)
@@ -31,7 +36,7 @@ methods that leverage historical data.
 We begin by setting up parameters for the MCMC. We detect the number of cores
 on our machine as well as set up the warmup and total number of desired
 samples.
-```{r parallel_setup}
+```{r parallel_setup, cache = TRUE}
 ## obtain number of cores
 ncores = max(1, parallel::detectCores() - 1)
 warmup  = 1000          ## warmup for MCMC sampling
@@ -40,9 +45,9 @@ samples = ceiling(warmup + total.samples / ncores)  ## outputs approx total.samp
 ```
 
 
-## Simulating logistic regression data
-We now simulate some logistic regression data.
-```{r simdata}
+## Simulating Poisson regression data
+We now simulate some Poisson data.
+```{r simdata, cache = TRUE}
 ## simulate logistic regression data
 set.seed(391)
 n  = 200
@@ -51,8 +56,8 @@ N  = n + n0
 
 X    = cbind(1, 'z' = rbinom(N, 1, 0.5), 'x' = rnorm(N, mean = 1, sd = 1) )
 beta = c(1, 0.5, -1)
-mean = binomial('logit')$linkinv(X %*% beta)
-y    = rbinom(N, 1, mean)
+mean = poisson('log')$linkinv(X %*% beta)
+y    = rpois(n = N, lambda = mean)
 
 ## create current and historical data sets
 data = data.frame('y' = y, 'z' = X[, 'z'], 'x' = X[, 'x'])
@@ -63,9 +68,9 @@ data     = data[-(1:n0), ]
 
 ## Frequentist analysis of the data sets
 We use the `stats::glm` function to conduct a frequentist GLM of the data sets
-```{r freq_glm}
+```{r freq_glm, cache = TRUE}
 formula = y ~ z + x
-family  = binomial('logit')
+family  = poisson('log')
 fit.mle.cur  = glm(formula, family, data)
 fit.mle.hist = glm(formula, family, histdata)
 
@@ -81,8 +86,8 @@ We now utilize the functions in this package.
 The Bayesian hierarchical model (BHM) is the following model:
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  y_i | x_i, \beta &\sim \text{Poisson}\left( \exp(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Poisson}\left( \exp(x_{0i}'\beta_0) \right) \\
   \beta, \beta_0 &\sim N_p(\mu, \Sigma) \\
   \mu &\sim N_p(\mu_0, \Sigma_0) \\
   \Sigma &\sim \text{IW}_p(\nu_0, \Psi_0)
@@ -104,7 +109,7 @@ The defaults in `hdbayes` are
 where $p$ is the number of predictors (including the intercept if applicable).
 
 We fit this model as follows
-```{r bhm, echo = FALSE}
+```{r bhm, echo = FALSE, cache = TRUE}
 ## Bayesian Hierarchical Model
 fit.bhm = glm.bhm(
   formula, family, data, histdata,
@@ -117,8 +122,8 @@ round( summary(fit.bhm)$summary, 3 )
 The commensurate prior assumes the following hierarchical model
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  y_i | x_i, \beta &\sim \text{Poisson}\left( \exp(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Poisson}\left( \exp(x_{0i}'\beta_0) \right) \\
   \beta_0 &\sim N_p(\mu_0, \Sigma_0) \\
   \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
 \end{align*}
@@ -129,7 +134,7 @@ where the $\tau_j$'s are elicited by the user. The defaults in `hdbayes` are
 * $\Sigma_0 = 100 \times I_p$
 
 This method can be fit as follows
-```{r commensurate}
+```{r commensurate, cache = TRUE}
 fit.commensurate = glm.commensurate(
   formula, family, data, histdata, tau = rep(5, 3),
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
@@ -144,8 +149,8 @@ The Robust MAP prior is a generalization of the Bayesian Hierarchical Model
 
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
+  y_i | x_i, \beta &\sim \text{Poisson}\left( \exp(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_0 &\sim \text{Poisson}\left( \exp(x_{0i}'\beta_0) \right) \\
   \beta_0 &\sim N_p(\mu, \Sigma) \\
   \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
   \mu &\sim N_p(\mu_0, \Sigma_0) \\
@@ -156,7 +161,7 @@ $$
 where $w \in (0,1)$ controls for the level of borrowing of the historical data.
 Note that when $w = 1$, the robust MAP prior effectively becomes the BHM. The
 defaults are the same as in the BHM except the default value for w is 0.1.
-```{r robustmap}
+```{r robustmap, cache = TRUE}
 fit.robustmap = glm.robustmap(
   formula, family, data, histdata,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
@@ -170,8 +175,8 @@ round( summary(fit.robustmap)$summary, 3 )
 The Power Prior takes the form
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
+  y_i | x_i, \beta &\sim \text{Poisson}\left( \exp(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta &\sim \text{Poisson}\left( \exp(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
 \end{align*}
 $$
@@ -186,15 +191,13 @@ $$
 $$
 
 The power prior (with $a_0 = 0.5$) may be fit as follows:
-```{r powerprior}
+```{r powerprior, cache = TRUE}
 fit.pp = glm.pp(
   formula, family, data, histdata, a0 = 0.5,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
 round( summary(fit.pp)$summary, 3 )
 ```
-
-
 
 ### Normalized power prior (NPP)
 The NPP treats the hyperparameter $a_0$ as random, allowing the data to decide
@@ -209,8 +212,8 @@ normalized power prior.
 The NPP may be summarized as
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
+  y_i | x_i, \beta &\sim \text{Poisson}\left( \exp(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta &\sim \text{Poisson}\left( \exp(x_{0i}'\beta) \right) \\
   \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
   \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
 \end{align*}
@@ -230,7 +233,7 @@ We begin by estimating the normalizing constant over a fine grid of values.
 On machines with multiple cores, this may be accomplished more efficiently
 using parallel computing.
 
-```{r npp_lognc}
+```{r npp_lognc, cache = TRUE}
 ## parallelize estimation of log normalizing constant
 library(parallel)
 a0     = seq(0, 1, length.out = ncores * 5)
@@ -266,16 +269,15 @@ of the power prior. It is a good idea to check that the minimum
 effective sample size is at least 1,000 and the maximum R-hat value is
 less than 1.10
 
-```{r npp_lognc_2}
+```{r npp_lognc_2, cache = TRUE}
 min(a0.lognc$min_n_eff) ## lowest effective sample size
 max(a0.lognc$max_Rhat)  ## highest R-hat value
 ```
 
 We can then plot the logarithm of the normalizing constant
-```{r npp_lognc_plot}
+```{r npp_lognc_plot, cache = TRUE}
 plot(a0.lognc$a0, a0.lognc$lognc)
 ```
-
 
 ### Sampling the posterior distribution
 We can now sample from the posterior distribution. The function
@@ -284,18 +286,13 @@ of the normalizing constant. Linear interpolation is used to estimate
 $Z(a_0)$ for values not in the fine grid. Thus, it may be a good idea to
 conduct smoothing of the function such as using LOESS, but we ignore that here.
 
-
-```{r npp_sample}
+```{r npp_sample, cache = TRUE}
 fit.npp = glm.npp(
   formula, family, data, histdata, a0 = a0.lognc$a0, lognc = a0.lognc$lognc,
   cores = ncores, chains = ncores, iter = samples, warmup = warmup, refresh = 0
 )
 round( summary(fit.npp)$summary, 3 )
 ```
-
-
-
-
 
 ### Normalized asymptotic power prior (NAPP)
 NAPP uses a large sample theory argument to formulate a normal approximation
@@ -319,13 +316,11 @@ fit.napp = glm.napp(
 round( summary(fit.napp)$summary, 3 )
 ```
 
-
-
 ## Comparison of methods
 We now can compare the point estimate (MLE / posterior mean) and uncertainty
 (SE / posterior standard deviation) of the methods.
 
-```{r comparison}
+```{r comparison, cache = TRUE}
 ##
 ## COMPARE METHODS
 ##
