@@ -1,4 +1,3 @@
-
 #'
 #' Posterior of LEAP
 #'
@@ -18,9 +17,16 @@
 #' @param disp.shape  shape parameter for inverse-gamma prior on dispersion parameter
 #' @param disp.scale  scale parameter for inverse-gamma prior on dispersion parameter
 #' @param offset.list a list of `data.frame` giving the offset for current data followed by historical data. For each `data.frame`, the number of rows correpond to observations and columns correspond to classes. Defaults to matrices of 0s
-#' @param ...         arguments passed to [rstan::sampling()] (e.g. iter, chains).
+#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
+#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
+#'                          [cmdstanr::sample()].
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in [cmdstanr::sample()].
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
+#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return            an object of class `stanfit` giving posterior samples
+#' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
 #' data(actg019)
@@ -33,7 +39,7 @@
 #'   family = poisson(),
 #'   data.list = list(actg019, actg036),
 #'   K = 2,
-#'   chains = 1, warmup = 500, iter = 1000
+#'   chains = 1, iter_warmup = 500, iter_sampling = 1000
 #' )
 #'
 glm.leap = function(
@@ -46,8 +52,14 @@ glm.leap = function(
     disp.shape  = 2.1,
     disp.scale  = 1.1,
     offset.list = NULL,
+    local.location    = NULL,
+    iter_warmup       = 1000,
+    iter_sampling     = 1000,
+    chains            = 4,
     ...
 ) {
+  data.checks(formula, family, data.list, offset.list)
+
   ## get model information
   data=data.list[[1]]
   histdata=data.list[[2]] # not yet support multiple histdata; only read 2nd dataset
@@ -77,9 +89,6 @@ glm.leap = function(
   if ( is.null(beta.cov) )
     beta.cov  = replicate(K, diag(100, ncol(X)), simplify=F)
 
-  ## perform data checks
-  data.checks(formula, family, data.list, offset.list=NULL)
-
   standat = list(
     'n'           = n,
     'n0'          = n0,
@@ -98,20 +107,37 @@ glm.leap = function(
     'gamma_upper' = 1,
     'dist'        = dist,
     'link'        = link,
-    'offset'      = offset,
-    'offset0'     = offset0
+    'offs'        = offset,
+    'offs0'       = offset0
   )
 
-  ## fit model in stan
-  fit = rstan::sampling(stanmodels$glm_leap, data = standat, ...)
+  ## copy all the .stan model files to the specified local location
+  if( is.null(local.location) )
+    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
+
+  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
+    cli::cli_alert_info("Using cached Stan models")
+  } else {
+    cli::cli_alert_info("Copying Stan models to cache")
+    staninside::copy_models(pkgname = "hdbayes",
+                            local_location = local.location)
+    cli::cli_alert_success("Models copied!")
+  }
+
+  model_name      = "glm_leap"
+  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
+  glm_leap        = cmdstanr::cmdstan_model(model_file_path)
+
+  ## fit model in cmdstanr
+  fit = glm_leap$sample(data = standat,
+                       iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                       ...)
+  d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
+  oldnames = paste0("beta[", 1:p, "]")
   newnames = colnames(X)
-  fit@sim$fnames_oi[seq_along(newnames)] = newnames
-  return(fit)
+  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+
+  return(d)
 }
-
-
-
-
-

@@ -12,39 +12,41 @@ Description: User-friendly functions for utilization of historical data
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 Biarch: true
 Depends: 
-    R (>= 3.4.0)
+    R (>= 4.2.0)
 Imports: 
-    bridgesampling,
-    enrichwith,
     formula.tools,
-    methods,
-    Rcpp (>= 0.12.0),
-    RcppParallel (>= 5.0.1),
-    rstan (>= 2.18.1),
-    rstantools (>= 2.1.1)
-LinkingTo: 
-    BH (>= 1.66.0),
-    Rcpp (>= 0.12.0),
-    RcppEigen (>= 0.3.3.3.0),
-    RcppParallel (>= 5.0.1),
-    rstan (>= 2.18.1),
-    StanHeaders (>= 2.18.0)
+    stats,
+    cmdstanr,
+    posterior,
+    staninside,
+    cli,
+    rappdirs,
+    mclust,
+    bridgesampling,
+    enrichwith
 SystemRequirements: GNU make
 Collate: 
+    'E1694-data.R'
+    'E2696-data.R'
+    'IBCSG_curr-data.R'
+    'IBCSG_hist-data.R'
     'actg019-data.R'
     'actg036-data.R'
     'data_checks.R'
+    'expfam_loglik.R'
     'glm_bhm.R'
     'glm_commensurate.R'
+    'glm_leap.R'
     'glm_napp.R'
     'glm_npp_lognc.R'
     'glm_npp.R'
     'glm_pp.R'
-    'glm_robustmap.R'
+    'glm_rmap.R'
+    'glm_rmap_bhm.R'
+    'glm_rmap_bhm_approx.R'
     'hdbayes-package.R'
     'lm_npp.R'
-    'stanmodels.R'
 LazyData: true

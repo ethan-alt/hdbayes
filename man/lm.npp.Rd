@@ -6,47 +6,66 @@
 \usage{
 lm.npp(
   formula,
-  data,
-  histdata,
+  data.list,
+  offset.list = NULL,
   beta.mean = NULL,
-  beta.cov = NULL,
+  beta.sd = NULL,
   sigmasq.shape = 2.1,
   sigmasq.scale = 1.1,
   a0.shape1 = 1,
   a0.shape2 = 1,
-  offset = NULL,
-  offset0 = NULL,
+  local.location = NULL,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  chains = 4,
   ...
 )
 }
 \arguments{
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
-\item{data}{a \code{data.frame} giving the current data}
+\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
+are the historical datasets.}
 
-\item{histdata}{a \code{data.frame} giving the historical data}
+\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
+the length of data.list. The length of each element of offset.list is equal to the number
+of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
 
-\item{beta.mean}{mean parameter for initial prior on regression coefficients (including intercept). Defaults to a vector of zeros.}
+\item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
+beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
-\item{beta.cov}{covariance parameter for initial prior on regression coefficients (including intercept). Defaults to a diagonal covariance matrix where each variance is equal to 100.}
+\item{beta.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients.
+Conditional on the variance parameter sigmasq for the outcome, beta.sd * sqrt(sigmasq) gives
+the sd for the initial prior on regression coefficients. If a scalar is provided, same as for
+beta.mean. Defaults to a vector of 10s.}
 
-\item{sigmasq.shape}{shape parameter for inverse-gamma prior on variance parameter}
+\item{sigmasq.shape}{shape parameter for inverse-gamma prior on variance parameter. Defaults to 2.1.}
 
-\item{sigmasq.scale}{scale parameter for inverse-gamma prior on variance parameter}
+\item{sigmasq.scale}{scale parameter for inverse-gamma prior on variance parameter. Defaults to 1.1.}
 
-\item{a0.shape1}{first shape parameter for beta prior on a0. When \code{a0.shape1 == 1} and \code{a0.shape2 == 1}, a uniform prior is used.}
+\item{a0.shape1}{first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
+\code{a0.shape2 == 1}, a uniform prior is used.}
 
-\item{a0.shape2}{first shape parameter for beta prior on a0. When \code{a0.shape1 == 1} and \code{a0.shape2 == 1}, a uniform prior is used.}
+\item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
+\code{a0.shape2 == 1}, a uniform prior is used.}
 
-\item{offset}{vector whose dimension is equal to the rows of the current data set giving an offset for the current data. Defaults to a vector of 0s}
+\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
+package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
 
-\item{offset0}{vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s}
+\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
+\code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
-\item{...}{arguments passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} (e.g. iter, chains).}
+\item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
+in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+
+\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+
+\item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\preformatted{       an object of class `stanfit` giving posterior samples
-}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
+}\if{html}{\out{</div>}}
 }
 \description{
 Sample from the posterior distribution of a normal linear model
@@ -56,8 +75,9 @@ using the normalized power prior (NPP)
 data(actg019)
 data(actg036)
 lm.npp(
-   cd4 ~ treatment + age + race,
-   data = actg019, histdata = actg036, chains = 1
+   formula = cd4 ~ treatment + age + race,
+   data.list = list(data = actg019, histdata = actg036), chains = 1,
+   iter_warmup = 500, iter_sampling = 1000, refresh = 0
 )
 
 

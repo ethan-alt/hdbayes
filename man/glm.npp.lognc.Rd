@@ -9,50 +9,73 @@ glm.npp.lognc(
   family,
   histdata,
   a0,
-  beta.mean = NULL,
-  beta.cov = NULL,
-  disp.shape = 2.1,
-  disp.scale = 1.1,
   offset0 = NULL,
+  beta.mean = NULL,
+  beta.sd = NULL,
+  disp.mean = NULL,
+  disp.sd = NULL,
   bridge.args = NULL,
+  local.location = NULL,
+  iter_warmup = 1000,
+  iter_sampling = 1000,
+  chains = 4,
   ...
 )
 }
 \arguments{
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{stats::family()}}}
+\item{family}{an object of class \code{family}. See \code{\link[stats:family]{stats::family()}}.}
 
-\item{histdata}{a \code{data.frame} giving the historical data}
+\item{histdata}{a \code{data.frame} giving the historical data.}
 
-\item{a0}{the power prior parameter (a scalar between 0 and 1)}
+\item{a0}{the power prior parameter (a scalar between 0 and 1).}
 
-\item{beta.mean}{mean parameter for the normal initial prior on the regression coefficients given the dispersion parameter. Defaults to a vector of 0s}
+\item{offset0}{vector whose dimension is equal to the rows of the historical data set giving an offset for the
+historical data. Defaults to a vector of 0s.}
 
-\item{beta.cov}{covariance parameter for the conditional multivariate normal initial prior on the regression coefficients. The covariance used is \code{dispersion * beta.cov}. Defaults to a diagonal matrix of 100s}
+\item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+the mean parameters for the normal initial prior on regression coefficients given the dispersion
+parameter. If a scalar is provided, beta.mean will be a vector of repeated elements of the given
+scalar. Defaults to a vector of 0s.}
 
-\item{disp.shape}{shape parameter for inverse-gamma initial prior on dispersion parameter}
+\item{beta.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+the sd parameters for the initial prior on regression coefficients. The sd used is
+\code{sqrt(dispersion) * beta.sd}. If a scalar is provided, same as for beta.mean. Defaults to
+a vector of 10s.}
 
-\item{disp.scale}{scale parameter for inverse-gamma initial prior on dispersion parameter}
+\item{disp.mean}{mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
 
-\item{offset0}{vector whose dimension is equal to the rows of the historical data set giving an offset for the historical data. Defaults to a vector of 0s}
+\item{disp.sd}{sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
 
-\item{bridge.args}{<optional> a \code{list} giving arguments to pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}}
+\item{bridge.args}{\if{html}{\out{<optional>}} a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
+onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
-\item{...}{arguments passed to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}} (e.g. iter, chains)}
+\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
+package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
+
+\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
+\code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+
+\item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
+in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+
+\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+
+\item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\preformatted{        a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum effective sample size of
-                the MCMC sampling, and the maximum Rhat.
-}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{             a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
+                     estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
+}\if{html}{\out{</div>}}
 }
 \description{
 Uses Markov chain Monte Carlo and bridge sampling
 to estimate the logarithm of the normalizing
 constant for the normalized power prior for a fixed value of a0. The discounts
-the historical data likelihood by a value a0 between 0 and 1. The initial prior
-is a multivariate-normal inverse-gamma prior on the regression coefficients
-(conditional on the dispersion) and the dispersion parameter (if applicable).
+the historical data likelihood by a value a0 between 0 and 1. The initial priors
+are independent normal priors on the regression coefficients and a half-normal
+prior on the dispersion parameter (if applicable).
 }
 \examples{
 data(actg036)
@@ -61,7 +84,7 @@ actg036 = actg036[1:50, ]
 glm.npp.lognc(
   cd4 ~ treatment + age + race,
   family = poisson(), histdata = actg036, a0 = 0.5,
-  chains = 1, warmup = 500, iter = 5000
+  chains = 1, iter_warmup = 500, iter_sampling = 5000
 )
 
 
