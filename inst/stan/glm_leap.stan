@@ -20,8 +20,8 @@ data {
   real<lower=gamma_lower,upper=1> gamma_upper;  // Upper bound for probability of being exchangeable.
   int<lower=1,upper=5>  dist;
   int<lower=1,upper=9>  link;
-  matrix[n,K]           offset;
-  matrix[n0,K]          offset0;
+  matrix[n,K]           offs;
+  matrix[n0,K]          offs0;
 }
 transformed data {
   real gamma_shape1 = conc[1];
@@ -46,13 +46,13 @@ transformed parameters {
   probs[2:K] = (1 - gamma) * delta_raw;
   logProbs = log(probs);
   // Compute probability of being in first component and marginalized log probability
-  contribs = glm_mixture_contrib(y0, betaMat, dispersion, probs, X0, dist, link, offset0);
+  contribs = glm_mixture_contrib(y0, betaMat, dispersion, probs, X0, dist, link, offs0);
 
   for (i in 1:n0) contrib[i] = log_sum_exp(contribs[i,]);
 }
 model {
   if ( dist <= 2 ) {
-    target += glm_lp(y, betaMat[, 1], 1.0, X, dist, link, offset[,1]); // current data likelihood
+    target += glm_lp(y, betaMat[, 1], 1.0, X, dist, link, offs[,1]); // current data likelihood
     target += contrib; // historical data likelihood
     // initial priors
     for ( k in 1:K ) {
@@ -60,7 +60,7 @@ model {
     }
   }
   else {
-    target += glm_lp(y, betaMat[, 1], dispersion[1], X, dist, link, offset[,1]); // current data likelihood
+    target += glm_lp(y, betaMat[, 1], dispersion[1], X, dist, link, offs[,1]); // current data likelihood
     target += contrib; // historical data likelihood
     // initial priors
     for ( k in 1:K ) {
