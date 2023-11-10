@@ -264,6 +264,6 @@ matrix glm_mixture_contrib(
     return gamma_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
   else if (dist == 5)
     return invgauss_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
-  else reject("Distribution not supported")
+  else reject("Distribution not supported");
   return beta; // never reached
 }
