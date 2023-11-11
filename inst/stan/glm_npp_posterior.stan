@@ -61,7 +61,7 @@ model {
       offs[ start_idx[k]:end_idx[k] ]);  // power prior
     }
   }
-  ## Subtract log nc from power prior
+  // Subtract log nc from power prior
   for ( k in 2:K ) {
       target += -pp_lognc(a0_vals[k-1], a0_lognc, lognc[, k-1]);
     }
