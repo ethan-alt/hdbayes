@@ -24,13 +24,13 @@
 #'                          Defaults to a vector of 0s.
 #' @param meta.mean.sd      a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If a
-#'                          scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.
+#'                          scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param meta.sd.mean      a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 #'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 #' @param meta.sd.sd        a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
+#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.
 #' @param disp.mean         a scalar or a vector whose dimension is equal to the number of datasets (including the current
 #'                          data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a scalar
 #'                          is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
@@ -110,7 +110,7 @@ glm.bhm = function(
     if ( !( is.vector(meta.mean.sd) & (length(meta.mean.sd) %in% c(1, p)) ) )
       stop("meta.mean.sd must be a scalar or a vector of length ", p, " if meta.mean.sd is not NULL")
   }
-  meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 1, len = p)
+  meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 10, len = p)
 
   ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 10^2)
   if ( !is.null(meta.sd.mean) ){
@@ -122,7 +122,7 @@ glm.bhm = function(
     if ( !( is.vector(meta.sd.sd) & (length(meta.sd.sd) %in% c(1, p)) ) )
       stop("meta.sd.sd must be a scalar or a vector of length ", p, " if meta.sd.sd is not NULL")
   }
-  meta.sd.sd = to.vector(param = meta.sd.sd, default.value = 10, len = p)
+  meta.sd.sd = to.vector(param = meta.sd.sd, default.value = 1, len = p)
 
   ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10^2)
   if ( !is.null(disp.mean) ){
