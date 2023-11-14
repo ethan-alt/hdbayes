@@ -100,7 +100,7 @@ glm.bhm = function(
     offset = unlist(offset.list)
   }
 
-  ## Default normal hyperprior on mean of regression coefficients is N(0, 1)
+  ## Default normal hyperprior on mean of regression coefficients is N(0, 10^2)
   if ( !is.null(meta.mean.mean) ){
     if ( !( is.vector(meta.mean.mean) & (length(meta.mean.mean) %in% c(1, p)) ) )
       stop("meta.mean.mean must be a scalar or a vector of length ", p, " if meta.mean.mean is not NULL")
@@ -112,7 +112,7 @@ glm.bhm = function(
   }
   meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 10, len = p)
 
-  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 10^2)
+  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 1)
   if ( !is.null(meta.sd.mean) ){
     if ( !( is.vector(meta.sd.mean) & (length(meta.sd.mean) %in% c(1, p)) ) )
       stop("meta.sd.mean must be a scalar or a vector of length ", p, " if meta.sd.mean is not NULL")
