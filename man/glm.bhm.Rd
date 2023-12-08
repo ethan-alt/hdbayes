@@ -41,7 +41,7 @@ Defaults to a vector of 0s.}
 
 \item{meta.mean.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If a
-scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.}
+scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
 
 \item{meta.sd.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
@@ -49,7 +49,7 @@ If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 
 \item{meta.sd.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
+If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of datasets (including the current
 data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a scalar
