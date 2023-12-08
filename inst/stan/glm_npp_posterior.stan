@@ -19,6 +19,8 @@ data {
   matrix[s,K-1]                       lognc; // the j-th column is the log nc for a0_lognc using the j-th historical datasets
   real<lower=0>                       a0_shape1;
   real<lower=0>                       a0_shape2;
+  vector<lower=0,upper=1>[K-1]        a0_lower; // lower bounds for a0_vals
+  vector<lower=a0_lower,upper=1>[K-1] a0_upper; // upper bounds for a0_vals
   int<lower=1,upper=5>                dist;
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
@@ -28,7 +30,7 @@ data {
 parameters {
   vector[p] beta;
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
-  vector<lower=0,upper=1>[K-1] a0_vals;
+  vector<lower=a0_lower,upper=a0_upper>[K-1] a0_vals;
 }
 
 // The model to be estimated. We model the output
