@@ -14,6 +14,8 @@ data {
   real<lower=0>                       sigmasq_scale;  // scale parameter for inv gamma prior for sigmasq
   real<lower=0>                       a0_shape1;      // shape parameter for a0s
   real<lower=0>                       a0_shape2;      // shape2 parameter for a0s
+  vector<lower=0,upper=1>[K]          a0_lower; // lower bounds for a0s
+  vector<lower=a0_lower,upper=1>[K]   a0_upper; // upper bounds for a0s
 }
 transformed data{
   matrix[p,K]              hist_prec_mle; // each column is X0'X0 * betahat0 for a historical dataset
@@ -28,7 +30,7 @@ transformed data{
 parameters {
   vector[p] beta;
   real<lower=0> sigmasq;
-  vector<lower=0,upper=1>[K] a0s;
+  vector<lower=a0_lower,upper=a0_upper>[K] a0s;
 }
 model {
   // Compute parameters for implied normal-inverse-Gamma prior on beta, sigma^2

@@ -14,6 +14,8 @@ lm.npp(
   sigmasq.scale = 1.1,
   a0.shape1 = 1,
   a0.shape2 = 1,
+  a0.lower = NULL,
+  a0.upper = NULL,
   local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -49,6 +51,14 @@ beta.mean. Defaults to a vector of 10s.}
 
 \item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}
+
+\item{a0.lower}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
+vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
+
+\item{a0.upper}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
+Defaults to a vector of 1s.}
 
 \item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
 package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
