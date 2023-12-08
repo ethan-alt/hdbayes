@@ -36,6 +36,12 @@
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
+#' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#'                          lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
+#'                          vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
+#'                          Defaults to a vector of 1s.
 #' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
 #'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -112,6 +118,8 @@ glm.npp = function(
     disp.sd           = NULL,
     a0.shape1         = 1,
     a0.shape2         = 1,
+    a0.lower          = NULL,
+    a0.upper          = NULL,
     local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
@@ -176,6 +184,17 @@ glm.npp = function(
   }
   disp.sd = to.vector(param = disp.sd, default.value = 10, len = 1)
 
+  ## Default lower bound for each a0 is 0; default upper bound for each a0 is 1
+  if ( !is.null(a0.lower) ){
+    if ( !( is.vector(a0.lower) & (length(a0.lower) %in% c(1, K - 1)) ) )
+      stop("a0.lower must be a scalar or a vector of length ", K - 1, " if a0.lower is not NULL")
+  }
+  a0.lower = to.vector(param = a0.lower, default.value = 0, len = K - 1)
+  if ( !is.null(a0.upper) ){
+    if ( !( is.vector(a0.upper) & (length(a0.upper) %in% c(1, K - 1)) ) )
+      stop("a0.upper must be a scalar or a vector of length ", K - 1, " if a0.upper is not NULL")
+  }
+  a0.upper = to.vector(param = a0.upper, default.value = 1, len = K - 1)
 
   standat = list(
     'K'               = K,
@@ -194,6 +213,8 @@ glm.npp = function(
     'lognc'           = lognc,
     'a0_shape1'       = a0.shape1,
     'a0_shape2'       = a0.shape2,
+    'a0_lower'        = a0.lower,
+    'a0_upper'        = a0.upper,
     'dist'            = dist,
     'link'            = link,
     'offs'            = offset
