@@ -9,11 +9,11 @@ glm.leap(
   family,
   data.list,
   K = 2,
+  offset.list = NULL,
   beta.mean = NULL,
   beta.cov = NULL,
-  disp.shape = 2.1,
-  disp.scale = 1.1,
-  offset.list = NULL,
+  disp.mean = NULL,
+  disp.sd = NULL,
   local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -22,23 +22,32 @@ glm.leap(
 )
 }
 \arguments{
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
+\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{data.list}{a list of \code{data.frame} giving the current data followed by historical data}
+\item{data.list}{a list of \code{data.frame} giving the current data followed by one historical data set.}
 
-\item{K}{the desired number of classes to identify}
+\item{K}{the desired number of classes to identify.}
 
-\item{beta.mean}{a \verb{p x K} matrix of mean parameter for initial prior on regression coefficients (including intercept). Defaults to a matrix of zeros.}
+\item{offset.list}{a list of matrices giving the offset for current data followed by historical data. For each
+matrix, the number of rows corresponds to observations and columns correspond to classes.
+Defaults to a list of matrices of 0s.}
 
-\item{beta.cov}{a list of \code{K} \code{data.frame} each size \verb{p x p} giving covariance parameter for initial prior on regression coefficients (including intercept). Each defaults to a diagonal covariance matrix where each variance is equal to 100.}
+\item{beta.mean}{a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients (including intercept).
+Defaults to a matrix of 0s.}
 
-\item{disp.shape}{shape parameter for inverse-gamma prior on dispersion parameter}
+\item{beta.cov}{a list of \code{K} matrices, each size \verb{p x p} giving covariance parameter for initial prior on regression
+coefficients (including intercept). Each defaults to a diagonal covariance matrix where each variance
+is equal to 100.}
 
-\item{disp.scale}{scale parameter for inverse-gamma prior on dispersion parameter}
+\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the means for
+the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, disp.mean will
+be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
-\item{offset.list}{a list of \code{data.frame} giving the offset for current data followed by historical data. For each \code{data.frame}, the number of rows correpond to observations and columns correspond to classes. Defaults to matrices of 0s}
+\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the sds for
+the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same as for
+disp.mean. Defaults to a vector of 10s.}
 
 \item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
 package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
