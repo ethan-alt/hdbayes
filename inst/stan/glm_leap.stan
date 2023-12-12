@@ -13,8 +13,8 @@ data {
   matrix[n0,p]          X0;                     // design mtx for historical data
   matrix[p,K]           mean_beta;              // mean for normal initial prior on coefficients
   matrix[p*K,p]         cov_beta;               // covariance mtx for normal initial prior on coefficients
-  real<lower=0>         disp_shape;             // shape parameter for inv-gamma initial prior on dispersion
-  real<lower=0>         disp_scale;             // scale parameter for inv-gamma initial prior on dispersion
+  vector[K]             disp_mean;              // mean for the half-normal prior for dispersion of each dataset
+  vector<lower=0>[K]    disp_sd;                // sd for the half-normal prior for dispersion of each dataset
   vector<lower=0>[K]    conc;                   // Concentration parameter for exchangeability
   real<lower=0,upper=1> gamma_lower;            // Lower bound for probability of being exchangeable.
   real<lower=gamma_lower,upper=1> gamma_upper;  // Upper bound for probability of being exchangeable.
@@ -31,7 +31,7 @@ transformed data {
 }
 parameters {
   matrix[p,K] betaMat;       // pxK matrix of regression coefficients; p = number of covars, K = number of components
-  vector<lower=0>[K] dispersion;  // K-dim vector of dispersion params
+  vector<lower=0>[(dist > 2) ? K : 0] dispersion;  // K-dim vector of dispersion params
   real<lower=gamma_lower,upper=gamma_upper> gamma;  // probability of being exchangeable
   simplex[K-1] delta_raw;
 }
@@ -39,34 +39,32 @@ transformed parameters {
   vector[n0] lp01;                           // log probability for first component
   vector[n0] contrib;                        // log probability summing over all components
   vector[K] probs;
-  vector[K] logProbs;
   matrix[n0, K] contribs;
 
   probs[1]   = gamma;
   probs[2:K] = (1 - gamma) * delta_raw;
-  logProbs = log(probs);
   // Compute probability of being in first component and marginalized log probability
-  contribs = glm_mixture_contrib(y0, betaMat, dispersion, probs, X0, dist, link, offs0);
+  if ( dist <= 2 ) {
+    contribs = glm_mixture_contrib(y0, betaMat, ones_vector(K), probs, X0, dist, link, offs0);
+  }
+  else {
+    contribs = glm_mixture_contrib(y0, betaMat, dispersion, probs, X0, dist, link, offs0);
+  }
 
   for (i in 1:n0) contrib[i] = log_sum_exp(contribs[i,]);
 }
 model {
+  // initial priors
+  for ( k in 1:K ) {
+    betaMat[, k] ~ multi_normal(mean_beta[,k], cov_beta[(1+(k-1)*p):(k*p),]);
+  }
+  target += contrib; // historical data likelihood
   if ( dist <= 2 ) {
     target += glm_lp(y, betaMat[, 1], 1.0, X, dist, link, offs[,1]); // current data likelihood
-    target += contrib; // historical data likelihood
-    // initial priors
-    for ( k in 1:K ) {
-      betaMat[, k] ~ multi_normal(mean_beta[,k], cov_beta[(1+(k-1)*p):(k*p),]);
-    }
   }
   else {
+    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
     target += glm_lp(y, betaMat[, 1], dispersion[1], X, dist, link, offs[,1]); // current data likelihood
-    target += contrib; // historical data likelihood
-    // initial priors
-    for ( k in 1:K ) {
-      betaMat[, k] ~ multi_normal(mean_beta[,k], dispersion[k] * cov_beta[(1+(k-1)*p):(k*p),]);
-      dispersion[k] ~ normal(disp_shape, disp_scale);
-    }
   }
   // If two components, get beta prior on gamma;
   // If >2 components, get a dirichlet prior on raw delta
@@ -78,3 +76,4 @@ model {
 generated quantities {
   vector[p] beta = betaMat[, 1];
 }
+
