@@ -1,10 +1,10 @@
-
 //' Compute mean from linear predictor in a GLM
 //'
 //' @param eta linear predictor
 //' @param link integer giving link function
 matrix lp2mean(matrix eta, int link) {
   if (link == 1) return(eta);                        // identity link
+  else if (link == 2) return exp(eta);               // log link
   else if (link == 3) return inv_logit(eta);         // logit link
   else if (link == 4) return inv(eta);               // inverse link
   else if (link == 5) return Phi_approx(eta);        // probit link
@@ -173,13 +173,13 @@ matrix gamma_glm_mixture_contrib(
     theta = inv( lp2mean(theta, link) );
 
   // Likelihood contribution:
-  //  log f(y | theta) = 1 / phi * [ y * theta - b(theta) ] + c(y, phi)
-  //    b(theta)  = -log(theta) [technically b(theta) = -log(-theta) but absorb negative in coefficients]
+  //  log f(y | theta) = 1 / phi * [ -y * theta - b(theta) ] + c(y, phi)
+  //    b(theta)  = -log(theta)
   //    c(y, phi) = (1/phi - 1) * log(y) - (1 / phi) * log(phi) - lgamma(1 / phi)
   for ( k in 1:K )
     contrib[, k] = log_probs[k]
-       + inv_disp[k] * ( y .* theta[, k] + log(theta[, k]) )
-       + (inv_disp[k] - 1) * log_y - inv_disp * log(disp[k]) - lgamma(inv_disp[k]);
+       + inv_disp[k] * ( -y .* theta[, k] + log(theta[, k]) )
+       + (inv_disp[k] - 1) * log_y + inv_disp[k] * log(disp[k]) - lgamma(inv_disp[k]);
     ;
 
   // Return n x K matrix of contributions to mixture likelihood
@@ -215,19 +215,19 @@ matrix invgauss_glm_mixture_contrib(
   vector[K] inv_disp = inv(disp);
   real log_2pi = 1.837877066409345483560659;  // log(2*pi)
 
-  // Compute canonical parameter: theta = 1 / mu
-  //  technically it is -1 / (2*mu^2), but negative can be absorbed in reg coefs
+  // Compute canonical parameter: theta = 1 / mu^2
+  //  technically it is -1 / (2*mu^2)
   theta = X * beta + offs;
-  if ( link != 4 )
+  if ( link != 9 )
     theta = inv( lp2mean(theta, link) );
 
   // Likelihood contribution:
-  //  log f(y | theta) = 1 / phi * [ 0.5 * y * theta - b(theta) ] + c(y, phi)
+  //  log f(y | theta) = 1 / phi * [ -0.5 * y * theta - b(theta) ] + c(y, phi)
   //    b(theta)  = -sqrt(theta)
   //    c(y, phi) = -0.5 * ( 1 / (y * phi) + log(phi) + log(2 * pi) + log(y^3) )
   for ( k in 1:K )
     contrib[, k] = log_probs[k]
-       + inv_disp[k] * ( y .* theta[, k] + sqrt(theta[, k]) )
+       + inv_disp[k] * ( -0.5 * y .* theta[, k] + sqrt(theta[, k]) )
        - 0.5 * ( inv_disp[k] * inv_y + log(disp[k]) + log_2pi + log_y_cubed )
     ;
 
