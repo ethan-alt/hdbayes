@@ -11,7 +11,9 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame` giving the current data followed by one historical data set.
-#' @param K                 the desired number of classes to identify.
+#' @param K                 the desired number of classes to identify. Defaults to 2.
+#' @param prob.conc         a vector of length `K` giving the concentration parameters for Dirichlet prior. If length == 2, a
+#'                          `beta(prob.conc[1], prob.conc[2])` prior is used. Defaults to a vector of 1s.
 #' @param beta.mean         a `p x K` matrix of mean parameters for initial prior on regression coefficients (including intercept).
 #'                          Defaults to a matrix of 0s.
 #' @param beta.cov          a list of `K` matrices, each size `p x p` giving covariance parameter for initial prior on regression
@@ -56,6 +58,7 @@ glm.leap = function(
     family,
     data.list,
     K                 = 2,
+    prob.conc         = NULL,
     offset.list       = NULL,
     beta.mean         = NULL,
     beta.cov          = NULL,
@@ -86,6 +89,10 @@ glm.leap = function(
   fam.indx = get.dist.link(family)
   dist     = fam.indx[1]
   link     = fam.indx[2]
+
+  ## Default prob.conc is a vector of 1s
+  if ( is.null(prob.conc) )
+    prob.conc = rep(1, K)
 
   ## Default offset is matrix of 0s
   if ( is.null(offset) )
@@ -125,7 +132,7 @@ glm.leap = function(
     'cov_beta'    = do.call(rbind, beta.cov),
     'disp_mean'   = disp.mean,
     'disp_sd'     = disp.sd,
-    'conc'        = c(0.95, 0.95),
+    'conc'        = prob.conc,
     'gamma_lower' = 0,
     'gamma_upper' = 1,
     'dist'        = dist,

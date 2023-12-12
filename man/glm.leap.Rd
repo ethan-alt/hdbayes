@@ -9,6 +9,7 @@ glm.leap(
   family,
   data.list,
   K = 2,
+  prob.conc = NULL,
   offset.list = NULL,
   beta.mean = NULL,
   beta.cov = NULL,
@@ -28,7 +29,10 @@ glm.leap(
 
 \item{data.list}{a list of \code{data.frame} giving the current data followed by one historical data set.}
 
-\item{K}{the desired number of classes to identify.}
+\item{K}{the desired number of classes to identify. Defaults to 2.}
+
+\item{prob.conc}{a vector of length \code{K} giving the concentration parameters for Dirichlet prior. If length == 2, a
+\code{beta(prob.conc[1], prob.conc[2])} prior is used. Defaults to a vector of 1s.}
 
 \item{offset.list}{a list of matrices giving the offset for current data followed by historical data. For each
 matrix, the number of rows corresponds to observations and columns correspond to classes.
