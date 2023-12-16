@@ -6,12 +6,13 @@
 \title{ECOG E2696 Data
 from patients receiving the vaccine (GMK) alone and patients receiving both GMK and interferon alfa-2b therapy}
 \format{
-A data frame with 98 rows and 4 variables:
+A data frame with 105 rows and 6 variables:
 \describe{
-\item{log_igm28}{continuous outcome variable, log of antibody immunoglobulin (IgM)
-levels on day 28, more precisely, log(IgM + 1) on day 28}
-\item{age}{age, in years}
+\item{failtime}{relapse-free surviva (RFS) times (in months)}
+\item{failind}{event indicator, 0 = censored, 1 = failed}
+\item{trt}{treatment indicator, 0 = GMK, 1 = IFN and GMK}
 \item{sex}{gender indicator, 0 = male, 1 = female}
+\item{age}{age, in years}
 \item{perform}{ECOG performance status indicator, 0 = fully active patient, able to
 carry on all pre-disease performance without restriction,
 1 = restricted in physically strenuous activity, but are ambulatory
