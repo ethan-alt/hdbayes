@@ -1,5 +1,5 @@
 #' ECOG E2696 Data
-#' from patients receiving the vaccine (GMK) alone and patients receiving both GMK and interferon alfa-2b therapy
+#' from patients without nodal metastases
 #'
 #' @name E2696
 #' @docType data

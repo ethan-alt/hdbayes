@@ -1,5 +1,5 @@
 #' ECOG E1694 Data
-#' from patients receiving the vaccine (GMK) only
+#' restricted to patients without nodal metastases
 #'
 #' @name E1694
 #' @docType data
