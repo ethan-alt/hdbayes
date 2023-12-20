@@ -4,7 +4,7 @@
 \name{E2696}
 \alias{E2696}
 \title{ECOG E2696 Data
-from patients receiving the vaccine (GMK) alone and patients receiving both GMK and interferon alfa-2b therapy}
+from patients without nodal metastases}
 \format{
 A data frame with 105 rows and 6 variables:
 \describe{
@@ -21,7 +21,7 @@ and able to carry out work of a light or sedentary nature}
 }
 \description{
 ECOG E2696 Data
-from patients receiving the vaccine (GMK) alone and patients receiving both GMK and interferon alfa-2b therapy
+from patients without nodal metastases
 }
 \references{
 DOI: 10.1200/JCO.2001.19.5.1430

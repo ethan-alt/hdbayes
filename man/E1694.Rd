@@ -4,7 +4,7 @@
 \name{E1694}
 \alias{E1694}
 \title{ECOG E1694 Data
-from patients receiving the vaccine (GMK) only}
+restricted to patients without nodal metastases}
 \format{
 A data frame with 200 rows and 6 variables:
 \describe{
@@ -21,7 +21,7 @@ and able to carry out work of a light or sedentary nature}
 }
 \description{
 ECOG E1694 Data
-from patients receiving the vaccine (GMK) only
+restricted to patients without nodal metastases
 }
 \references{
 DOI: 10.1200/JCO.2001.19.9.2370
