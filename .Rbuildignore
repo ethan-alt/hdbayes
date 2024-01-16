@@ -6,3 +6,7 @@
 ^hdbayes\.Rproj$
 ^README_files$
 ^\.Rproj\.user$
+^NOTICE$
+^\.Rhistory$
+^\.Rbuildignore$
+^\.RData$

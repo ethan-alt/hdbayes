@@ -3,7 +3,7 @@
 \name{glm.rmap}
 \alias{glm.rmap}
 \title{Final step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP)
-Prior Of Schmidli. See \code{glm_rmap_bhm.R} for the first step and \code{glm_rmap_bhm_approx.R} for the second step.}
+Prior by Schmidli et al. See \code{glm_rmap_bhm.R} for the first step and \code{glm_rmap_bhm_approx.R} for the second step.}
 \usage{
 glm.rmap(
   formula,
@@ -18,7 +18,6 @@ glm.rmap(
   norm.vague.sd = NULL,
   curr.disp.mean = NULL,
   curr.disp.sd = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -63,9 +62,6 @@ data. Defaults to a vector of 0s.}
 \item{curr.disp.sd}{a scalar giving the sd for the half-normal hyperprior on the dispersion parameter for the current
 data. Defaults to a vector of 10s.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -88,29 +84,31 @@ a mixture of multivariate normal distributions where the parameters are obtained
 that the covariance matrix of the vague prior is a diagonal matrix.
 }
 \examples{
-data(actg019) ## current data
-data(actg036) ## historical data
-## take subset for speed purposes
-actg019 = actg019[1:150, ]
-actg036 = actg036[1:100, ]
-hist_data_list = list(actg036)
-samples_bhm = glm.rmap.bhm(
-  formula = cd4 ~ treatment + age + race,
-  family = poisson('log'),
-  hist.data.list = hist_data_list,
-  chains = 1, iter_warmup = 1000, iter_sampling = 2000
-)$beta_pred
-res_approx = glm.rmap.bhm.approx(
-  samples.bhm = samples_bhm,
-  G = 1:5, verbose = FALSE
-)
-glm.rmap(
-  formula = cd4 ~ treatment + age + race,
-  family = poisson('log'),
-  curr.data = actg019,
-  probs = res_approx$probs,
-  means = res_approx$means,
-  covs = res_approx$covs,
-  chains = 1, iter_warmup = 1000, iter_sampling = 2000
-)
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg019) ## current data
+  data(actg036) ## historical data
+  ## take subset for speed purposes
+  actg019 = actg019[1:150, ]
+  actg036 = actg036[1:100, ]
+  hist_data_list = list(actg036)
+  samples_bhm = glm.rmap.bhm(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson('log'),
+    hist.data.list = hist_data_list,
+    chains = 1, iter_warmup = 1000, iter_sampling = 2000
+  )$beta_pred
+  res_approx = glm.rmap.bhm.approx(
+    samples.bhm = samples_bhm,
+    G = 1:5, verbose = FALSE
+  )
+  glm.rmap(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson('log'),
+    curr.data = actg019,
+    probs = res_approx$probs,
+    means = res_approx$means,
+    covs = res_approx$covs,
+    chains = 1, iter_warmup = 1000, iter_sampling = 2000
+  )
+}
 }

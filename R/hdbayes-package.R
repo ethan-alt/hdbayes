@@ -5,18 +5,12 @@
 #' @docType package
 #' @name hdbayes-package
 #' @aliases hdbayes
-#' @import cmdstanr
-#' @import stats
+#' @family help
+#' @importFrom instantiate stan_package_model
 #' @importFrom formula.tools is.two.sided lhs.vars
-#' @importFrom staninside copy_models
-#' @importFrom cli cli_alert_info cli_alert_success
-#' @importFrom rappdirs user_cache_dir
-#' @importFrom mclust Mclust mclustBIC
+#' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian
 #' @importFrom posterior variables
-#' @importFrom bridgesampling bridge_sampler
 #' @importFrom enrichwith enrich
-#'
-#' @references
-#' Stan Development Team (2021). RStan: the R interface to Stan. R package version 2.21.3. https://mc-stan.org
-#'
+#' @importFrom mclust Mclust mclustBIC
+#' @importFrom bridgesampling bridge_sampler
 NULL

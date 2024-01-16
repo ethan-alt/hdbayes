@@ -42,8 +42,6 @@
 #' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
 #'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 #'                          Defaults to a vector of 1s.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -66,45 +64,47 @@
 #'   a0        = seq(0, 1, length.out = 100)
 #'   a0.lognc  = list()
 #'   a0.lognc.hdbayes = data.frame( a0 = a0 )
-#'   ## call created function
-#'   for (i in 2:length(data.list)) {
-#'     histdata = data.list[[i]]
-#'     ## wrapper to obtain log normalizing constant in parallel package
-#'     logncfun = function(a0, ...){
-#'       glm.npp.lognc(
-#'         formula = formula, family = family, a0 = a0, histdata = histdata, ...
+#'   if (instantiate::stan_cmdstan_exists()) {
+#'     ## call created function
+#'     for (i in 2:length(data.list)) {
+#'       histdata = data.list[[i]]
+#'       ## wrapper to obtain log normalizing constant in parallel package
+#'       logncfun = function(a0, ...){
+#'         glm.npp.lognc(
+#'           formula = formula, family = family, a0 = a0, histdata = histdata,
+#'           ...
+#'         )
+#'       }
+#'
+#'       cl = makeCluster(ncores)
+#'       clusterSetRNGStream(cl, 123)
+#'       clusterExport(cl, varlist = c('formula', 'family', 'histdata', 'glm.npp.lognc',
+#'                                     'glm_lp', 'get_lp2mean', 'normal_glm_lp', 'bernoulli_glm_lp',
+#'                                     'poisson_glm_lp', 'gamma_glm_lp', 'invgauss_glm_lp'))
+#'       a0.lognc[[i-1]] = parLapply(
+#'         cl = cl, X = a0, fun = logncfun, iter_warmup = 2000,
+#'         iter_sampling = 5000, chains = 1, refresh = 0
 #'       )
+#'       stopCluster(cl)
+#'       a0.lognc[[i-1]] = data.frame( do.call(rbind, a0.lognc[[i-1]]) )
+#'       a0.lognc.hdbayes = cbind(a0.lognc.hdbayes, a0.lognc[[i-1]]$lognc)
+#'       colnames(a0.lognc.hdbayes)[i] = paste0("lognc_hist", i-1)
 #'     }
+#'     a0.lognc = a0.lognc.hdbayes$a0
+#'     lognc    = as.matrix(a0.lognc.hdbayes[, -1, drop = F])
 #'
-#'     cl = makeCluster(ncores)
-#'     clusterSetRNGStream(cl, 123)
-#'     clusterExport(cl, varlist = c('formula', 'family', 'histdata', 'glm.npp.lognc',
-#'                                   'glm_lp', 'get_lp2mean', 'normal_glm_lp', 'bernoulli_glm_lp',
-#'                                   'poisson_glm_lp', 'gamma_glm_lp', 'invgauss_glm_lp'))
-#'     a0.lognc[[i-1]] = parLapply(
-#'       cl = cl, X = a0, fun = logncfun, iter_warmup = 2000,
-#'       iter_sampling = 5000, chains = 1, refresh = 0
+#'     ## sample from normalized power prior
+#'     glm.npp(
+#'       formula = cd4 ~ treatment + age + race,
+#'       family = poisson(),
+#'       data.list = data.list,
+#'       a0.lognc = a0.lognc,
+#'       lognc = lognc,
+#'       chains = 1, iter_warmup = 500, iter_sampling = 1000,
+#'       refresh = 0
 #'     )
-#'     stopCluster(cl)
-#'     a0.lognc[[i-1]] = data.frame( do.call(rbind, a0.lognc[[i-1]]) )
-#'     a0.lognc.hdbayes = cbind(a0.lognc.hdbayes, a0.lognc[[i-1]]$lognc)
-#'     colnames(a0.lognc.hdbayes)[i] = paste0("lognc_hist", i-1)
-#'     }
-#'   a0.lognc = a0.lognc.hdbayes$a0
-#'   lognc    = as.matrix(a0.lognc.hdbayes[, -1, drop = F])
-#'
-#'   ## sample from normalized power prior
-#'   glm.npp(
-#'     formula = cd4 ~ treatment + age + race,
-#'     family = poisson(),
-#'     data.list = data.list,
-#'     a0.lognc = a0.lognc,
-#'     lognc = lognc,
-#'     chains = 1, iter_warmup = 500, iter_sampling = 1000,
-#'     refresh = 0
-#'   )
+#'   }
 #' }
-#'
 glm.npp = function(
     formula,
     family,
@@ -120,7 +120,6 @@ glm.npp = function(
     a0.shape2         = 1,
     a0.lower          = NULL,
     a0.upper          = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -196,6 +195,7 @@ glm.npp = function(
   }
   a0.upper = to.vector(param = a0.upper, default.value = 1, len = K - 1)
 
+
   standat = list(
     'K'               = K,
     'N'               = N,
@@ -220,29 +220,16 @@ glm.npp = function(
     'offs'            = offset
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name        = "glm_npp_posterior"
-  model_file_path   = file.path(local.location, paste0(model_name, ".stan"))
-  glm_npp_posterior = cmdstanr::cmdstan_model(model_file_path)
+  glm_npp_posterior = instantiate::stan_package_model(
+    name = "glm_npp_posterior",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = glm_npp_posterior$sample(data = standat,
                                  iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                                  ...)
   d   = fit$draws(format = 'draws_df')
-
 
   ## rename parameters
   oldnames = paste0("beta[", 1:p, "]")
@@ -255,6 +242,5 @@ glm.npp = function(
   oldnames = c(oldnames, paste0('a0_vals[', 1:(K-1), ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:(K-1)))
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-
   return(d)
 }

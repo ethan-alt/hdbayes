@@ -14,7 +14,6 @@ glm.pp(
   beta.sd = NULL,
   disp.mean = NULL,
   disp.sd = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -49,9 +48,6 @@ same as for beta.mean. Defaults to a vector of 10s.}
 
 \item{disp.sd}{sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -71,18 +67,19 @@ Sample from the posterior distribution of a GLM using the power prior with
 a list of fixed power prior parameters (a0's)
 }
 \examples{
-data(actg019)
-data(actg036)
-## take subset for speed purposes
-actg019 = actg019[1:100, ]
-actg036 = actg036[1:50, ]
-data_list = list(currdata = actg019, histdata = actg036)
-glm.pp(
-  formula = cd4 ~ treatment + age + race,
-  family = poisson('log'),
-  data.list = data_list,
-  a0.vals = 0.5,
-  chains = 1, iter_warmup = 500, iter_sampling = 1000
-)
-
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg019)
+  data(actg036)
+  ## take subset for speed purposes
+  actg019 = actg019[1:100, ]
+  actg036 = actg036[1:50, ]
+  data_list = list(currdata = actg019, histdata = actg036)
+  glm.pp(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson('log'),
+    data.list = data_list,
+    a0.vals = 0.5,
+    chains = 1, iter_warmup = 500, iter_sampling = 1000
+  )
+}
 }

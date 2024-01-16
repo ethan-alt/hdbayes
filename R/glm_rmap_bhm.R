@@ -1,6 +1,6 @@
 #'
-#' First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prio
-#' Of Schmidli.
+#' First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prior
+#' by Schmidli et al.
 #'
 #' The Robust MAP prior is a mixture prior where one component is a prior induced by the Bayesian Hierarchical Model (BHM)
 #' and the second is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
@@ -36,8 +36,6 @@
 #' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical datasets giving the
 #'                          sds for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same
 #'                          as for meta.mean.mean. Defaults to a vector of 10s.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -50,16 +48,18 @@
 #'                          the number of MCMC samples.
 #'
 #' @examples
-#' data(actg036) ## historical data
-#' ## take subset for speed purposes
-#' actg036 = actg036[1:100, ]
-#' hist_data_list = list(actg036)
-#' glm.rmap.bhm(
-#'   formula = cd4 ~ treatment + age + race,
-#'   family = poisson('log'),
-#'   hist.data.list = hist_data_list,
-#'   chains = 1, iter_warmup = 1000, iter_sampling = 2000
-#' )
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg036) ## historical data
+#'   ## take subset for speed purposes
+#'   actg036 = actg036[1:100, ]
+#'   hist_data_list = list(actg036)
+#'   glm.rmap.bhm(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     hist.data.list = hist_data_list,
+#'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
+#'   )
+#' }
 glm.rmap.bhm = function(
     formula,
     family,
@@ -71,7 +71,6 @@ glm.rmap.bhm = function(
     meta.sd.sd        = NULL,
     hist.disp.mean    = NULL,
     hist.disp.sd      = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -92,7 +91,6 @@ glm.rmap.bhm = function(
     meta.sd.sd        = meta.sd.sd,
     disp.mean         = hist.disp.mean,
     disp.sd           = hist.disp.sd,
-    local.location    = local.location,
     iter_warmup       = iter_warmup,
     iter_sampling     = iter_sampling,
     chains            = chains,
@@ -117,9 +115,10 @@ glm.rmap.bhm = function(
   })
   beta_pred           = as.matrix(beta_pred)
   colnames(beta_pred) = varnames[2:(1+p)]
-  return(list(
-    beta_pred = beta_pred,
-    hist_bhm  = hist.bhm ## can be used for assessing MCMC convergence
-  )
+  return(
+    list(
+      beta_pred = beta_pred,
+      hist_bhm  = hist.bhm ## can be used for assessing MCMC convergence
+      )
   )
 }

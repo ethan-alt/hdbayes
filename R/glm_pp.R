@@ -27,8 +27,6 @@
 #'                          vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.
 #' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -39,20 +37,21 @@
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
-#' data(actg019)
-#' data(actg036)
-#' ## take subset for speed purposes
-#' actg019 = actg019[1:100, ]
-#' actg036 = actg036[1:50, ]
-#' data_list = list(currdata = actg019, histdata = actg036)
-#' glm.pp(
-#'   formula = cd4 ~ treatment + age + race,
-#'   family = poisson('log'),
-#'   data.list = data_list,
-#'   a0.vals = 0.5,
-#'   chains = 1, iter_warmup = 500, iter_sampling = 1000
-#' )
-#'
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg019)
+#'   data(actg036)
+#'   ## take subset for speed purposes
+#'   actg019 = actg019[1:100, ]
+#'   actg036 = actg036[1:50, ]
+#'   data_list = list(currdata = actg019, histdata = actg036)
+#'   glm.pp(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     data.list = data_list,
+#'     a0.vals = 0.5,
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
+#'   )
+#' }
 glm.pp = function(
     formula,
     family,
@@ -63,7 +62,6 @@ glm.pp = function(
     beta.sd           = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -142,29 +140,16 @@ glm.pp = function(
     'offs'            = offset
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "glm_pp"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  glm_pp          = cmdstanr::cmdstan_model(model_file_path)
+  glm_pp     = instantiate::stan_package_model(
+    name = "glm_pp",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = glm_pp$sample(data = standat,
                       iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                       ...)
   d   = fit$draws(format = 'draws_df')
-
 
   ## rename parameters
   oldnames = paste0("beta[", 1:p, "]")
@@ -175,6 +160,5 @@ glm.pp = function(
     newnames = c(newnames, 'dispersion')
   }
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-
   return(d)
 }

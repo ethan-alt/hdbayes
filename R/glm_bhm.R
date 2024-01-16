@@ -37,8 +37,6 @@
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of datasets (including the current
 #'                          data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
 #'                          is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -49,18 +47,20 @@
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
-#' data(actg019)
-#' data(actg036)
-#' ## take subset for speed purposes
-#' actg019 = actg019[1:200, ]
-#' actg036 = actg036[1:100, ]
-#' data_list = list(currdata = actg019, histdata = actg036)
-#' glm.bhm(
-#'   formula = cd4 ~ treatment + age + race,
-#'   family = poisson('log'),
-#'   data.list = data_list,
-#'   chains = 1, iter_warmup = 500, iter_sampling = 1000
-#' )
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg019)
+#'   data(actg036)
+#'   ## take subset for speed purposes
+#'   actg019 = actg019[1:200, ]
+#'   actg036 = actg036[1:100, ]
+#'   data_list = list(currdata = actg019, histdata = actg036)
+#'   glm.bhm(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     data.list = data_list,
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
+#'   )
+#' }
 glm.bhm = function(
     formula,
     family,
@@ -72,7 +72,6 @@ glm.bhm = function(
     meta.sd.sd        = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -156,22 +155,10 @@ glm.bhm = function(
     'offs'            = offset
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "glm_bhm"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  glm_bhm         = cmdstanr::cmdstan_model(model_file_path)
+  glm_bhm    = instantiate::stan_package_model(
+    name = "glm_bhm",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = glm_bhm$sample(data = standat,

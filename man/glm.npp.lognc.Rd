@@ -15,7 +15,6 @@ glm.npp.lognc(
   disp.mean = NULL,
   disp.sd = NULL,
   bridge.args = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -25,7 +24,7 @@ glm.npp.lognc(
 \arguments{
 \item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{stats::family()}}.}
+\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
 \item{histdata}{a \code{data.frame} giving the historical data.}
 
@@ -51,9 +50,6 @@ a vector of 10s.}
 \item{bridge.args}{\if{html}{\out{<optional>}} a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -78,14 +74,14 @@ are independent normal priors on the regression coefficients and a half-normal
 prior on the dispersion parameter (if applicable).
 }
 \examples{
-data(actg036)
-## take subset for speed purposes
-actg036 = actg036[1:50, ]
-glm.npp.lognc(
-  cd4 ~ treatment + age + race,
-  family = poisson(), histdata = actg036, a0 = 0.5,
-  chains = 1, iter_warmup = 500, iter_sampling = 5000
-)
-
-
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg036)
+  ## take subset for speed purposes
+  actg036 = actg036[1:50, ]
+  glm.npp.lognc(
+    cd4 ~ treatment + age + race,
+    family = poisson(), histdata = actg036, a0 = 0.5,
+    chains = 1, iter_warmup = 500, iter_sampling = 5000
+  )
+}
 }

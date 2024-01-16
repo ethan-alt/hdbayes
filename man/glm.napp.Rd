@@ -11,7 +11,6 @@ glm.napp(
   offset.list = NULL,
   a0.shape1 = 1,
   a0.shape2 = 1,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -35,9 +34,6 @@ of rows in the corresponding element of data.list. Defaults to a list of vectors
 
 \item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}
-
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
@@ -63,15 +59,18 @@ information matrix of the historical data, where a0 is the power prior
 parameter (treated as random).
 }
 \examples{
-data(actg019)
-data(actg036)
-## take subset for speed purposes
-actg019 = actg019[1:100, ]
-actg036 = actg036[1:50, ]
-data.list = list(data = actg019, histdata = actg036)
-glm.napp(
-  cd4 ~ treatment + age + race,
-  family = poisson(), data.list = data.list,
-  chains = 1, iter_warmup = 500, iter_sampling = 1000
-)
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg019)
+  data(actg036)
+  ## take subset for speed purposes
+  actg019 = actg019[1:100, ]
+  actg036 = actg036[1:50, ]
+  data_list = list(currdata = actg019, histdata = actg036)
+  glm.napp(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson('log'),
+    data.list = data_list,
+    chains = 1, iter_warmup = 500, iter_sampling = 1000
+  )
+}
 }

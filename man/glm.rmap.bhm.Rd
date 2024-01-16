@@ -2,8 +2,8 @@
 % Please edit documentation in R/glm_rmap_bhm.R
 \name{glm.rmap.bhm}
 \alias{glm.rmap.bhm}
-\title{First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prio
-Of Schmidli.}
+\title{First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prior
+by Schmidli et al.}
 \usage{
 glm.rmap.bhm(
   formula,
@@ -16,7 +16,6 @@ glm.rmap.bhm(
   meta.sd.sd = NULL,
   hist.disp.mean = NULL,
   hist.disp.sd = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -60,9 +59,6 @@ same as for meta.mean.mean. Defaults to a vector of 0s.}
 sds for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same
 as for meta.mean.mean. Defaults to a vector of 10s.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -84,14 +80,16 @@ The Robust MAP prior is a mixture prior where one component is a prior induced b
 and the second is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
 }
 \examples{
-data(actg036) ## historical data
-## take subset for speed purposes
-actg036 = actg036[1:100, ]
-hist_data_list = list(actg036)
-glm.rmap.bhm(
-  formula = cd4 ~ treatment + age + race,
-  family = poisson('log'),
-  hist.data.list = hist_data_list,
-  chains = 1, iter_warmup = 1000, iter_sampling = 2000
-)
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg036) ## historical data
+  ## take subset for speed purposes
+  actg036 = actg036[1:100, ]
+  hist_data_list = list(actg036)
+  glm.rmap.bhm(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson('log'),
+    hist.data.list = hist_data_list,
+    chains = 1, iter_warmup = 1000, iter_sampling = 2000
+  )
+}
 }

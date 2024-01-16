@@ -14,7 +14,7 @@
 #' @export
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
-#' @param family            an object of class `family`. See [stats::family()].
+#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param histdata          a `data.frame` giving the historical data.
 #' @param a0                the power prior parameter (a scalar between 0 and 1).
 #' @param offset0           vector whose dimension is equal to the rows of the historical data set giving an offset for the
@@ -31,8 +31,6 @@
 #' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param bridge.args       <optional> a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 #'                          onto [bridgesampling::bridge_sampler()].
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                         [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -44,17 +42,16 @@
 #'                          estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
 #'
 #' @examples
-#' data(actg036)
-#' ## take subset for speed purposes
-#' actg036 = actg036[1:50, ]
-#' glm.npp.lognc(
-#'   cd4 ~ treatment + age + race,
-#'   family = poisson(), histdata = actg036, a0 = 0.5,
-#'   chains = 1, iter_warmup = 500, iter_sampling = 5000
-#' )
-#'
-#'
-
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg036)
+#'   ## take subset for speed purposes
+#'   actg036 = actg036[1:50, ]
+#'   glm.npp.lognc(
+#'     cd4 ~ treatment + age + race,
+#'     family = poisson(), histdata = actg036, a0 = 0.5,
+#'     chains = 1, iter_warmup = 500, iter_sampling = 5000
+#'   )
+#' }
 glm.npp.lognc = function(
     formula,
     family,
@@ -66,7 +63,6 @@ glm.npp.lognc = function(
     disp.mean         = NULL,
     disp.sd           = NULL,
     bridge.args       = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -135,22 +131,10 @@ glm.npp.lognc = function(
     'offs0'       = offset0
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "glm_npp_prior"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  glm_npp_prior   = cmdstanr::cmdstan_model(model_file_path)
+  glm_npp_prior = instantiate::stan_package_model(
+    name = "glm_npp_prior",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit  = glm_npp_prior$sample(data = standat,

@@ -24,8 +24,6 @@
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -36,17 +34,20 @@
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
-#' data(actg019)
-#' data(actg036)
-#' ## take subset for speed purposes
-#' actg019 = actg019[1:100, ]
-#' actg036 = actg036[1:50, ]
-#' data.list = list(data = actg019, histdata = actg036)
-#' glm.napp(
-#'   cd4 ~ treatment + age + race,
-#'   family = poisson(), data.list = data.list,
-#'   chains = 1, iter_warmup = 500, iter_sampling = 1000
-#' )
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg019)
+#'   data(actg036)
+#'   ## take subset for speed purposes
+#'   actg019 = actg019[1:100, ]
+#'   actg036 = actg036[1:50, ]
+#'   data_list = list(currdata = actg019, histdata = actg036)
+#'   glm.napp(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     data.list = data_list,
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
+#'   )
+#' }
 glm.napp = function(
     formula,
     family,
@@ -54,7 +55,6 @@ glm.napp = function(
     offset.list       = NULL,
     a0.shape1         = 1,
     a0.shape2         = 1,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -66,7 +66,7 @@ glm.napp = function(
   data     = data.list[[1]] # current data
   y        = data[, all.vars(formula)[1]]
   n        = length(y)
-  X        = model.matrix(formula, data)
+  X        = stats::model.matrix(formula, data)
   p        = ncol(X)
   fam.indx = get.dist.link(family)
   dist     = fam.indx[1]
@@ -133,29 +133,16 @@ glm.napp = function(
     'offs'         = offset.curr
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "glm_napp"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  glm_napp        = cmdstanr::cmdstan_model(model_file_path)
+  glm_napp   = instantiate::stan_package_model(
+    name = "glm_napp",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = glm_napp$sample(data = standat,
                         iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                         ...)
   d   = fit$draws(format = 'draws_df')
-
 
   ## rename parameters
   oldnames = paste0("beta[", 1:p, "]")
@@ -168,6 +155,5 @@ glm.napp = function(
   oldnames = c(oldnames, paste0('a0s[', 1:K, ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:K))
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-
   return(d)
 }

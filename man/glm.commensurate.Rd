@@ -14,7 +14,6 @@ glm.commensurate(
   beta0.sd = NULL,
   disp.mean = NULL,
   disp.sd = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -54,9 +53,6 @@ scalar is provided, same as for tau. Defaults to a vector of 0s.}
 data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
 is provided, same as for tau. Defaults to a vector of 10s.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in
-the package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -81,16 +77,18 @@ Dispersion parameters (if applicable) between the
 current and historical data sets are treated as independent.
 }
 \examples{
-data(actg019)
-data(actg036)
-## take subset for speed purposes
-actg019 = actg019[1:100, ]
-actg036 = actg036[1:50, ]
-data_list = list(currdata = actg019, histdata = actg036)
-glm.commensurate(
-  formula = cd4 ~ treatment + age + race,
-  family = poisson(), data.list = data_list,
-  tau = rep(5, 4),    ## 4 parameters including intercept
-  chains = 1, iter_warmup = 500, iter_sampling = 1000
-)
+if (instantiate::stan_cmdstan_exists()) {
+  data(actg019)
+  data(actg036)
+  ## take subset for speed purposes
+  actg019 = actg019[1:100, ]
+  actg036 = actg036[1:50, ]
+  data_list = list(currdata = actg019, histdata = actg036)
+  glm.commensurate(
+    formula = cd4 ~ treatment + age + race,
+    family = poisson(), data.list = data_list,
+    tau = rep(5, 4),    ## 4 parameters including intercept
+    chains = 1, iter_warmup = 500, iter_sampling = 1000
+  )
+}
 }

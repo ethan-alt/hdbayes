@@ -12,10 +12,9 @@ glm.leap(
   prob.conc = NULL,
   offset.list = NULL,
   beta.mean = NULL,
-  beta.cov = NULL,
+  beta.sd = NULL,
   disp.mean = NULL,
   disp.sd = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -27,23 +26,23 @@ glm.leap(
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{data.list}{a list of \code{data.frame} giving the current data followed by one historical data set.}
+\item{data.list}{a list of two \code{data.frame}s giving the current data followed by one historical data set.}
 
 \item{K}{the desired number of classes to identify. Defaults to 2.}
 
-\item{prob.conc}{a vector of length \code{K} giving the concentration parameters for Dirichlet prior. If length == 2, a
-\code{beta(prob.conc[1], prob.conc[2])} prior is used. Defaults to a vector of 1s.}
+\item{prob.conc}{a scalar or a vector of length \code{K} giving the concentration parameters for Dirichlet prior.
+If length == 2, a \code{beta(prob.conc[1], prob.conc[2])} prior is used. If a scalar is provided,
+prob.conc will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.}
 
 \item{offset.list}{a list of matrices giving the offset for current data followed by historical data. For each
 matrix, the number of rows corresponds to observations and columns correspond to classes.
 Defaults to a list of matrices of 0s.}
 
-\item{beta.mean}{a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients (including intercept).
-Defaults to a matrix of 0s.}
+\item{beta.mean}{a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients (including
+intercept). Defaults to a matrix of 0s.}
 
-\item{beta.cov}{a list of \code{K} matrices, each size \verb{p x p} giving covariance parameter for initial prior on regression
-coefficients (including intercept). Each defaults to a diagonal covariance matrix where each variance
-is equal to 100.}
+\item{beta.sd}{a \verb{p x K} matrix of sd parameters for the initial prior on regression coefficients (including
+intercept). Defaults to a matrix of 10s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the means for
 the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, disp.mean will
@@ -52,9 +51,6 @@ be a vector of repeated elements of the given scalar. Defaults to a vector of 0s
 \item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the sds for
 the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same as for
 disp.mean. Defaults to a vector of 10s.}
-
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
@@ -79,12 +75,13 @@ data(actg036)
 # take subset for speed purposes
 actg019 = actg019[1:100, ]
 actg036 = actg036[1:50, ]
-glm.leap(
-  cd4 ~ treatment + age + race,
-  family = poisson(),
-  data.list = list(actg019, actg036),
-  K = 2,
-  chains = 1, iter_warmup = 500, iter_sampling = 1000
-)
-
+if (instantiate::stan_cmdstan_exists()) {
+  glm.leap(
+    cd4 ~ treatment + age + race,
+    family = poisson(),
+    data.list = list(actg019, actg036),
+    K = 2,
+    chains = 1, iter_warmup = 500, iter_sampling = 1000
+  )
+}
 }

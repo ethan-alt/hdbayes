@@ -34,8 +34,6 @@
 #' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
 #'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 #'                          Defaults to a vector of 1s.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -46,15 +44,16 @@
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
-#' data(actg019)
-#' data(actg036)
-#' lm.npp(
-#'    formula = cd4 ~ treatment + age + race,
-#'    data.list = list(data = actg019, histdata = actg036), chains = 1,
-#'    iter_warmup = 500, iter_sampling = 1000, refresh = 0
-#' )
-#'
-#'
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg019)
+#'   data(actg036)
+#'   data_list = list(currdata = actg019, histdata = actg036)
+#'   lm.npp(
+#'     formula = cd4 ~ treatment + age + race,
+#'     data.list = data_list,
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
+#'   )
+#' }
 lm.npp = function(
     formula,
     data.list,
@@ -67,7 +66,6 @@ lm.npp = function(
     a0.shape2         = 1,
     a0.lower          = NULL,
     a0.upper          = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -158,22 +156,10 @@ lm.npp = function(
     'a0_upper'        = a0.upper
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "lm_npp"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  lm_npp          = cmdstanr::cmdstan_model(model_file_path)
+  lm_npp     = instantiate::stan_package_model(
+    name = "lm_npp",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = lm_npp$sample(data = standat,
@@ -188,6 +174,5 @@ lm.npp = function(
   oldnames = c(oldnames, paste0('a0s[', 1:K, ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:K))
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-
   return(d)
 }

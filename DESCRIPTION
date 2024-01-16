@@ -13,21 +13,20 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
-Biarch: true
-Depends: 
-    R (>= 4.2.0)
-Imports: 
-    formula.tools,
-    stats,
-    cmdstanr,
-    posterior,
-    staninside,
-    cli,
-    rappdirs,
-    mclust,
-    bridgesampling,
-    enrichwith
-SystemRequirements: GNU make
+Depends:
+  R (>= 4.2.0)
+Imports:
+  instantiate,
+  formula.tools,
+  stats,
+  posterior,
+  enrichwith,
+  mclust,
+  bridgesampling
+Additional_repositories:
+  https://mc-stan.org/r-packages/
+SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
+LazyData: true
 Collate: 
     'E1694-data.R'
     'E2696-data.R'
@@ -49,4 +48,3 @@ Collate:
     'glm_rmap_bhm_approx.R'
     'hdbayes-package.R'
     'lm_npp.R'
-LazyData: true

@@ -1,6 +1,6 @@
 #'
 #' Final step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP)
-#' Prior Of Schmidli. See `glm_rmap_bhm.R` for the first step and `glm_rmap_bhm_approx.R` for the second step.
+#' Prior by Schmidli et al. See `glm_rmap_bhm.R` for the first step and `glm_rmap_bhm_approx.R` for the second step.
 #'
 #' This function samples from the posterior distribution of a GLM using the Robust MAP prior. The first component of
 #' the Robust MAP prior is a prior induced by the Bayesian Hierarchical Model (BHM). We approximate this component by
@@ -37,8 +37,6 @@
 #'                          data. Defaults to a vector of 0s.
 #' @param curr.disp.sd      a scalar giving the sd for the half-normal hyperprior on the dispersion parameter for the current
 #'                          data. Defaults to a vector of 10s.
-#' @param local.location    a file path giving the desired location of the local copies of all the .stan model files in the
-#'                          package. Defaults to the path created by `rappdirs::user_cache_dir("hdbayes")`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -49,31 +47,33 @@
 #' @return                  an object of class `draws_df` giving posterior samples
 #'
 #' @examples
-#' data(actg019) ## current data
-#' data(actg036) ## historical data
-#' ## take subset for speed purposes
-#' actg019 = actg019[1:150, ]
-#' actg036 = actg036[1:100, ]
-#' hist_data_list = list(actg036)
-#' samples_bhm = glm.rmap.bhm(
-#'   formula = cd4 ~ treatment + age + race,
-#'   family = poisson('log'),
-#'   hist.data.list = hist_data_list,
-#'   chains = 1, iter_warmup = 1000, iter_sampling = 2000
-#' )$beta_pred
-#' res_approx = glm.rmap.bhm.approx(
-#'   samples.bhm = samples_bhm,
-#'   G = 1:5, verbose = FALSE
-#' )
-#' glm.rmap(
-#'   formula = cd4 ~ treatment + age + race,
-#'   family = poisson('log'),
-#'   curr.data = actg019,
-#'   probs = res_approx$probs,
-#'   means = res_approx$means,
-#'   covs = res_approx$covs,
-#'   chains = 1, iter_warmup = 1000, iter_sampling = 2000
-#' )
+#' if (instantiate::stan_cmdstan_exists()) {
+#'   data(actg019) ## current data
+#'   data(actg036) ## historical data
+#'   ## take subset for speed purposes
+#'   actg019 = actg019[1:150, ]
+#'   actg036 = actg036[1:100, ]
+#'   hist_data_list = list(actg036)
+#'   samples_bhm = glm.rmap.bhm(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     hist.data.list = hist_data_list,
+#'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
+#'   )$beta_pred
+#'   res_approx = glm.rmap.bhm.approx(
+#'     samples.bhm = samples_bhm,
+#'     G = 1:5, verbose = FALSE
+#'   )
+#'   glm.rmap(
+#'     formula = cd4 ~ treatment + age + race,
+#'     family = poisson('log'),
+#'     curr.data = actg019,
+#'     probs = res_approx$probs,
+#'     means = res_approx$means,
+#'     covs = res_approx$covs,
+#'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
+#'   )
+#' }
 glm.rmap = function(
     formula,
     family,
@@ -87,7 +87,6 @@ glm.rmap = function(
     norm.vague.sd     = NULL,
     curr.disp.mean    = NULL,
     curr.disp.sd      = NULL,
-    local.location    = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -130,7 +129,6 @@ glm.rmap = function(
   }
   norm.vague.sd = to.vector(param = norm.vague.sd, default.value = 10, len = p)
 
-
   standat = list(
     'n1'              = n,
     'p'               = p,
@@ -150,22 +148,10 @@ glm.rmap = function(
     'offs1'           = curr.offset
   )
 
-  ## copy all the .stan model files to the specified local location
-  if( is.null(local.location) )
-    local.location <- rappdirs::user_cache_dir(appname = "hdbayes")
-
-  if (length(list.files(local.location, pattern = ".stan")) >= 1) {
-    cli::cli_alert_info("Using cached Stan models")
-  } else {
-    cli::cli_alert_info("Copying Stan models to cache")
-    staninside::copy_models(pkgname = "hdbayes",
-                            local_location = local.location)
-    cli::cli_alert_success("Models copied!")
-  }
-
-  model_name      = "glm_robustmap"
-  model_file_path = file.path(local.location, paste0(model_name, ".stan"))
-  glm_robustmap   = cmdstanr::cmdstan_model(model_file_path)
+  glm_robustmap = instantiate::stan_package_model(
+    name = "glm_robustmap",
+    package = "hdbayes"
+  )
 
   ## fit model in cmdstanr
   fit = glm_robustmap$sample(data = standat,
@@ -182,6 +168,5 @@ glm.rmap = function(
     newnames = c(newnames, 'dispersion')
   }
   posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-
   return(d)
 }

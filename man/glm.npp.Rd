@@ -19,7 +19,6 @@ glm.npp(
   a0.shape2 = 1,
   a0.lower = NULL,
   a0.upper = NULL,
-  local.location = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -71,9 +70,6 @@ vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 Defaults to a vector of 1s.}
 
-\item{local.location}{a file path giving the desired location of the local copies of all the .stan model files in the
-package. Defaults to the path created by \code{rappdirs::user_cache_dir("hdbayes")}.}
-
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 
@@ -107,43 +103,45 @@ smoothing techniques over a find grid.
   a0        = seq(0, 1, length.out = 100)
   a0.lognc  = list()
   a0.lognc.hdbayes = data.frame( a0 = a0 )
-  ## call created function
-  for (i in 2:length(data.list)) {
-    histdata = data.list[[i]]
-    ## wrapper to obtain log normalizing constant in parallel package
-    logncfun = function(a0, ...){
-      glm.npp.lognc(
-        formula = formula, family = family, a0 = a0, histdata = histdata, ...
+  if (instantiate::stan_cmdstan_exists()) {
+    ## call created function
+    for (i in 2:length(data.list)) {
+      histdata = data.list[[i]]
+      ## wrapper to obtain log normalizing constant in parallel package
+      logncfun = function(a0, ...){
+        glm.npp.lognc(
+          formula = formula, family = family, a0 = a0, histdata = histdata,
+          ...
+        )
+      }
+
+      cl = makeCluster(ncores)
+      clusterSetRNGStream(cl, 123)
+      clusterExport(cl, varlist = c('formula', 'family', 'histdata', 'glm.npp.lognc',
+                                    'glm_lp', 'get_lp2mean', 'normal_glm_lp', 'bernoulli_glm_lp',
+                                    'poisson_glm_lp', 'gamma_glm_lp', 'invgauss_glm_lp'))
+      a0.lognc[[i-1]] = parLapply(
+        cl = cl, X = a0, fun = logncfun, iter_warmup = 2000,
+        iter_sampling = 5000, chains = 1, refresh = 0
       )
+      stopCluster(cl)
+      a0.lognc[[i-1]] = data.frame( do.call(rbind, a0.lognc[[i-1]]) )
+      a0.lognc.hdbayes = cbind(a0.lognc.hdbayes, a0.lognc[[i-1]]$lognc)
+      colnames(a0.lognc.hdbayes)[i] = paste0("lognc_hist", i-1)
     }
+    a0.lognc = a0.lognc.hdbayes$a0
+    lognc    = as.matrix(a0.lognc.hdbayes[, -1, drop = F])
 
-    cl = makeCluster(ncores)
-    clusterSetRNGStream(cl, 123)
-    clusterExport(cl, varlist = c('formula', 'family', 'histdata', 'glm.npp.lognc',
-                                  'glm_lp', 'get_lp2mean', 'normal_glm_lp', 'bernoulli_glm_lp',
-                                  'poisson_glm_lp', 'gamma_glm_lp', 'invgauss_glm_lp'))
-    a0.lognc[[i-1]] = parLapply(
-      cl = cl, X = a0, fun = logncfun, iter_warmup = 2000,
-      iter_sampling = 5000, chains = 1, refresh = 0
+    ## sample from normalized power prior
+    glm.npp(
+      formula = cd4 ~ treatment + age + race,
+      family = poisson(),
+      data.list = data.list,
+      a0.lognc = a0.lognc,
+      lognc = lognc,
+      chains = 1, iter_warmup = 500, iter_sampling = 1000,
+      refresh = 0
     )
-    stopCluster(cl)
-    a0.lognc[[i-1]] = data.frame( do.call(rbind, a0.lognc[[i-1]]) )
-    a0.lognc.hdbayes = cbind(a0.lognc.hdbayes, a0.lognc[[i-1]]$lognc)
-    colnames(a0.lognc.hdbayes)[i] = paste0("lognc_hist", i-1)
-    }
-  a0.lognc = a0.lognc.hdbayes$a0
-  lognc    = as.matrix(a0.lognc.hdbayes[, -1, drop = F])
-
-  ## sample from normalized power prior
-  glm.npp(
-    formula = cd4 ~ treatment + age + race,
-    family = poisson(),
-    data.list = data.list,
-    a0.lognc = a0.lognc,
-    lognc = lognc,
-    chains = 1, iter_warmup = 500, iter_sampling = 1000,
-    refresh = 0
-  )
+  }
 }
-
 }
