@@ -4,8 +4,15 @@
 \name{hdbayes-package}
 \alias{hdbayes-package}
 \alias{hdbayes}
-\title{The 'hdbayes' package.}
+\title{hdbayes: Bayesian Analysis of Generalized Linear Models with Historical Data}
 \description{
+User-friendly functions for utilization of historical data in GLMs. Contains functions for the power prior, normalized power prior (NPP), normalized asymptotic power prior, commensurate prior, robust meta-analytic prior, and the Bayesian hierarchical model.
+
 Bayesian analysis of generalized linear models using historical data
 }
+\author{
+\strong{Maintainer}: Ethan Alt \email{ealt1@bwh.harvard.edu} (\href{https://orcid.org/0000-0002-6112-9030}{ORCID})
+
+}
 \concept{help}
+\keyword{internal}

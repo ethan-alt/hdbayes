@@ -1,3 +1,6 @@
+#' get distribution and link for a GLM
+#' @exportS3Method NULL
+#' @param family   an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 get.dist.link = function(family) {
   fams  = c('binomial', 'poisson', 'gaussian', 'Gamma', 'inverse.gaussian')
   links = c(
@@ -9,7 +12,15 @@ get.dist.link = function(family) {
   c(fam.id, link.id)
 }
 
-
+#' check if the input data are in appropriate forms
+#' @exportS3Method    NULL
+#' @param formula     a two-sided formula giving the relationship between the response variable and covariates.
+#' @param family      an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
+#' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
+#'                    are the historical datasets.
+#' @param offset.list a list of vectors giving the offsets for each data. The length of offset.list is equal to
+#'                    the length of data.list. The length of each element of offset.list is equal to the number
+#'                    of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
 data.checks = function(
     formula, family, data.list, offset.list
 ) {
@@ -49,7 +60,12 @@ data.checks = function(
   }
 }
 
-
+#' reshape the input data list into a list which contains the response vector y (from all data sets), the covariate matrix X (from all data sets),
+#' and the starting and ending indices of each data set
+#' @exportS3Method    NULL
+#' @param formula     a two-sided formula giving the relationship between the response variable and covariates.
+#' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
+#'                    are the historical datasets.
 stack.data = function(
     formula, data.list
 ) {
@@ -77,6 +93,11 @@ stack.data = function(
 }
 
 
+#' transfer a scalar/vector/NULL into a vector of given length and (default) values
+#' @exportS3Method NULL
+#' @param param         a scalar or a vector if param is not NULL
+#' @param default.value default value for param. Defaults to 0.
+#' @param len           length (number of elements) of param. Defaults to 1.
 to.vector = function(
     param, default.value = 0, len = 1
 ) {

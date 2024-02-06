@@ -12,11 +12,13 @@ Description: User-friendly functions for utilization of historical data
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
 Depends:
   R (>= 4.2.0)
 Imports:
   instantiate,
+  callr,
+  fs,
   formula.tools,
   stats,
   posterior,
