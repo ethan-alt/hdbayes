@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_pp.R
 \name{glm.pp}
 \alias{glm.pp}
-\title{Posterior of power prior with fixed a0 values}
+\title{Posterior of power prior (PP) with fixed \eqn{a_0}}
 \usage{
 glm.pp(
   formula,
@@ -26,10 +26,10 @@ glm.pp(
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{a0.vals}{a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
-datasets giving the (fixed) power prior parameter for each historical dataset. Each element of
+data sets giving the (fixed) power prior parameter for each historical data set. Each element of
 vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.}
 
 \item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
@@ -59,12 +59,15 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a GLM using the power prior with
-a list of fixed power prior parameters (a0's)
+Sample from the posterior distribution of a GLM using the PP by Ibrahim and Chen (2000) \url{doi:10.1214/ss/1009212673}.
+}
+\details{
+The power prior parameters (\eqn{a_0}'s) are treated as fixed. The initial priors on the regression coefficients
+are independent normal priors. The current and historical data sets are assumed to have a common dispersion parameter
+with a half-normal prior (if applicable).
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -82,4 +85,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 1000
   )
 }
+}
+\references{
+Chen, M.-H. and Ibrahim, J. G. (2000). Power prior distributions for Regression Models. Statistical Science, 15(1).
 }

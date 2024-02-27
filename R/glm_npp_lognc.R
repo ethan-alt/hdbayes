@@ -1,11 +1,8 @@
+#' Estimate the logarithm of the normalizing constant for normalized power prior (NPP) for one data set
 #'
-#' Estimate the logarithm of the normalizing constant for normalized power prior
-#'
-#' Uses Markov chain Monte Carlo and bridge sampling
-#' to estimate the logarithm of the normalizing
-#' constant for the normalized power prior for a fixed value of a0. The discounts
-#' the historical data likelihood by a value a0 between 0 and 1. The initial priors
-#' are independent normal priors on the regression coefficients and a half-normal
+#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
+#' constant for the NPP for a fixed value of the power prior parameter \eqn{a_0 \in (0, 1)} for one data
+#' set. The initial priors are independent normal priors on the regression coefficients and a half-normal
 #' prior on the dispersion parameter (if applicable).
 #'
 #' @include data_checks.R
@@ -38,8 +35,12 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
-#'                          estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
+#' @return
+#'  The function returns a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
+#'  estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
+#'
+#' @references
+#'  Gronau, Q. F., Singmann, H., and Wagenmakers, E.-J. (2020). bridgesampling: An r package for estimating normalizing constants. Journal of Statistical Software, 92(10).
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {

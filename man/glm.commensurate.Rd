@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_commensurate.R
 \name{glm.commensurate}
 \alias{glm.commensurate}
-\title{Commensurate prior}
+\title{Posterior of commensurate prior (CP)}
 \usage{
 glm.commensurate(
   formula,
@@ -26,7 +26,7 @@ glm.commensurate(
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{tau}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the commensurate prior parameters. If a scalar is provided, tau will be a vector of repeated
@@ -38,20 +38,20 @@ the length of data.list. The length of each element of offset.list is equal to t
 of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
 
 \item{beta0.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients
-giving the mean parameters for the initial prior on regression coefficients. If a scalar
-is provided, same as for tau. Defaults to a vector of 0s.}
-
-\item{beta0.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-same as for tau. Defaults to a vector of 10s.}
-
-\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of datasets (including the current
-data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a
+giving the mean parameters for the prior on the historical data regression coefficients. If a
 scalar is provided, same as for tau. Defaults to a vector of 0s.}
 
-\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of datasets (including the current
-data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
-is provided, same as for tau. Defaults to a vector of 10s.}
+\item{beta0.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+the sd parameters for the prior on the historical data regression coefficients. If a scalar is
+provided, same as for tau. Defaults to a vector of 10s.}
+
+\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
+provided, same as for tau. Defaults to a vector of 0s.}
+
+\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
+provided, same as for tau. Defaults to a vector of 10s.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
@@ -64,17 +64,18 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a GLM using the Commensurate
-prior of Hobbs et al. This prior assumes that the regression coefficients
-for the current data set conditional on those for the historical data set are
-multivariate normal with mean equal to the regression coefficients of the historical data
-and covariance equal to the inverse of a user-specified precision parameter (tau).
-Dispersion parameters (if applicable) between the
-current and historical data sets are treated as independent.
+Sample from the posterior distribution of a GLM using the CP by Hobbs et al. (2011) \url{doi:10.1111/j.1541-0420.2011.01564.x}.
+}
+\details{
+The CP assumes that the regression coefficients for the current data conditional on those for the historical
+data are independent normal distributions with mean equal to the corresponding regression coefficients
+for the historical data and variance equal to the inverse of the corresponding elements of a user-specified
+vector (tau) of precision parameters. The number of current data regression coefficients is assumed to be the
+same as that of historical data regression coefficients. The priors on the dispersion parameters (if applicable)
+for the current and historical data sets are independent half-normal distributions.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -91,4 +92,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 1000
   )
 }
+}
+\references{
+Hobbs, B. P., Carlin, B. P., Mandrekar, S. J., and Sargent, D. J. (2011). Hierarchical commensurate and power prior models for adaptive incorporation of historical information in clinical trials. Biometrics, 67(3), 1047–1056.
 }

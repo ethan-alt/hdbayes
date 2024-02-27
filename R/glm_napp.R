@@ -1,13 +1,11 @@
+#' Posterior of normalized asymptotic power prior (NAPP)
 #'
-#' Normalized asymptotic power prior (NAPP)
+#' Sample from the posterior distribution of a GLM using the NAPP by Ibrahim et al. (2015) <doi:10.1002/sim.6728>.
 #'
-#' Sample from the posterior distribution of a GLM using the normalized
-#' asymptotic power prior. The regression coefficients and logarithm of the
-#' dispersion parameter are a multivariate normal distribution with mean
-#' equal to the maximum likelihood estimate of the historical data and
-#' covariance matrix equal to \eqn{a0^{-1}} multiplied by the inverse Fisher
-#' information matrix of the historical data, where a0 is the power prior
-#' parameter (treated as random).
+#' The NAPP assumes that the regression coefficients and logarithm of the dispersion parameter are a multivariate
+#' normal distribution with mean equal to the maximum likelihood estimate of the historical data and covariance
+#' matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher information matrix of the historical data,
+#' where \eqn{a_0} is the power prior parameter (treated as random).
 #'
 #' @include data_checks.R
 #'
@@ -31,7 +29,11 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Ibrahim, J. G., Chen, M., Gwon, Y., and Chen, F. (2015). The power prior: Theory and applications. Statistics in Medicine, 34(28), 3724–3749.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {

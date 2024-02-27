@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_napp.R
 \name{glm.napp}
 \alias{glm.napp}
-\title{Normalized asymptotic power prior (NAPP)}
+\title{Posterior of normalized asymptotic power prior (NAPP)}
 \usage{
 glm.napp(
   formula,
@@ -46,17 +46,16 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a GLM using the normalized
-asymptotic power prior. The regression coefficients and logarithm of the
-dispersion parameter are a multivariate normal distribution with mean
-equal to the maximum likelihood estimate of the historical data and
-covariance matrix equal to \eqn{a0^{-1}} multiplied by the inverse Fisher
-information matrix of the historical data, where a0 is the power prior
-parameter (treated as random).
+Sample from the posterior distribution of a GLM using the NAPP by Ibrahim et al. (2015) \url{doi:10.1002/sim.6728}.
+}
+\details{
+The NAPP assumes that the regression coefficients and logarithm of the dispersion parameter are a multivariate
+normal distribution with mean equal to the maximum likelihood estimate of the historical data and covariance
+matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher information matrix of the historical data,
+where \eqn{a_0} is the power prior parameter (treated as random).
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -73,4 +72,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 1000
   )
 }
+}
+\references{
+Ibrahim, J. G., Chen, M., Gwon, Y., and Chen, F. (2015). The power prior: Theory and applications. Statistics in Medicine, 34(28), 3724–3749.
 }

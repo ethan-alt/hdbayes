@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_bhm.R
 \name{glm.bhm}
 \alias{glm.bhm}
-\title{Bayesian hierarchical model}
+\title{Posterior of Bayesian hierarchical model (BHM)}
 \usage{
 glm.bhm(
   formula,
@@ -27,7 +27,7 @@ glm.bhm(
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
 the length of data.list. The length of each element of offset.list is equal to the number
@@ -50,13 +50,13 @@ If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.}
 
-\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of datasets (including the current
-data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a scalar
-is provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
+\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
+provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
 
-\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of datasets (including the current
-data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
-is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
+\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
+provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
@@ -69,16 +69,20 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a GLM using the Bayesian Hierarchical Model (BHM). This model assumes that
-the regression coefficients of the historical and current data are different, but are correlated through a common
-distribution, whose hyperparameters (i.e., mean and standard deviation (the covariance is assumed to have a diagonal
-structure)) are treated as random.
-The mean hyperparmaters are independent normal and the standard deviation (sd) hyperparameters are independent half-normal.
-The dispersion parameters (if applicable) are independent.
+Sample from the posterior distribution of a GLM using the BHM.
+}
+\details{
+The BHM assumes that the regression coefficients for the historical and current data are different, but
+are correlated through a common distribution, whose hyperparameters (i.e., mean and standard deviation (sd)
+(the covariance matrix is assumed to have a diagonal structure)) are treated as random. The number of
+of regression coefficients for the current data is assumed to be the same as that for the historical data.
+
+The hyperpriors on the mean and the sd hyperparameters are independent normal and independent half-normal
+distributions, respectively. The priors on the dispersion parameters (if applicable) for the current and
+historical data sets are independent half-normal distributions.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {

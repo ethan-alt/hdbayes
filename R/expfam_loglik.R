@@ -57,7 +57,7 @@ bernoulli_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   if ( link != 3 ){
     theta = binomial('logit')$linkfun( get_lp2mean(theta, link) )
   }
-  return( sum( y*theta - log(1 + exp(theta)) ) ) # dot_product(y, theta) - sum( log1p_exp(theta) )
+  return( sum( y*theta - log(1 + exp(theta)) ) )
 }
 
 #' compute density for poisson GLM
@@ -74,7 +74,7 @@ poisson_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   if ( link != 2 ){
     theta = log( get_lp2mean(theta, link) )
   }
-  return( sum( y*theta - exp(theta) - lgamma(y + 1) ) ) # dot_product(y, theta) - sum( exp(theta) + lgamma(y + 1) );
+  return( sum( y*theta - exp(theta) - lgamma(y + 1) ) )
 }
 
 #' compute density for gamma GLM
@@ -92,7 +92,7 @@ gamma_glm_lp = function(y, beta, X, link, offs, phi) {
   if ( link != 4 ){
     theta = 1 / get_lp2mean(theta, link)
   }
-  return( dgamma(y, shape = tau, rate = tau * theta, log = T) ) # gamma_lpdf(y | tau, tau * theta );
+  return( dgamma(y, shape = tau, rate = tau * theta, log = T) )
 }
 
 #' compute density for inverse-gaussian GLM
@@ -116,7 +116,6 @@ invgauss_glm_lp = function(y, beta, X, link, offs, phi) {
       n * (log(tau) - log_2pi) - 3 * sum(log(y)) - tau * sum( ( (y*sqrt(theta) - 1) * 1/sqrt(y) )^2 )
     )
   )
-  # 0.5 * (n * (log(tau) - log_2pi) - 3 * sum(log(y)) - tau * dot_self( (y .* sqrt(theta) - 1) .* inv_sqrt(y) ) );
 }
 
 #' wrapper function compute density for a given link function and a given distribution

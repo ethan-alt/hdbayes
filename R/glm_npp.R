@@ -1,10 +1,14 @@
+#' Posterior of normalized power prior (NPP)
 #'
-#' Posterior of normalized power prior
+#' Sample from the posterior distribution of a GLM using the NPP by Duan et al. (2006) <doi:10.1002/env.752>.
 #'
-#' Sample from the posterior distribution of a GLM using the normalized power prior
-#' (NPP). Before using this function, users must estimate the logarithm of the
-#' normalizing constant across a range of power prior parameters (a0), possibly
-#' smoothing techniques over a find grid.
+#' Before using this function, users must estimate the logarithm of the normalizing constant across a
+#' range of different values for the power prior parameter (\eqn{a_0}), possibly smoothing techniques
+#' over a find grid. The power prior parameters (\eqn{a_0}'s) are treated as random with independent
+#' beta priors. The initial priors on the regression coefficients are independent normal priors. The
+#' current and historical data sets are assumed to have a common dispersion parameter with a
+#' half-normal prior (if applicable). For normal linear models, the exact normalizing constants for
+#' NPP can be computed. See the implementation in [lm.npp()].
 #'
 #'
 #' @include data_checks.R
@@ -15,7 +19,7 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
+#'                          are the historical data sets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -28,18 +32,18 @@
 #' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param a0.lognc          a vector giving values of the power prior parameter for which the logarithm of the normalizing
-#'                          constant has been evaluated
-#' @param lognc             an S by T matrix where S is the length of a0.lognc, T is the number of historical datasets, and
+#'                          constant has been evaluated.
+#' @param lognc             an S by T matrix where S is the length of a0.lognc, T is the number of historical data sets, and
 #'                          the j-th column, j = 1, ..., T, is a vector giving the logarithm of the normalizing constant (as
-#'                          estimated by \code{\link[hdbayes]{glm.npp.lognc}}) for a0.lognc using the j-th historical dataset.
+#'                          estimated by [glm.npp.lognc()] for a0.lognc using the j-th historical data set.
 #' @param a0.shape1         first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
 #'                          vector of repeated elements of the given scalar. Defaults to a vector of 0s.
-#' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 #'                          Defaults to a vector of 1s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -49,7 +53,13 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @seealso [glm.npp.lognc()]
+#'
+#' @references
+#'  Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
 #'
 #' @examples
 #' \dontrun{
@@ -140,7 +150,7 @@ glm.npp = function(
   dist         = fam.indx[1]
   link         = fam.indx[2]
 
-  ## Default offset for each dataset is a vector of 0s
+  ## Default offset for each data set is a vector of 0s
   if ( is.null(offset.list) ){
     offset = rep(0, N)
   }else {
@@ -163,7 +173,7 @@ glm.npp = function(
   if ( length(a0.lognc) != nrow(lognc) )
     stop('the number of rows in lognc must be the same as the length of a0.lognc')
   if ( ncol(lognc) != (K - 1) )
-    stop('the number of columns in lognc must be the same as the number of historical datasets')
+    stop('the number of columns in lognc must be the same as the number of historical data sets')
   if ( any(is.na(a0.lognc) ) )
     stop('a0.lognc must not have missing values')
   if ( any(is.na(lognc)) )

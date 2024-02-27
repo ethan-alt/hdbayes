@@ -17,7 +17,7 @@ get.dist.link = function(family) {
 #' @param formula     a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family      an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                    are the historical datasets.
+#'                    are the historical data sets.
 #' @param offset.list a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                    the length of data.list. The length of each element of offset.list is equal to the number
 #'                    of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -65,7 +65,7 @@ data.checks = function(
 #' @exportS3Method    NULL
 #' @param formula     a two-sided formula giving the relationship between the response variable and covariates.
 #' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                    are the historical datasets.
+#'                    are the historical data sets.
 stack.data = function(
     formula, data.list
 ) {

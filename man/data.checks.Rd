@@ -12,7 +12,7 @@ data.checks(formula, family, data.list, offset.list)
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
 the length of data.list. The length of each element of offset.list is equal to the number

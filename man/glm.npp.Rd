@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_npp.R
 \name{glm.npp}
 \alias{glm.npp}
-\title{Posterior of normalized power prior}
+\title{Posterior of normalized power prior (NPP)}
 \usage{
 glm.npp(
   formula,
@@ -31,14 +31,14 @@ glm.npp(
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{a0.lognc}{a vector giving values of the power prior parameter for which the logarithm of the normalizing
-constant has been evaluated}
+constant has been evaluated.}
 
-\item{lognc}{an S by T matrix where S is the length of a0.lognc, T is the number of historical datasets, and
+\item{lognc}{an S by T matrix where S is the length of a0.lognc, T is the number of historical data sets, and
 the j-th column, j = 1, ..., T, is a vector giving the logarithm of the normalizing constant (as
-estimated by \code{\link[hdbayes]{glm.npp.lognc}}) for a0.lognc using the j-th historical dataset.}
+estimated by \code{\link[=glm.npp.lognc]{glm.npp.lognc()}} for a0.lognc using the j-th historical data set.}
 
 \item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
 the length of data.list. The length of each element of offset.list is equal to the number
@@ -62,11 +62,11 @@ same as for beta.mean. Defaults to a vector of 10s.}
 \item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}
 
-\item{a0.lower}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{a0.lower}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
 vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
-\item{a0.upper}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{a0.upper}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 Defaults to a vector of 1s.}
 
@@ -81,14 +81,19 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a GLM using the normalized power prior
-(NPP). Before using this function, users must estimate the logarithm of the
-normalizing constant across a range of power prior parameters (a0), possibly
-smoothing techniques over a find grid.
+Sample from the posterior distribution of a GLM using the NPP by Duan et al. (2006) \url{doi:10.1002/env.752}.
+}
+\details{
+Before using this function, users must estimate the logarithm of the normalizing constant across a
+range of different values for the power prior parameter (\eqn{a_0}), possibly smoothing techniques
+over a find grid. The power prior parameters (\eqn{a_0}'s) are treated as random with independent
+beta priors. The initial priors on the regression coefficients are independent normal priors. The
+current and historical data sets are assumed to have a common dispersion parameter with a
+half-normal prior (if applicable). For normal linear models, the exact normalizing constants for
+NPP can be computed. See the implementation in \code{\link[=lm.npp]{lm.npp()}}.
 }
 \examples{
 \dontrun{
@@ -144,4 +149,10 @@ smoothing techniques over a find grid.
     )
   }
 }
+}
+\references{
+Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
+}
+\seealso{
+\code{\link[=glm.npp.lognc]{glm.npp.lognc()}}
 }

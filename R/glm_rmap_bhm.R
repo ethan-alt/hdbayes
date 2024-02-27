@@ -1,9 +1,9 @@
+#' Posterior of robust meta-analytic predictive prior (RMAP)
 #'
-#' First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prior
-#' by Schmidli et al.
+#' First step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) <doi:10.1111/biom.12242>.
 #'
-#' The Robust MAP prior is a mixture prior where one component is a prior induced by the Bayesian Hierarchical Model (BHM)
-#' and the second is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
+#' The RMAP is a mixture prior of two components where one component is a prior induced by the Bayesian hierarchical model (BHM),
+#' and the other is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
 #'
 #' @include data_checks.R
 #' @include glm_bhm.R
@@ -12,7 +12,7 @@
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param hist.data.list    a list of `data.frame`s. Each element in the list is a historical dataset.
+#' @param hist.data.list    a list of `data.frame`s. Each element in the list is a historical data set.
 #' @param hist.offset.list  a list of vectors giving the offsets for each historical data. The length of hist.offset.list is
 #'                          equal to the length of hist.data.list. The length of each element of hist.offset.list is equal
 #'                          to the number of rows in the corresponding element of hist.data.list. Defaults to a list of
@@ -30,10 +30,10 @@
 #' @param meta.sd.sd        a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 #'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
-#' @param hist.disp.mean    a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param hist.disp.mean    a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          means for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided,
 #'                          same as for meta.mean.mean. Defaults to a vector of 0s.
-#' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          sds for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same
 #'                          as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -43,9 +43,12 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  a matrix of the samples of regression coefficients from the prior induced by the BHM. The number
-#'                          of columns is equal to the number of regression coefficients, and the number of rows is equal to
-#'                          the number of MCMC samples.
+#' @return
+#'  The function returns a matrix of the samples of regression coefficients from the prior induced by the BHM.
+#'  The number of columns is equal to the number of regression coefficients, and the number of rows is equal to
+#'  the number of MCMC samples.
+#'
+#' @seealso [glm.rmap.bhm.approx()] for the second step and [glm.rmap()] for the final step of implementing RMAP.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {

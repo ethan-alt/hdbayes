@@ -2,7 +2,7 @@
 % Please edit documentation in R/lm_npp.R
 \name{lm.npp}
 \alias{lm.npp}
-\title{Posterior of normalized power prior}
+\title{Posterior of normalized power prior (NPP) for normal linear models}
 \usage{
 lm.npp(
   formula,
@@ -26,7 +26,7 @@ lm.npp(
 \item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 
 \item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
 the length of data.list. The length of each element of offset.list is equal to the number
@@ -51,11 +51,11 @@ beta.mean. Defaults to a vector of 10s.}
 \item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}
 
-\item{a0.lower}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{a0.lower}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
 vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
-\item{a0.upper}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{a0.upper}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 Defaults to a vector of 1s.}
 
@@ -70,12 +70,14 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-Sample from the posterior distribution of a normal linear model
-using the normalized power prior (NPP)
+Sample from the posterior distribution of a normal linear model using the NPP by Duan et al. (2006) \url{doi:10.1002/env.752}.
+The power prior parameters (\eqn{a_0}'s) are treated as random with independent beta priors. The current and historical
+data sets are assumed to have a common dispersion parameter (\eqn{\sigma^2}) with an inverse-gamma prior. Conditional on
+\eqn{\sigma^2}, the initial priors on the regression coefficients are independent normal distributions with variance
+\eqn{\propto (\sigma^2)^{-1}}. In this case, the normalizing constant for the NPP has a closed form.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -88,4 +90,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 1000
   )
 }
+}
+\references{
+Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
 }

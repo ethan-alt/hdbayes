@@ -2,8 +2,7 @@
 % Please edit documentation in R/glm_rmap_bhm.R
 \name{glm.rmap.bhm}
 \alias{glm.rmap.bhm}
-\title{First step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP) Prior
-by Schmidli et al.}
+\title{Posterior of robust meta-analytic predictive prior (RMAP)}
 \usage{
 glm.rmap.bhm(
   formula,
@@ -27,7 +26,7 @@ glm.rmap.bhm(
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{hist.data.list}{a list of \code{data.frame}s. Each element in the list is a historical dataset.}
+\item{hist.data.list}{a list of \code{data.frame}s. Each element in the list is a historical data set.}
 
 \item{hist.offset.list}{a list of vectors giving the offsets for each historical data. The length of hist.offset.list is
 equal to the length of hist.data.list. The length of each element of hist.offset.list is equal
@@ -51,11 +50,11 @@ If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
 
-\item{hist.disp.mean}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{hist.disp.mean}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 means for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided,
 same as for meta.mean.mean. Defaults to a vector of 0s.}
 
-\item{hist.disp.sd}{a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+\item{hist.disp.sd}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 sds for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same
 as for meta.mean.mean. Defaults to a vector of 10s.}
 
@@ -70,14 +69,16 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             a matrix of the samples of regression coefficients from the prior induced by the BHM. The number
-                     of columns is equal to the number of regression coefficients, and the number of rows is equal to
-                     the number of MCMC samples.
-}\if{html}{\out{</div>}}
+The function returns a matrix of the samples of regression coefficients from the prior induced by the BHM.
+The number of columns is equal to the number of regression coefficients, and the number of rows is equal to
+the number of MCMC samples.
 }
 \description{
-The Robust MAP prior is a mixture prior where one component is a prior induced by the Bayesian Hierarchical Model (BHM)
-and the second is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
+First step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
+}
+\details{
+The RMAP is a mixture prior of two components where one component is a prior induced by the Bayesian hierarchical model (BHM),
+and the other is a vague (noninformative) prior. This function samples from the prior induced by the BHM.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -92,4 +93,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 1000, iter_sampling = 2000
   )
 }
+}
+\seealso{
+\code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} for the second step and \code{\link[=glm.rmap]{glm.rmap()}} for the final step of implementing RMAP.
 }

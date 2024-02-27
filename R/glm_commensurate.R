@@ -1,13 +1,13 @@
+#' Posterior of commensurate prior (CP)
 #'
-#' Commensurate prior
+#' Sample from the posterior distribution of a GLM using the CP by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>.
 #'
-#' Sample from the posterior distribution of a GLM using the Commensurate
-#' prior of Hobbs et al. This prior assumes that the regression coefficients
-#' for the current data set conditional on those for the historical data set are
-#' multivariate normal with mean equal to the regression coefficients of the historical data
-#' and covariance equal to the inverse of a user-specified precision parameter (tau).
-#' Dispersion parameters (if applicable) between the
-#' current and historical data sets are treated as independent.
+#' The CP assumes that the regression coefficients for the current data conditional on those for the historical
+#' data are independent normal distributions with mean equal to the corresponding regression coefficients
+#' for the historical data and variance equal to the inverse of the corresponding elements of a user-specified
+#' vector (tau) of precision parameters. The number of current data regression coefficients is assumed to be the
+#' same as that of historical data regression coefficients. The priors on the dispersion parameters (if applicable)
+#' for the current and historical data sets are independent half-normal distributions.
 #'
 #' @include data_checks.R
 #'
@@ -16,7 +16,7 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
+#'                          are the historical data sets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -25,17 +25,17 @@
 #'                          elements of the given scalar. Each element of tau must be positive, corresponding to a normal
 #'                          precision parameter.
 #' @param beta0.mean        a scalar or a vector whose dimension is equal to the number of regression coefficients
-#'                          giving the mean parameters for the initial prior on regression coefficients. If a scalar
-#'                          is provided, same as for tau. Defaults to a vector of 0s.
-#' @param beta0.sd          a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-#'                          same as for tau. Defaults to a vector of 10s.
-#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of datasets (including the current
-#'                          data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a
+#'                          giving the mean parameters for the prior on the historical data regression coefficients. If a
 #'                          scalar is provided, same as for tau. Defaults to a vector of 0s.
-#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of datasets (including the current
-#'                          data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
-#'                          is provided, same as for tau. Defaults to a vector of 10s.
+#' @param beta0.sd          a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the sd parameters for the prior on the historical data regression coefficients. If a scalar is
+#'                          provided, same as for tau. Defaults to a vector of 10s.
+#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for tau. Defaults to a vector of 0s.
+#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for tau. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -43,7 +43,11 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Hobbs, B. P., Carlin, B. P., Mandrekar, S. J., and Sargent, D. J. (2011). Hierarchical commensurate and power prior models for adaptive incorporation of historical information in clinical trials. Biometrics, 67(3), 1047–1056.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -90,7 +94,7 @@ glm.commensurate = function(
   dist         = fam.indx[1]
   link         = fam.indx[2]
 
-  ## Default offset for each dataset is a vector of 0s
+  ## Default offset for each data set is a vector of 0s
   if ( is.null(offset.list) ){
     offset = rep(0, N)
   }else {

@@ -1,9 +1,10 @@
+#' Posterior of normalized power prior (NPP) for normal linear models
 #'
-#' Posterior of normalized power prior
-#'
-#' Sample from the posterior distribution of a normal linear model
-#' using the normalized power prior (NPP)
-#'
+#' Sample from the posterior distribution of a normal linear model using the NPP by Duan et al. (2006) <doi:10.1002/env.752>.
+#' The power prior parameters (\eqn{a_0}'s) are treated as random with independent beta priors. The current and historical
+#' data sets are assumed to have a common dispersion parameter (\eqn{\sigma^2}) with an inverse-gamma prior. Conditional on
+#' \eqn{\sigma^2}, the initial priors on the regression coefficients are independent normal distributions with variance
+#' \eqn{\propto (\sigma^2)^{-1}}. In this case, the normalizing constant for the NPP has a closed form.
 #'
 #' @include data_checks.R
 #'
@@ -11,7 +12,7 @@
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
+#'                          are the historical data sets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -28,10 +29,10 @@
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
 #'                          vector of repeated elements of the given scalar. Defaults to a vector of 0s.
-#' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical datasets giving the
+#' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
 #'                          Defaults to a vector of 1s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -41,7 +42,11 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -82,9 +87,9 @@ lm.npp = function(
   num.obs      = 1 + end.index - start.index
   p            = ncol(X)
   N            = length(y)
-  K            = length(data.list) - 1 # number of historical datasets
+  K            = length(data.list) - 1 # number of historical data sets
 
-  ## Default offset for each dataset is a vector of 0s
+  ## Default offset for each data set is a vector of 0s
   if ( is.null(offset.list) ){
     offset = rep(0, N)
   }else {
@@ -108,8 +113,8 @@ lm.npp = function(
   beta.cov = diag(beta.sd^2, nrow = p, ncol = p)
 
   hist.mle  = matrix(NA, nrow = p, ncol = K)
-  hist.prec = array(NA, c(K, p, p)) # each element is X0'X0 for a historical dataset
-  sumy0sq   = vector(length = K) # each element is sum(y0^2) for a historical dataset (y0 has been adjusted for offsets)
+  hist.prec = array(NA, c(K, p, p)) # each element is X0'X0 for a historical data set
+  sumy0sq   = vector(length = K) # each element is sum(y0^2) for a historical data set (y0 has been adjusted for offsets)
   for(k in 1:K) {
     histdata       = data.list[[1+k]]
     offs0          = offset[ start.index[1+k]:end.index[1+k] ]
@@ -137,7 +142,7 @@ lm.npp = function(
   a0.upper = to.vector(param = a0.upper, default.value = 1, len = K)
 
   standat = list(
-    'K'               = K, # number of historical datasets
+    'K'               = K, # number of historical data sets
     'n'               = num.obs[1], # current data sample size
     'n0s'             = num.obs[-1],
     'p'               = p,

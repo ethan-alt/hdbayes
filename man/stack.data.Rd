@@ -11,7 +11,7 @@ and the starting and ending indices of each data set}
 \item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
+are the historical data sets.}
 }
 \description{
 reshape the input data list into a list which contains the response vector y (from all data sets), the covariate matrix X (from all data sets),

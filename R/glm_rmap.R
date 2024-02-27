@@ -1,12 +1,12 @@
+#' Posterior of robust meta-analytic predictive prior (RMAP)
 #'
-#' Final step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP)
-#' Prior by Schmidli et al. See `glm_rmap_bhm.R` for the first step and `glm_rmap_bhm_approx.R` for the second step.
+#' Final step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) <doi:10.1111/biom.12242>.
 #'
-#' This function samples from the posterior distribution of a GLM using the Robust MAP prior. The first component of
-#' the Robust MAP prior is a prior induced by the Bayesian Hierarchical Model (BHM). We approximate this component by
+#' This function samples from the posterior distribution of a GLM using the RMAP. The first component of
+#' the RMAP is a prior induced by the Bayesian hierarchical model (BHM). We approximate this component by
 #' a mixture of multivariate normal distributions where the parameters are obtained from the outputs of the
-#' `glm.rmap.bhm.approx()` function. The second component is a vague (noninformative) multivariate normal prior. We assume
-#' that the covariance matrix of the vague prior is a diagonal matrix.
+#' [glm.rmap.bhm.approx()] function. The second component is a vague (noninformative) multivariate normal
+#' prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
 #'
 #' @include data_checks.R
 #'
@@ -15,15 +15,15 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param curr.data         a `data.frame` giving the current data.
-#' @param curr.offset       a vector whose dimension is equal to the rows of the current dataset giving an offset for
+#' @param curr.offset       a vector whose dimension is equal to the rows of the current data set giving an offset for
 #'                          the current data. Defaults to a vector of 0s.
 #' @param probs             a vector of mixing proportions in the mixture approximation to the prior induced by the BHM.
-#'                          Obtained from the outputs of the `glm.rmap.bhm.approx()` function.
+#'                          Obtained from the outputs of the [glm.rmap.bhm.approx()] function.
 #' @param means             a matrix with the jth column being the mean vector for the jth component in the mixture
 #'                          approximation to the prior induced by the BHM. Obtained from the outputs of the
-#'                          `glm.rmap.bhm.approx()` function.
+#'                          [glm.rmap.bhm.approx()] function.
 #' @param covs              a 3-dimensional array giving the covariance matrices for the mixture approximation to the prior
-#'                          induced by the BHM. Obtained from the outputs of the `glm.rmap.bhm.approx()` function.
+#'                          induced by the BHM. Obtained from the outputs of the [glm.rmap.bhm.approx()] function.
 #'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 #' @param w                 a scalar between 0 and 1 giving how much weight to put on the historical data.
 #' @param norm.vague.mean   a scalar or a vector whose dimension is equal to the number of regression coefficients giving
@@ -44,7 +44,13 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Schmidli, H., Gsteiger, S., Roychoudhury, S., O’Hagan, A., Spiegelhalter, D., and Neuenschwander, B. (2014). Robust meta‐analytic‐predictive priors in clinical trials with historical control information. Biometrics, 70(4), 1023–1032.
+#'
+#' @seealso [glm.rmap.bhm()] for the first step and [glm.rmap.bhm.approx()] for the second step of implementing RMAP.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {

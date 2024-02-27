@@ -1,9 +1,10 @@
+#' Posterior of power prior (PP) with fixed \eqn{a_0}
 #'
-#' Posterior of power prior with fixed a0 values
+#' Sample from the posterior distribution of a GLM using the PP by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>.
 #'
-#' Sample from the posterior distribution of a GLM using the power prior with
-#' a list of fixed power prior parameters (a0's)
-#'
+#' The power prior parameters (\eqn{a_0}'s) are treated as fixed. The initial priors on the regression coefficients
+#' are independent normal priors. The current and historical data sets are assumed to have a common dispersion parameter
+#' with a half-normal prior (if applicable).
 #'
 #' @include data_checks.R
 #'
@@ -12,7 +13,7 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
+#'                          are the historical data sets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -23,7 +24,7 @@
 #'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
 #'                          same as for beta.mean. Defaults to a vector of 10s.
 #' @param a0.vals           a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
-#'                          datasets giving the (fixed) power prior parameter for each historical dataset. Each element of
+#'                          data sets giving the (fixed) power prior parameter for each historical data set. Each element of
 #'                          vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.
 #' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
@@ -34,7 +35,11 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Chen, M.-H. and Ibrahim, J. G. (2000). Power prior distributions for Regression Models. Statistical Science, 15(1).
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -82,7 +87,7 @@ glm.pp = function(
   dist         = fam.indx[1]
   link         = fam.indx[2]
 
-  ## Default offset for each dataset is a vector of 0s
+  ## Default offset for each data set is a vector of 0s
   if ( is.null(offset.list) ){
     offset = rep(0, N)
   }else {

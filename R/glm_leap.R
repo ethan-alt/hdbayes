@@ -1,8 +1,9 @@
+#' Posterior of Latent Exchangeability Prior (LEAP)
 #'
-#' Posterior of LEAP
+#' Sample from the posterior distribution of a GLM using the LEAP by Alt et al. (2023).
 #'
-#' ...
-#'
+#' The LEAP discounts the historical data by identifying the most relevant individuals from the historical data.
+#' It is equivalent to a prior induced by the posterior of a finite mixture model for the historical data set.
 #'
 #' @include data_checks.R
 #'
@@ -35,7 +36,11 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
+#'
+#' @references
+#'  Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
 #'
 #' @examples
 #' data(actg019)

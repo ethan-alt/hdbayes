@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_npp_lognc.R
 \name{glm.npp.lognc}
 \alias{glm.npp.lognc}
-\title{Estimate the logarithm of the normalizing constant for normalized power prior}
+\title{Estimate the logarithm of the normalizing constant for normalized power prior (NPP) for one data set}
 \usage{
 glm.npp.lognc(
   formula,
@@ -61,16 +61,13 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
-                     estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
-}\if{html}{\out{</div>}}
+The function returns a vector giving the value of a0, the estimated logarithm of the normalizing constant, the minimum
+estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
 }
 \description{
-Uses Markov chain Monte Carlo and bridge sampling
-to estimate the logarithm of the normalizing
-constant for the normalized power prior for a fixed value of a0. The discounts
-the historical data likelihood by a value a0 between 0 and 1. The initial priors
-are independent normal priors on the regression coefficients and a half-normal
+Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
+constant for the NPP for a fixed value of the power prior parameter \eqn{a_0 \in (0, 1)} for one data
+set. The initial priors are independent normal priors on the regression coefficients and a half-normal
 prior on the dispersion parameter (if applicable).
 }
 \examples{
@@ -84,4 +81,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 5000
   )
 }
+}
+\references{
+Gronau, Q. F., Singmann, H., and Wagenmakers, E.-J. (2020). bridgesampling: An r package for estimating normalizing constants. Journal of Statistical Software, 92(10).
 }

@@ -1,11 +1,15 @@
-#' Bayesian hierarchical model
+#' Posterior of Bayesian hierarchical model (BHM)
 #'
-#' Sample from the posterior distribution of a GLM using the Bayesian Hierarchical Model (BHM). This model assumes that
-#' the regression coefficients of the historical and current data are different, but are correlated through a common
-#' distribution, whose hyperparameters (i.e., mean and standard deviation (the covariance is assumed to have a diagonal
-#' structure)) are treated as random.
-#' The mean hyperparmaters are independent normal and the standard deviation (sd) hyperparameters are independent half-normal.
-#' The dispersion parameters (if applicable) are independent.
+#' Sample from the posterior distribution of a GLM using the BHM.
+#'
+#' The BHM assumes that the regression coefficients for the historical and current data are different, but
+#' are correlated through a common distribution, whose hyperparameters (i.e., mean and standard deviation (sd)
+#' (the covariance matrix is assumed to have a diagonal structure)) are treated as random. The number of
+#' of regression coefficients for the current data is assumed to be the same as that for the historical data.
+#'
+#' The hyperpriors on the mean and the sd hyperparameters are independent normal and independent half-normal
+#' distributions, respectively. The priors on the dispersion parameters (if applicable) for the current and
+#' historical data sets are independent half-normal distributions.
 #'
 #' @include data_checks.R
 #'
@@ -14,7 +18,7 @@
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
+#'                          are the historical data sets.
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
@@ -31,12 +35,12 @@
 #' @param meta.sd.sd        a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
 #'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.
-#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of datasets (including the current
-#'                          data) giving the means for the half-normal hyperpriors on the dispersion parameters. If a scalar
-#'                          is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
-#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of datasets (including the current
-#'                          data) giving the sds for the half-normal hyperpriors on the dispersion parameters. If a scalar
-#'                          is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
+#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for meta.mean.mean. Defaults to a vector of 0s.
+#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          [cmdstanr::sample()].
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -44,7 +48,8 @@
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
 #' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
 #'
-#' @return                  an object of class `draws_df` giving posterior samples
+#' @return
+#'  The function returns an object of class `draws_df` giving posterior samples.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -92,7 +97,7 @@ glm.bhm = function(
   dist         = fam.indx[1]
   link         = fam.indx[2]
 
-  ## Default offset for each dataset is a vector of 0s
+  ## Default offset for each data set is a vector of 0s
   if ( is.null(offset.list) ){
     offset = rep(0, N)
   }else {

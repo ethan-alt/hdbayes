@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_leap.R
 \name{glm.leap}
 \alias{glm.leap}
-\title{Posterior of LEAP}
+\title{Posterior of Latent Exchangeability Prior (LEAP)}
 \usage{
 glm.leap(
   formula,
@@ -63,11 +63,14 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-...
+Sample from the posterior distribution of a GLM using the LEAP by Alt et al. (2023).
+}
+\details{
+The LEAP discounts the historical data by identifying the most relevant individuals from the historical data.
+It is equivalent to a prior induced by the posterior of a finite mixture model for the historical data set.
 }
 \examples{
 data(actg019)
@@ -84,4 +87,7 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 500, iter_sampling = 1000
   )
 }
+}
+\references{
+Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
 }

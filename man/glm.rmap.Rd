@@ -2,8 +2,7 @@
 % Please edit documentation in R/glm_rmap.R
 \name{glm.rmap}
 \alias{glm.rmap}
-\title{Final step for sampling from the posterior distribution of a GLM using the Robust Meta-Analytic Predictive (MAP)
-Prior by Schmidli et al. See \code{glm_rmap_bhm.R} for the first step and \code{glm_rmap_bhm_approx.R} for the second step.}
+\title{Posterior of robust meta-analytic predictive prior (RMAP)}
 \usage{
 glm.rmap(
   formula,
@@ -32,17 +31,17 @@ glm.rmap(
 \item{curr.data}{a \code{data.frame} giving the current data.}
 
 \item{probs}{a vector of mixing proportions in the mixture approximation to the prior induced by the BHM.
-Obtained from the outputs of the \code{glm.rmap.bhm.approx()} function.}
+Obtained from the outputs of the \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.}
 
 \item{means}{a matrix with the jth column being the mean vector for the jth component in the mixture
 approximation to the prior induced by the BHM. Obtained from the outputs of the
-\code{glm.rmap.bhm.approx()} function.}
+\code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.}
 
 \item{covs}{a 3-dimensional array giving the covariance matrices for the mixture approximation to the prior
-induced by the BHM. Obtained from the outputs of the \code{glm.rmap.bhm.approx()} function.
+induced by the BHM. Obtained from the outputs of the \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.
 the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.}
 
-\item{curr.offset}{a vector whose dimension is equal to the rows of the current dataset giving an offset for
+\item{curr.offset}{a vector whose dimension is equal to the rows of the current data set giving an offset for
 the current data. Defaults to a vector of 0s.}
 
 \item{w}{a scalar between 0 and 1 giving how much weight to put on the historical data.}
@@ -73,15 +72,17 @@ in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
 \item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
 }
 \value{
-\if{html}{\out{<div class="sourceCode">}}\preformatted{             an object of class `draws_df` giving posterior samples
-}\if{html}{\out{</div>}}
+The function returns an object of class \code{draws_df} giving posterior samples.
 }
 \description{
-This function samples from the posterior distribution of a GLM using the Robust MAP prior. The first component of
-the Robust MAP prior is a prior induced by the Bayesian Hierarchical Model (BHM). We approximate this component by
+Final step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
+}
+\details{
+This function samples from the posterior distribution of a GLM using the RMAP. The first component of
+the RMAP is a prior induced by the Bayesian hierarchical model (BHM). We approximate this component by
 a mixture of multivariate normal distributions where the parameters are obtained from the outputs of the
-\code{glm.rmap.bhm.approx()} function. The second component is a vague (noninformative) multivariate normal prior. We assume
-that the covariance matrix of the vague prior is a diagonal matrix.
+\code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function. The second component is a vague (noninformative) multivariate normal
+prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -111,4 +112,10 @@ if (instantiate::stan_cmdstan_exists()) {
     chains = 1, iter_warmup = 1000, iter_sampling = 2000
   )
 }
+}
+\references{
+Schmidli, H., Gsteiger, S., Roychoudhury, S., O’Hagan, A., Spiegelhalter, D., and Neuenschwander, B. (2014). Robust meta‐analytic‐predictive priors in clinical trials with historical control information. Biometrics, 70(4), 1023–1032.
+}
+\seealso{
+\code{\link[=glm.rmap.bhm]{glm.rmap.bhm()}} for the first step and \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} for the second step of implementing RMAP.
 }
