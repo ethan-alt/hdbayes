@@ -1,22 +1,29 @@
 Package: hdbayes
 Title: Bayesian Analysis of Generalized Linear Models with Historical Data
-Version: 0.0.0.9000
-Authors@R: 
-    person("Ethan", "Alt", , "ealt1@bwh.harvard.edu", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0002-6112-9030"))
-Description: User-friendly functions for utilization of historical data
-             in GLMs. Contains functions for the power prior, normalized
-             power prior (NPP), normalized asymptotic power prior,
-             commensurate prior, robust meta-analytic prior, and 
-             the Bayesian hierarchical model.
+Version: 0.0.1
+Authors@R: c(person("Ethan M.", "Alt", email = "ethanalt@live.unc.edu", role = c("aut", "cre"), 
+                    comment = c(ORCID = "0000-0002-6112-9030")),
+             person("Xinxin", "Chen", role = "aut"),
+             person("Luiz M.", "Carvalho", role = "aut"),
+             person("Joseph G.", "Ibrahim", role = "aut")
+             )
+Description: User-friendly functions for utilization of (multiple) historical data set(s) in generalized linear models
+             (GLMs). Contains functions for sampling from the posterior distribution of a GLM using the power prior 
+             by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>, normalized power prior (NPP) by Duan et al. 
+             (2006) <doi:10.1002/env.752>, normalized asymptotic power prior (NAPP) by Ibrahim et al. (2015)
+             <doi:10.1002/sim.6728>, commensurate prior by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>, 
+             robust meta-analytic-predictive prior (RMAP) by Schmidli et al. (2014) <doi:10.1111/biom.12242>, latent 
+             exchangeability prior (LEAP) by Alt et al. (2023) <arXiv:2303.05223>, and the Bayesian hierarchical model.
 License: MIT + file LICENSE
+URL: https://github.com/ethan-alt/hdbayes
+BugReports: https://github.com/ethan-alt/hdbayes/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1
 Depends:
   R (>= 4.2.0)
 Imports:
-  instantiate,
+  instantiate (>= 0.1.0),
   callr,
   fs,
   formula.tools,
