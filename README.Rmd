@@ -18,7 +18,7 @@ library(rstan)
 
 
 <!-- badges: start -->
-  [![R-CMD-check](https://github.com/ethan-alt/hdbayes/workflows/R-CMD-check/badge.svg)](https://github.com/ethan-alt/hdbayes/actions)
+  [![R-CMD-check](https://github.com/ethan-alt/hdbayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ethan-alt/hdbayes/actions)
   <!-- badges: end -->
 
 ## hdbayes
