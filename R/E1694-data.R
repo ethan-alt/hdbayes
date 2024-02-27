@@ -1,21 +1,27 @@
-#' ECOG E1694 Data
-#' restricted to patients without nodal metastases
+#' ECOG E1694 Trial
+#'
+#' A data set from the ECOG E1694 trial comparing the GM2-KLH/QS-21 (GMK) vaccine with high-dose
+#' interferon alfa-2b (IFN) therapy in resected high-risk melanoma patients. The study results
+#' were described in Kirkwood et al. (2001) <doi:10.1200/JCO.2001.19.9.2370>. This data set only
+#' includes patients without nodal metastasis and has the same variables as the E2696 data set.
+#' We can use the E2696 data as the historical data and the E1694 data as the current data.
 #'
 #' @name E1694
 #' @docType data
-#' @author Joseph Ibrahim \email{ibrahim@@bios.unc.edu}
-#' @references DOI: 10.1200/JCO.2001.19.9.2370
+#' @usage data(E1694)
 #' @keywords data
 #' @format A data frame with 200 rows and 6 variables:
 #' \describe{
-#'   \item{failtime}{relapse-free surviva (RFS) times (in months)}
-#'   \item{failind}{event indicator, 0 = censored, 1 = failed}
-#'   \item{trt}{treatment indicator, 0 = GMK, 1 = IFN}
+#'   \item{failtime}{relapse-free survival (RFS) times (in months)}
+#'   \item{failind}{relapse indicator, 0 = right censored, 1 = relapse}
+#'   \item{treatment}{treatment indicator, 0 = GMK, 1 = IFN}
 #'   \item{sex}{gender indicator, 0 = male, 1 = female}
-#'   \item{age}{age, in years}
+#'   \item{age}{patient age in years}
 #'   \item{perform}{ECOG performance status indicator, 0 = fully active patient, able to
 #'                  carry on all pre-disease performance without restriction,
 #'                  1 = restricted in physically strenuous activity, but are ambulatory
 #'                  and able to carry out work of a light or sedentary nature}
 #' }
+#' @references
+#'  Kirkwood, J. M., Ibrahim, J. G., Sosman, J. A., Sondak, V. K., Agarwala, S. S., Ernstoff, M. S., and Rao, U. (2001). High-dose interferon alfa-2b significantly prolongs relapse-free and overall survival compared with the GM2-KLH/QS-21 vaccine in patients with resected stage IIB-III melanoma: Results of intergroup trial E1694/S9512/C509801. Journal of Clinical Oncology, 19(9), 2370–2380.
 NULL
