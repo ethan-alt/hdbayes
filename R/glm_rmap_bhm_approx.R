@@ -13,7 +13,7 @@
 #' @param G                 an integer vector giving the numbers of mixtures components (in the mixture approximation to
 #'                          the BHM) for which the BIC is to be calculated. Defaults to 1:9. See the argument `G` in
 #'                          \code{\link[mclust:Mclust]{?mclust::Mclust}}.
-#' @param ...               arguments passed to [mclust::Mclust()]. See \url{https://mclust-org.github.io/mclust/reference/Mclust.html>}.
+#' @param ...               arguments passed to [mclust::Mclust()]. See \url{https://mclust-org.github.io/mclust/reference/Mclust.html}.
 #'
 #' @return
 #'  The function returns a list giving the parameters estimated from the optimal (according to BIC)

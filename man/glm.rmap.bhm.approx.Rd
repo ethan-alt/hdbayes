@@ -14,7 +14,7 @@ from the \code{\link[=glm.rmap.bhm]{glm.rmap.bhm()}} function.}
 the BHM) for which the BIC is to be calculated. Defaults to 1:9. See the argument \code{G} in
 \code{\link[mclust:Mclust]{?mclust::Mclust}}.}
 
-\item{...}{arguments passed to \code{\link[mclust:Mclust]{mclust::Mclust()}}. See \url{https://mclust-org.github.io/mclust/reference/Mclust.html>}.}
+\item{...}{arguments passed to \code{\link[mclust:Mclust]{mclust::Mclust()}}. See \url{https://mclust-org.github.io/mclust/reference/Mclust.html}.}
 }
 \value{
 The function returns a list giving the parameters estimated from the optimal (according to BIC)
