@@ -19,7 +19,7 @@ and able to carry out work of a light or sedentary nature}
 }
 }
 \usage{
-data(E1694)
+E1694
 }
 \description{
 A data set from the ECOG E1694 trial comparing the GM2-KLH/QS-21 (GMK) vaccine with high-dose

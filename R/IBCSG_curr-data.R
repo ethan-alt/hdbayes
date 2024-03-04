@@ -12,7 +12,7 @@
 #'
 #' @name IBCSG_curr
 #' @docType data
-#' @usage data(IBCSG_curr)
+#' @usage IBCSG_curr
 #' @keywords data
 #' @format A data frame with 488 rows and 8 variables:
 #' \describe{

@@ -23,7 +23,7 @@ equal to 4, 0 = less than 4, 1 = 4+}
 }
 }
 \usage{
-data(IBCSG_curr)
+IBCSG_curr
 }
 \description{
 A data set from the IBCSG Trial VI investigating both the duration of adjuvant chemotherapy

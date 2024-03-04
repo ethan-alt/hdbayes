@@ -8,7 +8,7 @@
 #'
 #' @name E1694
 #' @docType data
-#' @usage data(E1694)
+#' @usage E1694
 #' @keywords data
 #' @format A data frame with 200 rows and 6 variables:
 #' \describe{

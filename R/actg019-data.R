@@ -6,7 +6,7 @@
 #'
 #' @name actg019
 #' @docType data
-#' @usage data(actg019)
+#' @usage actg019
 #' @keywords data
 #' @format A data frame with 822 rows and 5 variables:
 #' \describe{

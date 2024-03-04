@@ -15,7 +15,7 @@ A data frame with 183 rows and 5 variables:
 }
 }
 \usage{
-data(actg036)
+actg036
 }
 \description{
 A data set from the AIDS clinical trial ACTG036 (\url{https://clinicaltrials.gov/study/NCT00001104}) comparing
