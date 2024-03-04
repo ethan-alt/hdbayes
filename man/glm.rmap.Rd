@@ -85,32 +85,34 @@ a mixture of multivariate normal distributions where the parameters are obtained
 prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
 }
 \examples{
-if (instantiate::stan_cmdstan_exists()) {
-  data(actg019) ## current data
-  data(actg036) ## historical data
-  ## take subset for speed purposes
-  actg019 = actg019[1:150, ]
-  actg036 = actg036[1:100, ]
-  hist_data_list = list(actg036)
-  samples_bhm = glm.rmap.bhm(
-    formula = cd4 ~ treatment + age + race,
-    family = poisson('log'),
-    hist.data.list = hist_data_list,
-    chains = 1, iter_warmup = 1000, iter_sampling = 2000
-  )$beta_pred
-  res_approx = glm.rmap.bhm.approx(
-    samples.bhm = samples_bhm,
-    G = 1:5, verbose = FALSE
-  )
-  glm.rmap(
-    formula = cd4 ~ treatment + age + race,
-    family = poisson('log'),
-    curr.data = actg019,
-    probs = res_approx$probs,
-    means = res_approx$means,
-    covs = res_approx$covs,
-    chains = 1, iter_warmup = 1000, iter_sampling = 2000
-  )
+\dontrun{
+  if (instantiate::stan_cmdstan_exists()) {
+    data(actg019) ## current data
+    data(actg036) ## historical data
+    ## take subset for speed purposes
+    actg019 = actg019[1:150, ]
+    actg036 = actg036[1:100, ]
+    hist_data_list = list(actg036)
+    samples_bhm = glm.rmap.bhm(
+      formula = outcome ~ scale(age) + race + treatment + scale(cd4),
+      family = binomial('logit'),
+      hist.data.list = hist_data_list,
+      chains = 1, iter_warmup = 1000, iter_sampling = 2000
+    )$beta_pred
+    res_approx = glm.rmap.bhm.approx(
+      samples.bhm = samples_bhm,
+      G = 1:5, verbose = FALSE
+    )
+    glm.rmap(
+      formula = outcome ~ scale(age) + race + treatment + scale(cd4),
+      family = binomial('logit'),
+      curr.data = actg019,
+      probs = res_approx$probs,
+      means = res_approx$means,
+      covs = res_approx$covs,
+      chains = 1, iter_warmup = 1000, iter_sampling = 2000
+    )
+  }
 }
 }
 \references{

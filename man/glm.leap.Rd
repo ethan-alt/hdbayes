@@ -80,8 +80,8 @@ actg019 = actg019[1:100, ]
 actg036 = actg036[1:50, ]
 if (instantiate::stan_cmdstan_exists()) {
   glm.leap(
-    cd4 ~ treatment + age + race,
-    family = poisson(),
+    formula = outcome ~ scale(age) + race + treatment + scale(cd4),
+    family = binomial('logit'),
     data.list = list(actg019, actg036),
     K = 2,
     chains = 1, iter_warmup = 500, iter_sampling = 1000

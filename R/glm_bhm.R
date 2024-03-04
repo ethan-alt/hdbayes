@@ -56,12 +56,12 @@
 #'   data(actg019)
 #'   data(actg036)
 #'   ## take subset for speed purposes
-#'   actg019 = actg019[1:200, ]
-#'   actg036 = actg036[1:100, ]
+#'   actg019 = actg019[1:100, ]
+#'   actg036 = actg036[1:50, ]
 #'   data_list = list(currdata = actg019, histdata = actg036)
 #'   glm.bhm(
-#'     formula = cd4 ~ treatment + age + race,
-#'     family = poisson('log'),
+#'     formula = outcome ~ scale(age) + race + treatment + scale(cd4),
+#'     family = binomial('logit'),
 #'     data.list = data_list,
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )

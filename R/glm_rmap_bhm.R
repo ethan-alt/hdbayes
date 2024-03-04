@@ -54,13 +54,13 @@
 #' if (instantiate::stan_cmdstan_exists()) {
 #'   data(actg036) ## historical data
 #'   ## take subset for speed purposes
-#'   actg036 = actg036[1:100, ]
+#'   actg036 = actg036[1:50, ]
 #'   hist_data_list = list(actg036)
 #'   glm.rmap.bhm(
-#'     formula = cd4 ~ treatment + age + race,
-#'     family = poisson('log'),
+#'     formula = outcome ~ scale(age) + race + treatment + scale(cd4),
+#'     family = binomial('logit'),
 #'     hist.data.list = hist_data_list,
-#'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #' }
 glm.rmap.bhm = function(
