@@ -47,7 +47,7 @@ a vector of 10s.}
 
 \item{disp.sd}{sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
 
-\item{bridge.args}{\if{html}{\out{<optional>}} a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
+\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
