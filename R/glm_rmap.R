@@ -53,7 +53,7 @@
 #' @seealso [glm.rmap.bhm()] for the first step and [glm.rmap.bhm.approx()] for the second step of implementing RMAP.
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #'   if (instantiate::stan_cmdstan_exists()) {
 #'     data(actg019) ## current data
 #'     data(actg036) ## historical data

@@ -85,7 +85,7 @@ a mixture of multivariate normal distributions where the parameters are obtained
 prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
 }
 \examples{
-\dontrun{
+\donttest{
   if (instantiate::stan_cmdstan_exists()) {
     data(actg019) ## current data
     data(actg036) ## historical data

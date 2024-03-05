@@ -30,7 +30,7 @@ samples from the prior induced by the Bayesian hierarchical model (BHM)) by a mi
 distributions. We use the \code{mclust} package by Scrucca et al. (2023) to implement the mixture approximation.
 }
 \examples{
-\dontrun{
+\donttest{
   if (instantiate::stan_cmdstan_exists()) {
     data(actg036) ## historical data
     ## take subset for speed purposes
