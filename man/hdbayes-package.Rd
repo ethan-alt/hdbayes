@@ -6,7 +6,7 @@
 \alias{hdbayes}
 \title{hdbayes: Bayesian Analysis of Generalized Linear Models with Historical Data}
 \description{
-User-friendly functions for utilization of (multiple) historical data set(s) in generalized linear models (GLMs). Contains functions for sampling from the posterior distribution of a GLM using the power prior by Ibrahim and Chen (2000) \doi{10.1214/ss/1009212673}, normalized power prior (NPP) by Duan et al. (2006) \doi{10.1002/env.752}, normalized asymptotic power prior (NAPP) by Ibrahim et al. (2015) \doi{10.1002/sim.6728}, commensurate prior by Hobbs et al. (2011) \doi{10.1111/j.1541-0420.2011.01564.x}, robust meta-analytic-predictive prior (RMAP) by Schmidli et al. (2014) \doi{10.1111/biom.12242}, latent exchangeability prior (LEAP) by Alt et al. (2023) \href{https://arxiv.org/abs/2303.05223}{arXiv:2303.05223}, and the Bayesian hierarchical model.
+User-friendly functions for utilization of (multiple) historical data set(s) in generalized linear models. Contains functions for sampling from the posterior distribution of a generalized linear model using the Bayesian hierarchical model, power prior by Ibrahim and Chen (2000) \doi{10.1214/ss/1009212673}, normalized power prior by Duan et al. (2006) \doi{10.1002/env.752}, normalized asymptotic power prior by Ibrahim et al. (2015) \doi{10.1002/sim.6728}, commensurate prior by Hobbs et al. (2011) \doi{10.1111/j.1541-0420.2011.01564.x}, robust meta-analytic-predictive prior by Schmidli et al. (2014) \doi{10.1111/biom.12242}, and the latent exchangeability prior (LEAP) by Alt et al. (2023) \href{https://arxiv.org/abs/2303.05223}{arXiv:2303.05223}. The implementation is done via pre-compiled 'CmdStan' models.
 
 Bayesian analysis of generalized linear models using historical data
 }
@@ -26,6 +26,11 @@ Authors:
   \item Xinxin Chen
   \item Luiz M. Carvalho
   \item Joseph G. Ibrahim
+}
+
+Other contributors:
+\itemize{
+  \item Xiuya Chang [contributor]
 }
 
 }
