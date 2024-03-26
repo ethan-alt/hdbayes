@@ -36,14 +36,15 @@ of rows in the corresponding element of data.list. Defaults to a list of vectors
 \code{a0.shape2 == 1}, a uniform prior is used.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
-\code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+\code{sample()} method in cmdstanr package.}
 
 \item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
-in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+in \code{sample()} method in cmdstanr package.}
 
-\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}}.}
+\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
+cmdstanr package.}
 
-\item{...}{arguments passed to \code{\link[cmdstanr:model-method-sample]{cmdstanr::sample()}} (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
 }
 \value{
 The function returns an object of class \code{draws_df} giving posterior samples.

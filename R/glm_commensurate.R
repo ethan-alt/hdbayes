@@ -37,11 +37,12 @@
 #'                          data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
 #'                          provided, same as for tau. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
-#'                          [cmdstanr::sample()].
+#'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
-#'                          in [cmdstanr::sample()].
-#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in [cmdstanr::sample()].
-#' @param ...               arguments passed to [cmdstanr::sample()] (e.g. seed, refresh, init).
+#'                          in `sample()` method in cmdstanr package.
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
+#'                          cmdstanr package.
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
 #'
 #' @return
 #'  The function returns an object of class `draws_df` giving posterior samples.
