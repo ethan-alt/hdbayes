@@ -62,3 +62,4 @@ Collate:
     'glm_rmap_bhm_approx.R'
     'hdbayes-package.R'
     'lm_npp.R'
+    'zzz.R'
