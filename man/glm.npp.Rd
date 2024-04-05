@@ -97,57 +97,51 @@ half-normal prior (if applicable). For normal linear models, the exact normalizi
 NPP can be computed. See the implementation in \code{\link[=lm.npp]{lm.npp()}}.
 }
 \examples{
-\dontrun{
-  data(actg019)
-  data(actg036)
-  library(parallel)
-  ncores = 5
+\donttest{
+  if(requireNamespace("parallel")){
+    data(actg019)
+    data(actg036)
+    ## take subset for speed purposes
+    actg019 = actg019[1:100, ]
+    actg036 = actg036[1:50, ]
 
-  data.list = list(data = actg019, histdata = actg036)
-  formula   = cd4 ~ treatment + age + race
-  family    = poisson()
-  a0        = seq(0, 1, length.out = 100)
-  a0.lognc  = list()
-  a0.lognc.hdbayes = data.frame( a0 = a0 )
-  if (instantiate::stan_cmdstan_exists()) {
-    ## call created function
-    for (i in 2:length(data.list)) {
-      histdata = data.list[[i]]
+    library(parallel)
+    ncores    = 2
+    data.list = list(data = actg019, histdata = actg036)
+    formula   = cd4 ~ treatment + age + race
+    family    = poisson()
+    a0        = seq(0, 1, length.out = 11)
+    if (instantiate::stan_cmdstan_exists()) {
+      ## call created function
       ## wrapper to obtain log normalizing constant in parallel package
       logncfun = function(a0, ...){
-        glm.npp.lognc(
-          formula = formula, family = family, a0 = a0, histdata = histdata,
+        hdbayes::glm.npp.lognc(
+          formula = formula, family = family, a0 = a0, histdata = data.list[[2]],
           ...
         )
       }
 
       cl = makeCluster(ncores)
       clusterSetRNGStream(cl, 123)
-      clusterExport(cl, varlist = c('formula', 'family', 'histdata', 'glm.npp.lognc',
-                                    'glm_lp', 'get_lp2mean', 'normal_glm_lp', 'bernoulli_glm_lp',
-                                    'poisson_glm_lp', 'gamma_glm_lp', 'invgauss_glm_lp'))
-      a0.lognc[[i-1]] = parLapply(
-        cl = cl, X = a0, fun = logncfun, iter_warmup = 2000,
-        iter_sampling = 5000, chains = 1, refresh = 0
+      clusterExport(cl, varlist = c('formula', 'family', 'data.list'))
+      a0.lognc = parLapply(
+        cl = cl, X = a0, fun = logncfun, iter_warmup = 500,
+        iter_sampling = 1000, chains = 1, refresh = 0
       )
       stopCluster(cl)
-      a0.lognc[[i-1]] = data.frame( do.call(rbind, a0.lognc[[i-1]]) )
-      a0.lognc.hdbayes = cbind(a0.lognc.hdbayes, a0.lognc[[i-1]]$lognc)
-      colnames(a0.lognc.hdbayes)[i] = paste0("lognc_hist", i-1)
-    }
-    a0.lognc = a0.lognc.hdbayes$a0
-    lognc    = as.matrix(a0.lognc.hdbayes[, -1, drop = F])
+      a0.lognc = data.frame( do.call(rbind, a0.lognc) )
 
-    ## sample from normalized power prior
-    glm.npp(
-      formula = cd4 ~ treatment + age + race,
-      family = poisson(),
-      data.list = data.list,
-      a0.lognc = a0.lognc,
-      lognc = lognc,
-      chains = 1, iter_warmup = 500, iter_sampling = 1000,
-      refresh = 0
-    )
+      ## sample from normalized power prior
+      glm.npp(
+        formula = cd4 ~ treatment + age + race,
+        family = poisson(),
+        data.list = data.list,
+        a0.lognc = a0.lognc$a0,
+        lognc = matrix(a0.lognc$lognc, ncol = 1),
+        chains = 1, iter_warmup = 500, iter_sampling = 1000,
+        refresh = 0
+      )
+    }
   }
 }
 }
