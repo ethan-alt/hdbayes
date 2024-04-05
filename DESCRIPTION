@@ -1,6 +1,6 @@
 Package: hdbayes
 Title: Bayesian Analysis of Generalized Linear Models with Historical Data
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: c(person("Ethan M.", "Alt", email = "ethanalt@live.unc.edu", role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0002-6112-9030")), 
     person("Xinxin", "Chen", role = "aut"), 
     person("Luiz M.", "Carvalho", role = "aut"),
@@ -36,7 +36,8 @@ Imports:
     mclust,
     bridgesampling
 Suggests:
-    cmdstanr (>= 0.6.0)
+    cmdstanr (>= 0.6.0),
+    parallel
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
