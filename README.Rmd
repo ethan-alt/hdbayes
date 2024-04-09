@@ -33,15 +33,19 @@ methods that leverage historical data.
 
 Using `hdbayes` package requires installing the R package [`cmdstanr`](https://mc-stan.org/cmdstanr/) (not available on CRAN) and the command-line  interface to Stan: [`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). You may follow the instructions in [Getting started with CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to install both.
 
-You can install the latest version of `hdbayes` package on CRAN using the following R command:
+You can install the released version of `hdbayes` from CRAN with:
 
-`install.packages("hdbayes", type = "source")`
+```r
+install.packages("hdbayes", type = "source")
+```
 
 Please note that it is important to set `type = "source"`. Otherwise, the 'CmdStan' models in the package may not be compiled during installation.
 
-Alternatively, you can install the development version of `hdbayes` from GitHub via
+Alternatively, you can install the development version from GitHub with
 
-`remotes::install_github("ethan-alt/hdbayes")`
+```r
+remotes::install_github("ethan-alt/hdbayes")
+```
 
 
 # Example
@@ -121,7 +125,7 @@ entries of $\Sigma$.
 
 The defaults in `hdbayes` are
 
-* $\mu_0 = 0$
+* $\mu_0 = \textbf{0}_p$, where $\textbf{0}_p$ denotes a $p$-dimensional vector of 0s
 * $\Sigma_0 = 100 \times I_p$
 * $\nu_{0,j} = 0$ for $j = 1, \ldots, p$
 * $\psi_{0,j} = 1$ for $j = 1, \ldots, p$
@@ -158,7 +162,7 @@ $$
 $$
 where the $\tau_j$'s are elicited by the user. The defaults in `hdbayes` are
 
-* $\mu_0 = 0$
+* $\mu_0 = \textbf{0}_p$
 * $\Sigma_0 = 100 \times I_p$
 
 This method can be fit as follows
@@ -197,7 +201,7 @@ Note that when $w = 1$, the robust MAP prior effectively becomes the BHM. The
 defaults are the same as in the BHM except the default value for w is 0.1, and 
 the default vague prior $N_p(\mu_v, \Sigma_v)$ is specified as:
 
-* $\mu_v = 0$
+* $\mu_v = \textbf{0}_p$
 * $\Sigma_v = 100 \times I_p$
 
 The Robust MAP prior is implemented via a three-step procedure in hdbayes as follows: 
@@ -261,7 +265,7 @@ and $\pi_0(\beta)$ is an "initial prior" on $\beta$.
 
 The default in `hdbayes` is a (noninformative) normal prior on $\beta$:
 $$
-\beta \sim N_p(0, 100 \times I_p)
+\beta \sim N_p(\textbf{0}_p, 100 \times I_p)
 $$
 
 The power prior (with $a_0 = 0.5$) may be fit as follows:
@@ -302,7 +306,7 @@ $$
 
 The defaults in `hdbayes` are
 
-* $\pi_0(\beta) \propto N(\beta | 0, 100 \times I_p)$
+* $\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)$
 * $\alpha_0 = 1$
 * $\gamma_0 = 1$
 
@@ -417,6 +421,39 @@ fit.napp[, -1] %>%
 ```
 
 
+### Latent exchangeability prior (LEAP)
+LEAP assumes that the historical data are generated from a finite mixture model consisting of $K \ge 2$ components, with the current data generated from the first component of this mixture. For single historical data set settings, the posterior under the LEAP may be expressed hierarchically as
+$$
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right) \\
+  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_0), \:k = 2, \ldots, K, \text{ where }\Sigma_0 = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
+  \gamma &\sim \text{Dirichlet}(\alpha_0)
+\end{align*}
+$$
+where $\gamma = (\gamma_1, \ldots, \gamma_K)'$ is a vector of mixing probabilities, $\alpha_0 = (\alpha_1, \ldots, \alpha_K)'$ is a vector of concentration parameters, and $\mu_0$ and $\Sigma_0$ are respectively the prior mean and covariance matrices for the $K$ regression coefficients. The defaults in `hdbayes` are
+
+* $\mu_0 = \textbf{0}_p$
+* $\Sigma_0 = 100 \times I_p$
+* $\alpha_0 = \textbf{1}_K$, where $\textbf{1}_K$ denotes a $K$-dimensional vector of 1s
+* $K = 2$
+
+The LEAP can be fit as follows:
+```{r leap}
+fit.leap = glm.leap(
+  formula = formula, family = family, data.list = data.list,
+  iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
+  chains = chains, parallel_chains = ncores,
+  refresh = 0
+)
+
+suppressWarnings(
+ fit.leap[, c(2:4, 11)] %>% 
+    summarise_draws() %>% 
+    mutate(across(where(is.numeric), round, 3)) 
+)
+```
+
 
 ## Comparison of methods
 We now can compare the point estimate (MLE / posterior mean) and uncertainty
@@ -428,7 +465,7 @@ We now can compare the point estimate (MLE / posterior mean) and uncertainty
 ##
 fit.list = list('bhm' = fit.bhm, 'commensurate' = fit.commensurate,
                 'robustmap' = fit.rmap, 'napp' = fit.napp,
-                'npp' = fit.npp, 'pp' = fit.pp)
+                'npp' = fit.npp, 'pp' = fit.pp, 'leap' = fit.leap)
 
 post.mean = suppressWarnings(
   sapply(
