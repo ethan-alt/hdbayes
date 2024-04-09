@@ -2,16 +2,42 @@
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 <!-- badges: start -->
 
+[![CRAN](https://www.r-pkg.org/badges/version/hdbayes)](https://CRAN.R-project.org/package=hdbayes)
 [![R-CMD-check](https://github.com/ethan-alt/hdbayes/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/ethan-alt/hdbayes/actions)
 <!-- badges: end -->
 
-## hdbayes
+# hdbayes: Bayesian Analysis of Generalized Linear Models with Historical Data
 
 The goal of `hdbayes` is to make it easier for users to conduct Bayesian
-analysis methods that leverage historical data. The `hdbayes` package
-depends on the R package
-[`instantiate`](https://wlandau.github.io/instantiate/) to build
-pre-compiled CmdStan models.
+analysis methods that leverage historical data.
+
+# Installation
+
+Using `hdbayes` package requires installing the R package
+[`cmdstanr`](https://mc-stan.org/cmdstanr/) (not available on CRAN) and
+the command-line interface to Stan:
+[`CmdStan`](https://mc-stan.org/users/interfaces/cmdstan.html). You may
+follow the instructions in [Getting started with
+CmdStanR](https://mc-stan.org/cmdstanr/articles/cmdstanr.html) to
+install both.
+
+You can install the latest version of `hdbayes` package on CRAN using
+the following R command:
+
+`install.packages("hdbayes", type = "source")`
+
+Please note that it is important to set `type = "source"`. Otherwise,
+the ‘CmdStan’ models in the package may not be compiled during
+installation.
+
+Alternatively, you can install the development version of `hdbayes` from
+GitHub via
+
+`remotes::install_github("ethan-alt/hdbayes")`
+
+# Example
+
+We now demonstrate how to use `hdbayes` via a simple simulation study.
 
 ## Setting up MCMC parameters
 
@@ -29,7 +55,7 @@ iter_sampling = 2000   ## number of samples post warmup per chain
 
 ## Simulating logistic regression data
 
-We now simulate some logistic regression data. For simplicity, we
+Then we simulate some logistic regression data. For simplicity, we
 generate one current and one historical data set. Note that the package
 allows for using multiple historical data sets.
 
@@ -152,14 +178,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 5.3 seconds.
-#> Chain 3 finished in 6.1 seconds.
-#> Chain 4 finished in 6.5 seconds.
-#> Chain 2 finished in 7.1 seconds.
+#> Chain 1 finished in 5.4 seconds.
+#> Chain 3 finished in 6.2 seconds.
+#> Chain 4 finished in 6.6 seconds.
+#> Chain 2 finished in 7.3 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 6.2 seconds.
-#> Total execution time: 7.3 seconds.
+#> Mean chain execution time: 6.4 seconds.
+#> Total execution time: 7.4 seconds.
 
 suppressWarnings(
   fit.bhm[, 2:7] %>% 
@@ -294,12 +320,12 @@ fit.hist.bhm = glm.rmap.bhm(
 #> 
 #> Chain 1 finished in 2.4 seconds.
 #> Chain 4 finished in 2.8 seconds.
+#> Chain 3 finished in 3.0 seconds.
 #> Chain 2 finished in 3.1 seconds.
-#> Chain 3 finished in 3.1 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 2.9 seconds.
-#> Total execution time: 3.3 seconds.
+#> Mean chain execution time: 2.8 seconds.
+#> Total execution time: 3.2 seconds.
 ## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
 samples_bhm = fit.hist.bhm$beta_pred
 
@@ -387,7 +413,7 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
+#> Chain 1 finished in 0.5 seconds.
 #> Chain 3 finished in 0.5 seconds.
 #> Chain 2 finished in 0.6 seconds.
 #> Chain 4 finished in 0.6 seconds.
@@ -553,7 +579,7 @@ fit.npp = glm.npp(
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 0.9 seconds.
+#> Total execution time: 1.0 seconds.
 fit.npp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -596,13 +622,13 @@ fit.napp = glm.napp(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.5 seconds.
-#> Chain 2 finished in 0.5 seconds.
+#> Chain 2 finished in 0.6 seconds.
 #> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.5 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.6 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
