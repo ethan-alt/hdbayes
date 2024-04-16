@@ -56,7 +56,6 @@ jobs:
             any::rmarkdown
             any::ggplot2
             any::ggthemes
-            any::parallel
             any::tibble
             any::wacolors
           needs: check
