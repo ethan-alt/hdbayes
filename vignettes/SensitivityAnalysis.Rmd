@@ -1,0 +1,607 @@
+---
+title: "Evaluating the sensitivity of informative priors based on historical data"
+# output: rmarkdown::html_vignette
+output: rmarkdown::pdf_document
+bibliography: hdbayes.bib  
+vignette: >
+  %\VignetteIndexEntry{SensitivityAnalysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+The power prior (PP) and the robust meta-analytic prior (RMAP) are two very 
+common choices for constructing informative priors by borrowing information from
+historical data.
+However, these modelling devices depend on tuning parameters that must be chosen
+in advance, and it is not clear which values should be picked.
+In this vignette we will use the data set in the
+[AIDS progression](Logistic_regression_HIV.html) to explore the choice of tuning
+parameter in a logistic regression setting.
+Please refer to that document for model, data and research question details.
+
+```{r prep, echo=FALSE}
+library(hdbayes)
+library(posterior)
+library(ggplot2)
+library(ggthemes)
+library(tidyverse)
+library(scales)
+
+get_summaries <- function(fit, pars.interest,
+                          digits = 2) {
+  ## A little function to pull out the summaries in a convenient form
+  out <- subset(posterior::summarise_draws(fit,
+                                           .num_args = list(
+                                             sigfig = digits,
+                                             notation = "dec"
+                                           )),
+                variable %in% pars.interest)
+  
+  return(out)
+}
+
+```
+
+Let' setup
+```{r setup_data, cache=TRUE}
+
+data("actg019")
+data("actg036")
+
+actg019$age <- scale(actg019$age)
+actg019$cd4 <- scale(actg019$cd4)
+
+actg036$age <- scale(actg036$age)
+actg036$cd4 <- scale(actg036$cd4)
+
+ncores <- 4 # max(1, parallel::detectCores() - 2)
+nchains <- ncores
+warmup  <- 1000
+total.samples <- 10000   ## number of samples post warmup
+samples <- ceiling(total.samples / ncores)  ## outputs approx total.samples samples
+```
+
+And obtain some maximum likelihood estimates (MLE):
+
+```{r mle, cache = TRUE}
+formula <- outcome ~  age + race + treatment + cd4
+p <- length(attr(terms(formula), "term.labels")) # number of predictors
+family  <- binomial('logit')
+
+fit.mle.cur  <- glm(formula, family, actg036)
+fit.mle.hist <- glm(formula, family, actg019)
+
+mle.estimates.past <- data.frame(
+  parameter = names(coef(fit.mle.hist)),
+  value = coef(fit.mle.hist),
+  MLE = "Historical"
+)
+mle.estimates.curr <- data.frame(
+  parameter = names(coef(fit.mle.cur)),
+  value = coef(fit.mle.cur),
+  MLE = "Current"
+)
+
+mle.estimates <- rbind(mle.estimates.past,
+                       mle.estimates.curr)
+
+confint(fit.mle.hist)
+confint(fit.mle.cur)
+
+base.pars <- c("(Intercept)", "age", "race", "treatment", "cd4")
+
+the.data <-  list(actg036,
+                  actg019)
+```
+
+# Robust Meta-analytic predictive prior (RMAP)
+
+The RMAP (@Schmidli2014) is a (linear) mixture between the Bayesian hierarchical model (BHM) and 
+a vague prior.
+Conceptually, if $\theta$ is the parameter of interest, we have
+\begin{equation}
+\pi_{\text{RMAP}}(\theta) = w\pi_{\text{BHM}}(\theta) + (1-w)\pi_{\text{Vague}}(\theta),
+\end{equation}
+where $w \in (0,1)$ is a mixture weight that controls for the level of borrowing of the historical data.
+Note that when $w = 1$, the robust MAP prior should collapse to the BHM.
+The defaults are the same as in the BHM and the default value for $w$ is 0.1.
+We will now fit the RMAP for a few values of $w$ and see what effect (if any)
+this has on the regression coefficients (hence $\theta = \boldsymbol{\beta}$ here).
+First, let us wrap the function to fit the RMAP,  `glm.robustmap()`, into a
+convenient function that takes a given $w$ and returns the output:
+```{r mapsetup, cache=TRUE}
+
+fit.bhm.hist <- glm.rmap.bhm(
+    formula,
+    family,
+    hist.data.list = list(actg019),
+    meta.mean.mean = 0,
+    meta.mean.sd = 10,
+    meta.sd.mean = 0,
+    meta.sd.sd = .5,
+    parallel_chains = 4,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    thin = 10,
+    refresh = 0
+  )
+
+samples_bhm <- fit.bhm.hist$beta_pred
+
+res_approx <- glm.rmap.bhm.approx(
+  samples.bhm = samples_bhm,
+  G = 1:9,
+  verbose = FALSE
+)
+```
+
+Now, we will do this for a small set of weights, just to see what is going on:
+```{r regularRMAP, cache=TRUE}
+
+rmap_fit_and_report <- function(weight){
+  cat("Doing w=", weight, "\n")
+  fit.robustmap <- glm.rmap(
+    formula,
+    family,
+    curr.data = actg036,
+    probs = res_approx$probs,
+    means = res_approx$means,
+    covs = res_approx$covs,
+    w = weight,
+    parallel_chains = 4,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    show_messages = FALSE,
+    show_exceptions = FALSE,
+    refresh = 0
+  )
+  return(fit.robustmap)
+}
+
+ws.regular <- seq(0.1, 0.9, by = 0.1) 
+
+system.time(
+  all.fits.regular <- lapply(ws.regular, rmap_fit_and_report)
+)
+
+all.summaries.regular <- lapply(1:length(all.fits.regular),  function(i) {
+  out <- tibble(get_summaries(fit = all.fits.regular[[i]], base.pars),
+                name = paste0("w=", ws.regular[i]))
+  return(out)
+})
+
+results.regular <- do.call(rbind, all.summaries.regular) 
+results.regular$w <- as.numeric(gsub("w=", "", results.regular$name))
+results.regular <- results.regular %>% rename(lwr = q5)
+results.regular <- results.regular %>% rename(upr = q95)
+results.regular <- results.regular %>% rename(parameter = variable)
+```
+Next, we will produce a little plot to help us visualise things:
+
+```{r RMAPplot_regular, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+
+ggplot(data = results.regular,
+       aes(x = w, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(w), expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+As we can see, the actual posterior estimates do not seem to be very sensitive to
+the value of $w \in [0.1, 0.9]$.
+This might prompt the curious to ask whether this would change for small values
+of $w$.
+Let's investigate:
+```{r smallRMAP, cache=TRUE}
+
+ws.small <- c(10^{-(6:2)}, 2:9/100)
+
+system.time(
+  all.fits.small <- lapply(ws.small, rmap_fit_and_report)
+)
+
+all.summaries.small <- lapply(1:length(all.fits.small),
+                              function(i) {
+                                out <- tibble(get_summaries(fit = all.fits.small[[i]], base.pars),
+                                              name = paste0("w=", ws.small[i]))
+                                return(out)
+                              })
+
+results.small <- do.call(rbind, all.summaries.small) 
+results.small$w <- as.numeric(gsub("w=", "", results.small$name))
+results.small <- results.small %>% rename(lwr = q5)
+results.small <- results.small %>% rename(upr = q95)
+results.small <- results.small %>% rename(parameter = variable)
+
+```
+Again, let's plot 
+```{r RMAPplot_small, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+
+ggplot(data = results.small,
+       aes(x = w, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(w),
+                     trans = log_trans(),
+                     breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+and voilà!
+Now we do see that the posterior resulting from the RMAP is indeed sensitive
+to $w$, as long as that value is well below $0.1$.
+
+# Power prior (PP)
+
+We now turn our attention to the power prior (PP, @Ibrahim2000), which raises 
+the likelihood of the historical data to a discounting factor, $a_0$:
+\begin{equation}
+\pi_{\text{PP}}(\theta) \propto L(D_0 \mid \theta)^{a_0}\pi_0(\theta).
+\end{equation}
+
+```{r ppfits, cache=TRUE}
+
+pp_fit_and_report <- function(a){
+  cat("Doing a0=", a, "\n")
+  fit.pp <- glm.pp(
+    formula,
+    family,
+    data.list = the.data,
+    a0 = a,
+    parallel_chains = 4,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    show_messages = FALSE,
+    show_exceptions = FALSE,
+    refresh = 0
+  )
+  return(fit.pp)
+}
+
+as <- sort(c(ws.small, ws.regular))  
+
+system.time(
+  all.pp.fits <- lapply(as, pp_fit_and_report)
+)
+
+all.summaries.pp <- lapply(1:length(all.pp.fits),  function(i) {
+  out <- tibble(get_summaries(fit = all.pp.fits[[i]], base.pars),
+                name = paste0("a_0=", as[i]))
+  return(out)
+})
+
+results.pp <- do.call(rbind, all.summaries.pp) 
+results.pp$a0 <- as.numeric(gsub("a_0=", "", results.pp$name))
+results.pp <- results.pp %>% rename(lwr = q5)
+results.pp <- results.pp %>% rename(upr = q95)
+results.pp <- results.pp %>% rename(parameter = variable)
+```
+We can now plot the results:
+```{r PPplot_complete, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.pp,
+       aes(x = a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(a[0]),
+                     trans = log_trans(),
+                     breaks = scales::trans_breaks("log10", function(x) 10^x),
+                     labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+only to realise that the sensitivity is in the $(0.1, 1)$ interval.
+Let's slightly re-do the plot:
+
+```{r PPplot_small, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.pp,
+       aes(x = a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(a[0]),
+                     expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+
+Now we can clearly see that the posteriors seem to start converging when $a_0 > 0.3$,
+although the picture is not as clear cut as for the RMAP.
+
+Now, let's take a look at prior sensitivity in normalised versions of the power prior, the NPP and NAPP.
+
+First, let's elicit Beta priors with a given prior mean and maximum entropy (subject to having the right mean)
+```{r}
+# remotes::install_github("maxbiostat/logPoolR")
+library(logPoolR)
+hyperpars <- lapply(as, elicit_beta_mean_maxent)
+K <- length(hyperpars)
+prior.quantiles <- vector(K, mode = "list")
+Alpha <- .95
+for(k in 1:K) {
+  prior.quantiles[[k]] <- tibble(median = qbeta(p = 1/2,
+                                                shape1 = hyperpars[[k]]$a,
+                                                shape2 = hyperpars[[k]]$b), 
+                                 lwr = qbeta(p = (1 - Alpha)/2,
+                                             shape1 = hyperpars[[k]]$a,
+                                             shape2 = hyperpars[[k]]$b),
+                                 upr = qbeta(p = (1 + Alpha)/2,
+                                             shape1 = hyperpars[[k]]$a,
+                                             shape2 = hyperpars[[k]]$b))
+  prior.quantiles[[k]]$a0 <- as[k]
+  
+  prior.quantiles.df <- do.call(rbind, prior.quantiles)
+}
+```
+Now let's plot these (hyper-) priors on $a_0$:
+
+```{r priorPlotA0, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = prior.quantiles.df,
+       aes(x = a0, y = median)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_y_continuous(expression(a[0]), expand = c(0, 0)) +
+  scale_x_continuous("Prior mean",
+                     expand = c(0, 0)) +
+  ggtitle("Maximum entropy Beta prior on the discounting parameter") +
+  geom_abline(slope = 1, intercept = 0, linetype = "longdash") +
+  theme_bw(base_size = 16)
+```
+These seem wide enough.
+Now, let's prepare what we need to fit the normalised power prior (NPP) under each of these priors.
+
+
+```{r normconst, cache = TRUE}
+a0.lognc <- list()
+a0.lognc.hdbayes <- data.frame(a0 = as)
+
+glm_lp <- hdbayes:::glm_lp
+get_lp2mean <- hdbayes:::get_lp2mean
+bernoulli_glm_lp <- hdbayes:::bernoulli_glm_lp
+
+
+## call created function
+for (i in 2:length(the.data)) {
+  histdata = the.data[[i]]
+  ## wrapper to obtain log normalizing constant in parallel package
+  logncfun <- function(a0, ...) {
+    glm.npp.lognc(
+      formula = formula,
+      family = family,
+      a0 = a0,
+      histdata = histdata,
+      show_messages = FALSE,
+      show_exceptions = FALSE,
+      ...
+    )
+  }
+  cl <- parallel::makeCluster(10)
+  parallel::clusterSetRNGStream(cl, 123)
+  parallel::clusterExport(
+    cl,
+    varlist = c(
+      'formula',
+      'family',
+      'histdata',
+      'glm.npp.lognc',
+      'glm_lp',
+      'get_lp2mean',
+      'bernoulli_glm_lp'
+    )
+  )
+    a0.lognc[[i - 1]] <- parallel::parLapply(
+      cl = cl,
+      X = as,
+      fun = logncfun,
+      iter_warmup = warmup,
+      iter_sampling = samples,
+      chains = 1,
+      refresh = 0
+    )
+
+  stopCluster(cl)
+  a0.lognc[[i - 1]] <- data.frame(do.call(rbind, a0.lognc[[i - 1]]))
+  a0.lognc.hdbayes <- cbind(a0.lognc.hdbayes, a0.lognc[[i - 1]]$lognc)
+  colnames(a0.lognc.hdbayes)[i] <- paste0("lognc_hist", i - 1)
+}
+
+a0.lognc <- a0.lognc.hdbayes$a0
+lognc    <- as.matrix(a0.lognc.hdbayes[, -1, drop = F])
+```
+Now we will actually fit the NPP under each of these priors.
+
+```{r nppfits, cache=TRUE}
+
+npp_fit_and_report <- function(k){
+  cat("Doing a0=", as[k], "\n")
+  fit.npp <- glm.npp(
+    formula,
+    family,
+    data.list = the.data,
+    a0.lognc = a0.lognc,
+    lognc = lognc,
+    a0.shape1 =  hyperpars[[k]]$a, a0.shape2 = hyperpars[[k]]$b,
+    parallel_chains = 4,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    show_messages = FALSE,
+    show_exceptions = FALSE,
+    refresh = 0
+  )
+  return(fit.npp)
+}
+
+system.time(
+  all.npp.fits <- lapply(seq_along(as), npp_fit_and_report)
+)
+
+all.summaries.npp <- lapply(1:length(all.npp.fits),  function(i) {
+  out <- tibble(get_summaries(fit = all.npp.fits[[i]], base.pars),
+                name = paste0("a_0=", as[i]))
+  return(out)
+})
+
+results.npp <- do.call(rbind, all.summaries.npp) 
+results.npp$prior_mean_a0 <- as.numeric(gsub("a_0=", "", results.npp$name))
+results.npp <- results.npp %>% rename(lwr = q5)
+results.npp <- results.npp %>% rename(upr = q95)
+results.npp <- results.npp %>% rename(parameter = variable)
+```
+
+```{r NPPplot_all, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.npp,
+       aes(x = prior_mean_a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression("Prior mean for"~a[0]),
+                     expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+And now we will repeat the exercise with the normalised asymptotic power prior (NAPP).
+
+```{r nappfits, cache=TRUE}
+
+napp_fit_and_report <- function(k){
+  cat("Doing a0=", as[k], "\n")
+  fit.napp <- glm.napp(
+    formula,
+    family,
+    data.list = the.data,
+    a0.shape1 =  hyperpars[[k]]$a, a0.shape2 = hyperpars[[k]]$b,
+    parallel_chains = 4,
+    show_messages = FALSE,
+    show_exceptions = FALSE,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    refresh = 0
+  )
+  return(fit.napp)
+}
+
+system.time(
+  all.napp.fits <- lapply(seq_along(as), napp_fit_and_report)
+)
+
+all.summaries.napp <- lapply(1:length(all.napp.fits),  function(i) {
+  out <- tibble(get_summaries(fit = all.napp.fits[[i]], base.pars),
+                name = paste0("a_0=", as[i]))
+  return(out)
+})
+
+results.napp <- do.call(rbind, all.summaries.napp) 
+results.napp$prior_mean_a0 <- as.numeric(gsub("a_0=", "", results.napp$name))
+results.napp <- results.napp %>% rename(lwr = q5)
+results.napp <- results.napp %>% rename(upr = q95)
+results.napp <- results.napp %>% rename(parameter = variable)
+```
+
+```{r NAPPplot_all, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+ggplot(data = results.napp,
+       aes(x = prior_mean_a0, y = mean,
+           colour = parameter, fill = parameter)) +
+  geom_line() +
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_color_colorblind() +
+  scale_fill_colorblind() +
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression("Prior mean for"~a[0]),
+                     expand = c(0, 0)) +
+  facet_wrap(parameter~., scales = "free_y") +
+  theme_bw(base_size = 16)
+```
+
+Finally, we will look at the posterior distribution for $a_0$:
+
+```{r posteriorPlotA0, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+
+npp.a0.posterior <- do.call(rbind,
+                            lapply(seq_along(all.npp.fits), function(k){
+  tibble(median = mean(all.npp.fits[[k]]$a0_hist_1),
+         lwr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
+         upr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
+         a0 = as[k],
+         model = "NPP")
+}))
+
+
+napp.a0.posterior <- do.call(rbind,
+                            lapply(seq_along(all.napp.fits), function(k){
+  tibble(median = median(all.napp.fits[[k]]$a0_hist_1),
+         lwr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
+         upr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
+         a0 = as[k],
+         model = "NAPP")
+}))
+
+prior.quantiles.df$model <- "prior"
+
+a0.posterior.df <- do.call(rbind, list(prior.quantiles.df, npp.a0.posterior, napp.a0.posterior))
+
+ggplot(data = a0.posterior.df,
+       aes(x = a0, y = median, colour = model, fill = model)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = .2) +
+  scale_y_continuous(expression(a[0]), expand = c(0, 0)) +
+  scale_x_continuous("Prior mean",
+                     expand = c(0, 0)) +
+  ggtitle("Posterior quantiles for the discounting parameter") +
+  geom_abline(slope = 1, intercept = 0, linetype = "longdash") +
+  theme_bw(base_size = 16)
+```
+from which we conclude that the posterior for $a_0$ does not change much relative to its prior.
+
+# References {-}
+
+<div id="refs"></div>
+
+# Computing environment
+
+```{r env}
+sessionInfo()
+```
+
