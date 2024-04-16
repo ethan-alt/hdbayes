@@ -1,3 +1,5 @@
-# hdbayes 0.0.1
+# hdbayes (development version)
 
-* First version.
+# hdbayes 0.0.3
+
+* First CRAN release.
