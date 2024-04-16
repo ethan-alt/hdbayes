@@ -42,6 +42,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"' # do not install packages in Suggests
+          cache: false
           extra-packages: |
             any::rcmdcheck
             any::ggplot2

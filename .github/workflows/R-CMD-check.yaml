@@ -49,6 +49,7 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"' # do not install packages in Suggests
+          cache: false
           extra-packages: |
             any::rcmdcheck
             any::ggplot2
@@ -61,7 +62,6 @@ jobs:
             any::tidyverse
             any::wacolors
           needs: check
-          cache-version: 2
 
       - uses: r-lib/actions/check-r-package@v2
         with:
