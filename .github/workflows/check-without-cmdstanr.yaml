@@ -45,15 +45,8 @@ jobs:
           cache: false
           extra-packages: |
             any::rcmdcheck
-            any::ggplot2
-            any::ggthemes
             any::knitr
-            any::parallel
             any::rmarkdown
-            any::scales
-            any::tibble
-            any::tidyverse
-            any::wacolors
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
