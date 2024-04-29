@@ -15,42 +15,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(parallel)
-library(hdbayes)
-library(ggplot2)
-library(ggthemes)
-library(tibble)
-library(wacolors)
-library(tidyverse)
-```
 
-```{r}
-data("actg019")
-data("actg036")
-
-summary(actg019)
-summary(actg036)
-
-actg019$age <- scale(actg019$age)
-actg019$cd4 <- scale(actg019$cd4)
-
-actg036$age <- scale(actg036$age)
-actg036$cd4 <- scale(actg036$cd4)
-
-formula <- outcome ~  age + race + treatment + cd4
-p <- length(attr(terms(formula), "term.labels")) # number of predictors
-family  <- binomial('logit')
-
-fit.mle.cur  <- glm(formula, family, actg036)
-fit.mle.hist <- glm(formula, family, actg019)
-
-summary(fit.mle.hist)
-summary(fit.mle.cur)
-
-confint(fit.mle.hist)
-confint(fit.mle.cur)
-
-the.data <-  list(actg036,
-                  actg019)
 ```
 
