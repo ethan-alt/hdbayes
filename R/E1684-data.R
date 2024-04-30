@@ -1,0 +1,26 @@
+#' ECOG E1684 Trial
+#'
+#' A data set from the ECOG E1684 trial comparing the high-dose interferon alfa-2b (IFN)
+#' therapy with the observation in resected high-risk melanoma patients. The study results
+#' were described in Kirkwood et al. (1996) <doi:10.1200/JCO.1996.14.1.7>.
+#'
+#' @name E1684
+#' @docType data
+#' @usage E1684
+#' @keywords data
+#' @format A data frame with 262 rows and 8 variables:
+#' \describe{
+#'   \item{failtime}{time to relapse in years}
+#'   \item{failcens}{censoring indicator for time to relapse, 0 = did not relapse, 1 = relapsed}
+#'   \item{survtime}{time to death in years}
+#'   \item{survcens}{censoring indicator for time to death, 0 = alive, 1 = dead}
+#'   \item{treatment}{treatment indicator, 0 = observation, 1 = high-dose IFN}
+#'   \item{sex}{gender indicator, 0 = male, 1 = female}
+#'   \item{age}{patient age in years}
+#'   \item{node_bin}{indicator for having more than one cancerous lymph node,
+#'               0 = with one or no cancerous lymph nodes,
+#'               1 = with more than one cancerous lymph node}
+#' }
+#' @references
+#'  Kirkwood, J. M., Strawderman, M. H., Ernstoff, M. S., Smith, T. J., Borden, E. C., and Blum, R. H. (1996). Interferon alfa-2b adjuvant therapy of high-risk resected cutaneous melanoma: The Eastern Cooperative Oncology Group trial EST 1684. Journal of Clinical Oncology, 14(1), 7–17.
+NULL

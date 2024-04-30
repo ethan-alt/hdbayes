@@ -51,6 +51,8 @@ Additional_repositories:
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 LazyData: true
 Collate: 
+    'E1684-data.R'
+    'E1690-data.R'
     'E1694-data.R'
     'E2696-data.R'
     'IBCSG_curr-data.R'
