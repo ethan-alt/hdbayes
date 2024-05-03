@@ -2,7 +2,7 @@
 title: "AIDS progression"
 output: rmarkdown::html_vignette
 # output: rmarkdown::pdf_document
-  rmarkdown::html_vignette:
+rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
     code_folding: show
@@ -484,7 +484,7 @@ for (i in 2:length(the.data)) {
       refresh = 0
     )
   )
-
+  
   stopCluster(cl)
   a0.lognc[[i - 1]] <- data.frame(do.call(rbind, a0.lognc[[i - 1]]))
   a0.lognc.hdbayes <- cbind(a0.lognc.hdbayes, a0.lognc[[i - 1]]$lognc)
@@ -649,9 +649,9 @@ LL <- unique(results$model)
 # run this: wacolors::pal_vector("rainier", n = length(fit.list))
 
 Colours <- setNames( c("#465177", "#CDC24D", "#E1B11F", "#AF6522", "#613E30",
-                "#284739", "#497734", "#85A95C", "#9CB9BF", "#B19EEA",
-                "#DF3383"),
-                LL)
+                       "#284739", "#497734", "#85A95C", "#9CB9BF", "#B19EEA",
+                       "#DF3383"),
+                     LL)
 
 
 mle.estimates <- rbind(mle.estimates.past,
@@ -691,8 +691,8 @@ Let's take a look at the coefficients under the rMAP with different values for $
 ```{r rmap_plots, echo=FALSE, cache=TRUE,  fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
 
 rmapstuff <- c("RMAP_w=0.1",
-                 "RMAP_w=0.5",
-                 "RMAP_w=0.9")
+               "RMAP_w=0.5",
+               "RMAP_w=0.9")
 
 ggplot() + 
   geom_pointrange(

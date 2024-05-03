@@ -3,7 +3,7 @@ title: "Evaluating the sensitivity of informative priors based on historical dat
 output: rmarkdown::html_vignette
 # output: rmarkdown::pdf_document
 bibliography: hdbayes.bib  
-  rmarkdown::html_vignette:
+rmarkdown::html_vignette:
     toc: true
     toc_depth: 3
     code_folding: show
@@ -122,19 +122,19 @@ convenient function that takes a given $w$ and returns the output:
 ```{r mapsetup, cache=TRUE}
 
 fit.bhm.hist <- glm.rmap.bhm(
-    formula,
-    family,
-    hist.data.list = list(actg019),
-    meta.mean.mean = 0,
-    meta.mean.sd = 10,
-    meta.sd.mean = 0,
-    meta.sd.sd = .5,
-    parallel_chains = 4,
-    iter_warmup = warmup,
-    iter_sampling = samples,
-    thin = 10,
-    refresh = 0
-  )
+  formula,
+  family,
+  hist.data.list = list(actg019),
+  meta.mean.mean = 0,
+  meta.mean.sd = 10,
+  meta.sd.mean = 0,
+  meta.sd.sd = .5,
+  parallel_chains = 4,
+  iter_warmup = warmup,
+  iter_sampling = samples,
+  thin = 10,
+  refresh = 0
+)
 
 samples_bhm <- fit.bhm.hist$beta_pred
 
@@ -427,16 +427,16 @@ for (i in 2:length(the.data)) {
       'bernoulli_glm_lp'
     )
   )
-    a0.lognc[[i - 1]] <- parallel::parLapply(
-      cl = cl,
-      X = as,
-      fun = logncfun,
-      iter_warmup = warmup,
-      iter_sampling = samples,
-      chains = 1,
-      refresh = 0
-    )
-
+  a0.lognc[[i - 1]] <- parallel::parLapply(
+    cl = cl,
+    X = as,
+    fun = logncfun,
+    iter_warmup = warmup,
+    iter_sampling = samples,
+    chains = 1,
+    refresh = 0
+  )
+  
   stopCluster(cl)
   a0.lognc[[i - 1]] <- data.frame(do.call(rbind, a0.lognc[[i - 1]]))
   a0.lognc.hdbayes <- cbind(a0.lognc.hdbayes, a0.lognc[[i - 1]]$lognc)
@@ -565,22 +565,22 @@ Finally, we will look at the posterior distribution for $a_0$:
 
 npp.a0.posterior <- do.call(rbind,
                             lapply(seq_along(all.npp.fits), function(k){
-  tibble(median = mean(all.npp.fits[[k]]$a0_hist_1),
-         lwr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
-         upr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
-         a0 = as[k],
-         model = "NPP")
-}))
+                              tibble(median = mean(all.npp.fits[[k]]$a0_hist_1),
+                                     lwr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
+                                     upr = quantile(all.npp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
+                                     a0 = as[k],
+                                     model = "NPP")
+                            }))
 
 
 napp.a0.posterior <- do.call(rbind,
-                            lapply(seq_along(all.napp.fits), function(k){
-  tibble(median = median(all.napp.fits[[k]]$a0_hist_1),
-         lwr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
-         upr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
-         a0 = as[k],
-         model = "NAPP")
-}))
+                             lapply(seq_along(all.napp.fits), function(k){
+                               tibble(median = median(all.napp.fits[[k]]$a0_hist_1),
+                                      lwr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 - Alpha)/2),
+                                      upr = quantile(all.napp.fits[[k]]$a0_hist_1, probs = (1 + Alpha)/2),
+                                      a0 = as[k],
+                                      model = "NAPP")
+                             }))
 
 prior.quantiles.df$model <- "prior"
 
