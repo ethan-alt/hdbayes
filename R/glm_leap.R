@@ -74,7 +74,7 @@ glm.leap = function(
     chains            = 4,
     ...
 ) {
-  data.checks(formula, family, data.list, offset.list)
+  data.checks.leap(formula, family, data.list, K, offset.list)
 
   ## get model information
   data     = data.list[[1]]

@@ -42,7 +42,15 @@ jobs:
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"' # do not install packages in Suggests
-          extra-packages: any::rcmdcheck
+          cache: false
+          extra-packages: |
+            any::rcmdcheck
+            any::knitr
+            any::rmarkdown
+            any::ggplot2
+            any::ggthemes
+            any::tibble
+            any::wacolors
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2

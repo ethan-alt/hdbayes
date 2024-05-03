@@ -1,11 +1,12 @@
 Package: hdbayes
 Title: Bayesian Analysis of Generalized Linear Models with Historical Data
-Version: 0.0.3
+Version: 0.0.3.9000
 Authors@R: c(
     person("Ethan M.", "Alt",
             email = "ethanalt@live.unc.edu",
             role = c("aut", "cre", "cph"),
             comment = c(ORCID = "0000-0002-6112-9030")), 
+
     person("Xinxin", "Chen", role = "aut"), 
     person("Luiz M.", "Carvalho", role = "aut"),
     person("Joseph G.", "Ibrahim", role = "aut"),
@@ -41,13 +42,23 @@ Imports:
     bridgesampling
 Suggests:
     cmdstanr (>= 0.6.0),
-    parallel
+    ggplot2,
+    ggthemes,
+    knitr,
+    parallel,
+    rmarkdown,
+    scales,
+    tibble,
+    tidyverse,
+    wacolors
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 LazyData: true
 VignetteBuilder: knitr
 Collate: 
+    'E1684-data.R'
+    'E1690-data.R'
     'E1694-data.R'
     'E2696-data.R'
     'IBCSG_curr-data.R'
@@ -69,3 +80,4 @@ Collate:
     'hdbayes-package.R'
     'lm_npp.R'
     'zzz.R'
+VignetteBuilder: knitr
