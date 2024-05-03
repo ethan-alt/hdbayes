@@ -11,6 +11,7 @@ vignette: >
   %\VignetteIndexEntry{Logistic_regression_HIV}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  %\VignetteDepends{parallel, posterior, ggplot2, ggthemes, tibble, wacolors, tidyverse}
 ---
 
 ```{r, include = FALSE}

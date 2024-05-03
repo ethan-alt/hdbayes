@@ -11,6 +11,7 @@ vignette: >
   %\VignetteIndexEntry{SensitivityAnalysis}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
+  \VignetteDepends{posterior, ggplot2, ggthemes, tidyverse, scales}
 ---
 
 ```{r, include = FALSE}
@@ -350,8 +351,25 @@ Now, let's take a look at prior sensitivity in normalised versions of the power 
 
 First, let's elicit Beta priors with a given prior mean and maximum entropy (subject to having the right mean)
 ```{r}
-# remotes::install_github("maxbiostat/logPoolR")
-library(logPoolR)
+# remotes::install_github("")
+elicit_beta_mean_maxent <- 
+function (m0) 
+{
+  # taken from maxbiostat/logPoolR
+    eta <- (1/m0 - 1)
+    Q <- function(a) {
+        b <- a * eta
+        out <- entropy_beta(a, b)
+        return(-out)
+    }
+    Opt <- optimize(Q, lower = 0, upper = 10000)
+    a <- Opt$minimum
+    b <- a * eta
+    if (a < 0 || b < 0) {
+        warning("Warning: at least one of the obtained parameters is not valid")
+    }
+    return(list(a = a, b = b))
+}
 hyperpars <- lapply(as, elicit_beta_mean_maxent)
 K <- length(hyperpars)
 prior.quantiles <- vector(K, mode = "list")
