@@ -6,7 +6,6 @@ Authors@R: c(
             email = "ethanalt@live.unc.edu",
             role = c("aut", "cre", "cph"),
             comment = c(ORCID = "0000-0002-6112-9030")), 
-
     person("Xinxin", "Chen", role = "aut"), 
     person("Luiz M.", "Carvalho", role = "aut"),
     person("Joseph G.", "Ibrahim", role = "aut"),
@@ -80,4 +79,3 @@ Collate:
     'hdbayes-package.R'
     'lm_npp.R'
     'zzz.R'
-VignetteBuilder: knitr
