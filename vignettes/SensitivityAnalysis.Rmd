@@ -1,8 +1,12 @@
 ---
 title: "Evaluating the sensitivity of informative priors based on historical data"
-# output: rmarkdown::html_vignette
-output: rmarkdown::pdf_document
+output: rmarkdown::html_vignette
+# output: rmarkdown::pdf_document
 bibliography: hdbayes.bib  
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    code_folding: show
 vignette: >
   %\VignetteIndexEntry{SensitivityAnalysis}
   %\VignetteEngine{knitr::rmarkdown}

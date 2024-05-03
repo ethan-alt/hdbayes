@@ -1,7 +1,11 @@
 ---
 title: "AIDS progression"
-# output: rmarkdown::html_vignette
-output: rmarkdown::pdf_document
+output: rmarkdown::html_vignette
+# output: rmarkdown::pdf_document
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 3
+    code_folding: show
 bibliography: hdbayes.bib  
 vignette: >
   %\VignetteIndexEntry{Logistic_regression_HIV}
