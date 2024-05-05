@@ -46,7 +46,7 @@ For the ACTG036 study the sample size was `n`= 183.
 Let's take a look at the data and take the opportunity to centre the continuous
 covariates (`CD4` and `age`):
 
-```{r setup, cache = TRUE}
+```{r setup, cache = FALSE}
 library(parallel)
 library(posterior)
 library(ggplot2)
@@ -55,9 +55,12 @@ library(tibble)
 library(wacolors)
 library(tidyverse)
 library(hdbayes)
+
+ncores <- 2 # increase to match your computing power
+options(mc.cores = ncores)
 ```
 
-```{r setup_data, cache = TRUE}
+```{r setup_data, cache = FALSE}
 
 data("actg019")
 data("actg036")
@@ -75,7 +78,7 @@ actg036$cd4 <- scale(actg036$cd4)
 To establish a baseline, we will estimate the parameters via maximum likelihood,
 using `glm()` from **stats**:
 
-```{r mle, cache = TRUE}
+```{r mle, cache = FALSE}
 formula <- outcome ~  age + race + treatment + cd4
 p <- length(attr(terms(formula), "term.labels")) # number of predictors
 family  <- binomial('logit')
@@ -128,12 +131,11 @@ where $p$ is the number of predictors (including the intercept if applicable).
 To fit this model, let us first set up the computational specs, which will also be
 used in the subsequent analyses.
 
-```{r compsetup, cache = TRUE}
-ncores <- 4 # max(1, parallel::detectCores() - 2)
-nchains <- ncores
+```{r compsetup, cache = FALSE}
+nchains <- 4
 warmup  <- 1000
 total.samples <- 10000   ## number of samples post warmup
-samples <- ceiling( total.samples / ncores)  ## outputs approx total.samples samples
+samples <- ceiling( total.samples / nchains)  ## outputs approx total.samples samples
 base.pars <- c("(Intercept)", "age", "race", "treatment", "cd4")
 
 get_summaries <- function(fit, pars.interest,
@@ -152,7 +154,7 @@ get_summaries <- function(fit, pars.interest,
 ```
 
 Now, a simple call to `glm.bhm()` will fit the model:
-```{r bhm, cache = TRUE}
+```{r bhm, cache = FALSE}
 time.bhm <- system.time(
   fit.bhm <- glm.bhm(
     formula,
@@ -227,7 +229,7 @@ The defaults are the same as in the BHM and the default value for $w$ is 0.1.
 See the [sensitivity analysis vignette](SensitivityAnalysis.html) for insight into how
 to set $w$.
 The RMAP can be called with `glm.robustmap()`:
-```{r robustmap, cache = TRUE}
+```{r robustmap, cache = FALSE}
 rmap.t1 <- system.time(
   fit.bhm.hist <- glm.rmap.bhm(
     formula,
@@ -336,14 +338,14 @@ While no definitive answer can be given without context of the specific data and
 under analysis, we find it reasonable to set $a_0 = a^\star = \frac{1}{2}\frac{n}{n_0}$.
 This way, when the historical and current data sets are of the same size, we set the borrowing factor to $a_0 = 1/2$, reflecting no particular desire to either borrow or not borrow information.
 Let us do just that
-```{r astar, cache = TRUE}
+```{r astar, cache = FALSE}
 n0 <- nrow(actg019)
 n <- nrow(actg036)
 a0.star <- (n/n0) * 1/2
 ```
 and then proceed to call `glm.pp()` twice (once for $a_0 = 1/2$ and once for $a_0 = a^\star$):
 
-```{r pp, cache = TRUE}
+```{r pp, cache = FALSE}
 time.pp <- system.time(
   fit.pp <- glm.pp(
     formula,
@@ -407,7 +409,7 @@ We thus might decide to let $a_0$ vary and be estimated from data.
 This naturally necessitates placing a prior on $a_0$.
 We will now construct a Beta prior for $a_0$ centred on $a^\star = \frac{1}{2}\frac{n}{n_0}$ with coefficient of variation (cv) equal to $1$:
 
-```{r a0prior, cache = TRUE, fig.align='center', fig.height=4, fig.width=8, fig.fullwidth=TRUE}
+```{r a0prior, cache = FALSE, fig.align='center', fig.height=4, fig.width=8, fig.fullwidth=TRUE}
 devtools::source_url("https://raw.githubusercontent.com/maxbiostat/logPoolR/main/R/beta_elicitator.r")
 beta.pars <- elicit_beta_mean_cv(m0 = a0.star, cv = 1)
 curve(dbeta(x, shape1 = beta.pars$a, shape2 = beta.pars$b), 
@@ -429,7 +431,7 @@ In **hdbayes**, there is one function to estimate the normalising constant acros
 a grid of values for $a_0$ and another to obtain posterior samples of the
 normalized power prior.
 
-```{r normconst, cache = TRUE}
+```{r normconst, cache = FALSE}
 a0       <- seq(0, 1, length.out = 11)
 a0.lognc <- list()
 a0.lognc.hdbayes <- data.frame(a0 = a0)
@@ -456,7 +458,7 @@ for (i in 2:length(the.data)) {
       ...
     )
   }
-  cl <- parallel::makeCluster(10)
+  cl <- parallel::makeCluster(ncores)
   parallel::clusterSetRNGStream(cl, 123)
   parallel::clusterExport(
     cl,
@@ -498,7 +500,7 @@ lognc    <- as.matrix(a0.lognc.hdbayes[, -1, drop = F])
 We will now fit the NPP with both a uniform (Beta(1, 1)) and the informative prior 
 on $a_0$ devised above using the dictionary of $a_0$ and $c(a_0)$ we just created:
 
-```{r nppfits, cache = TRUE}
+```{r nppfits, cache = FALSE}
 time.npp.2 <- system.time(
   fit.npp_unif <- glm.npp(
     formula,
@@ -553,7 +555,7 @@ matrix (negative Hessian).
 In this case, the normalising constant is known, so we do not need to estimate it before sampling.
 
 The NAPP can be fitted with a call to `glm.napp()`:
-```{r nappfits, cache = TRUE}
+```{r nappfits, cache = FALSE}
 time.napp <- system.time(
   fit.napp_unif <- glm.napp(
     formula,

@@ -38,6 +38,9 @@ library(ggthemes)
 library(tidyverse)
 library(scales)
 
+ncores <- 2 # increase to match your computing power
+options(mc.cores = ncores)
+
 get_summaries <- function(fit, pars.interest,
                           digits = 2) {
   ## A little function to pull out the summaries in a convenient form
@@ -65,16 +68,15 @@ actg019$cd4 <- scale(actg019$cd4)
 actg036$age <- scale(actg036$age)
 actg036$cd4 <- scale(actg036$cd4)
 
-ncores <- 4 # max(1, parallel::detectCores() - 2)
-nchains <- ncores
+nchains <- 4
 warmup  <- 1000
 total.samples <- 10000   ## number of samples post warmup
-samples <- ceiling(total.samples / ncores)  ## outputs approx total.samples samples
+samples <- ceiling(total.samples / nchains)  ## outputs approx total.samples samples
 ```
 
 And obtain some maximum likelihood estimates (MLE):
 
-```{r mle, cache = TRUE}
+```{r mle, cache = FALSE}
 formula <- outcome ~  age + race + treatment + cd4
 p <- length(attr(terms(formula), "term.labels")) # number of predictors
 family  <- binomial('logit')
@@ -351,7 +353,12 @@ Now, let's take a look at prior sensitivity in normalised versions of the power 
 
 First, let's elicit Beta priors with a given prior mean and maximum entropy (subject to having the right mean)
 ```{r}
-# remotes::install_github("")
+# remotes::install_github("maxbiostat/logPoolR")
+entropy_beta <- function(a, b) 
+{
+    lbeta(a, b) - (a - 1) * digamma(a) - (b - 1) * digamma(b) + 
+        (a + b - 2) * digamma(a + b)
+}
 elicit_beta_mean_maxent <- 
 function (m0) 
 {
@@ -375,7 +382,7 @@ K <- length(hyperpars)
 prior.quantiles <- vector(K, mode = "list")
 Alpha <- .95
 for(k in 1:K) {
-  prior.quantiles[[k]] <- tibble(median = qbeta(p = 1/2,
+  prior.quantiles[[k]] <- tibble::tibble(median = qbeta(p = 1/2,
                                                 shape1 = hyperpars[[k]]$a,
                                                 shape2 = hyperpars[[k]]$b), 
                                  lwr = qbeta(p = (1 - Alpha)/2,
@@ -407,7 +414,7 @@ These seem wide enough.
 Now, let's prepare what we need to fit the normalised power prior (NPP) under each of these priors.
 
 
-```{r normconst, cache = TRUE}
+```{r normconst, cache = FALSE}
 a0.lognc <- list()
 a0.lognc.hdbayes <- data.frame(a0 = as)
 
@@ -431,7 +438,8 @@ for (i in 2:length(the.data)) {
       ...
     )
   }
-  cl <- parallel::makeCluster(10)
+  
+  cl <- parallel::makeCluster(ncores)
   parallel::clusterSetRNGStream(cl, 123)
   parallel::clusterExport(
     cl,
@@ -455,7 +463,7 @@ for (i in 2:length(the.data)) {
     refresh = 0
   )
   
-  stopCluster(cl)
+  parallel::stopCluster(cl)
   a0.lognc[[i - 1]] <- data.frame(do.call(rbind, a0.lognc[[i - 1]]))
   a0.lognc.hdbayes <- cbind(a0.lognc.hdbayes, a0.lognc[[i - 1]]$lognc)
   colnames(a0.lognc.hdbayes)[i] <- paste0("lognc_hist", i - 1)
