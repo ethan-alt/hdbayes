@@ -40,7 +40,7 @@ normal_glm_lp = function(y, beta, X, link, offs, phi) {
   if ( link != 1 ){
     theta = get_lp2mean(theta, link)
   }
-  return( dnorm(y, mean = theta, sd = sqrt(phi), log = T) )
+  return( sum( dnorm(y, mean = theta, sd = sqrt(phi), log = T) ) )
 }
 
 #' compute density for bernoulli GLM
@@ -92,7 +92,7 @@ gamma_glm_lp = function(y, beta, X, link, offs, phi) {
   if ( link != 4 ){
     theta = 1 / get_lp2mean(theta, link)
   }
-  return( dgamma(y, shape = tau, rate = tau * theta, log = T) )
+  return( sum( dgamma(y, shape = tau, rate = tau * theta, log = T) ) )
 }
 
 #' compute density for inverse-gaussian GLM
