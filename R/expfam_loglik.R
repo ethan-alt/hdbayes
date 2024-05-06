@@ -57,7 +57,7 @@ bernoulli_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   if ( link != 3 ){
     theta = binomial('logit')$linkfun( get_lp2mean(theta, link) )
   }
-  return( sum( y*theta - log(1 + exp(theta)) ) )
+  return( sum( y*theta - log1p(exp(theta)) ) )
 }
 
 #' compute density for poisson GLM
