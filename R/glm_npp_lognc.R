@@ -77,6 +77,7 @@ glm.npp.lognc = function(
   }
 
   y0 = histdata[, all.vars(formula)[1]]
+  y0 = unlist(y0)
   n0 = length(y0)
   X0 = model.matrix(formula, histdata)
   p  = ncol(X0)
