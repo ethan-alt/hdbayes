@@ -16,7 +16,7 @@ functions{
     else reject("Link not supported");
     return eta; // never reached
   }
-  
+
   real normal_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -24,7 +24,7 @@ functions{
       theta = lp2mean(theta, link);
     return normal_lpdf(y | theta, sqrt(phi) );
   }
-  
+
   real bernoulli_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -32,7 +32,7 @@ functions{
       theta = logit( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( log1p_exp(theta) );
   }
-  
+
   real poisson_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -40,7 +40,7 @@ functions{
       theta = log( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( exp(theta) + lgamma(y + 1) );
   }
-  
+
   real gamma_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     real tau        = inv(phi); // shape parameter
@@ -49,7 +49,7 @@ functions{
       theta = inv( lp2mean(theta, link) );
     return gamma_lpdf(y | tau, tau * theta );
   }
-  
+
   real invgauss_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n                 = rows(y);
     real tau              = inv(phi); // shape parameter
@@ -62,7 +62,7 @@ functions{
             - tau * dot_self( (y .* sqrt(theta) - 1) .* inv_sqrt(y) )
           );
   }
-  
+
   real glm_lp(vector y, vector beta, real phi, matrix X, int dist, int link, vector offs) {
     // Compute likelihood
     if (dist == 1) {     // Bernoulli
@@ -106,7 +106,7 @@ parameters {
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
 }
 model {
-  beta ~ normal(mean_beta, sd_beta); // initial prior beta ~ N(mu0, sd0)
+  target+= normal_lpdf(beta | mean_beta, sd_beta); // initial prior beta ~ N(mu0, sd0)
   if ( dist <= 2 ) {
     for ( k in 1:K ) {
       target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
@@ -115,7 +115,7 @@ model {
     }
   }
   else {
-    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);  // half-normal prior for dispersion
     for ( k in 1:K ) {
       target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, dispersion[1], X[ start_idx[k]:end_idx[k], ], dist, link,

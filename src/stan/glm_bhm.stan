@@ -16,7 +16,7 @@ functions{
     else reject("Link not supported");
     return eta; // never reached
   }
-  
+
   real normal_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -24,7 +24,7 @@ functions{
       theta = lp2mean(theta, link);
     return normal_lpdf(y | theta, sqrt(phi) );
   }
-  
+
   real bernoulli_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -32,7 +32,7 @@ functions{
       theta = logit( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( log1p_exp(theta) );
   }
-  
+
   real poisson_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -40,7 +40,7 @@ functions{
       theta = log( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( exp(theta) + lgamma(y + 1) );
   }
-  
+
   real gamma_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     real tau        = inv(phi); // shape parameter
@@ -49,7 +49,7 @@ functions{
       theta = inv( lp2mean(theta, link) );
     return gamma_lpdf(y | tau, tau * theta );
   }
-  
+
   real invgauss_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n                 = rows(y);
     real tau              = inv(phi); // shape parameter
@@ -62,7 +62,7 @@ functions{
             - tau * dot_self( (y .* sqrt(theta) - 1) .* inv_sqrt(y) )
           );
   }
-  
+
   real glm_lp(vector y, vector beta, real phi, matrix X, int dist, int link, vector offs) {
     // Compute likelihood
     if (dist == 1) {     // Bernoulli
@@ -116,10 +116,10 @@ transformed parameters{
   }
 }
 model {
-  beta_mean       ~ normal(meta_mean_mean, meta_mean_sd); // hyperprior for mean of coefficients
-  beta_sd         ~ normal(meta_sd_mean, meta_sd_sd); // hyperprior for sd of coefficients (half-normal)
+  target += normal_lpdf(beta_mean | meta_mean_mean, meta_mean_sd); // hyperprior for mean of coefficients
+  target += normal_lpdf(beta_sd | meta_sd_mean, meta_sd_sd)- normal_lccdf(0 | meta_sd_mean, meta_sd_sd); // hyperprior for sd of coefficients (half-normal)
   for ( j in 1:p ) {
-    beta_raw[j, ]   ~ std_normal(); // implies beta[j, ] ~ normal(beta_mean[j], beta_sd[j]);
+    target += std_normal_lpdf(beta_raw[j, ]); // implies beta[j, ] ~ normal(beta_mean[j], beta_sd[j]);
   }
 
   if ( dist <= 2 ) {
@@ -130,7 +130,7 @@ model {
       }
   }
   else {
-    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);  // half-normal prior for dispersion
     for ( k in 1:K ) {
       target += glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta[, k], dispersion[k], X[ start_idx[k]:end_idx[k], ], dist, link,
