@@ -96,7 +96,6 @@ glm.pp = function(
   fit = glm_pp$sample(data = standat,
                       iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                       ...)
-  d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
   p        = standat$p
@@ -108,6 +107,6 @@ glm.pp = function(
     oldnames = c(oldnames, 'dispersion[1]')
     newnames = c(newnames, 'dispersion')
   }
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   return(d)
 }
