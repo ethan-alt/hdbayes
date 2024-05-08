@@ -147,3 +147,43 @@ to.vector = function(
   }
   return(param)
 }
+
+
+#' check if the input `post.samples` are in appropriate forms for computing log marginal likelihood under different priors.
+#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
+#'                          samples of a GLM under different priors. Each row corresponds to the posterior samples obtained
+#'                          from one iteration of MCMC. The column names of `post.samples` should include the names of
+#'                          covariates for regression coefficients, such as "(Intercept)", and "dispersion" for the
+#'                          dispersion parameter, if applicable.
+#' @param covariate.names   a vector of `character` giving the names of the covariates.
+#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
+#' @noRd
+post.samples.checks = function(
+    post.samples, covariate.names, family
+) {
+  if ( !any( class(post.samples) %in% c("draws_df", "draws_matrix", "matrix", "data.frame") ) )
+    stop("post.samples must be in one of the following formats: draws_df, draws_matrix, matrix, or data.frame")
+  if ( !all( covariate.names %in% colnames(post.samples) ) )
+    stop("Column names of post.samples must include the names of covariates for regression coefficients, such as \"(Intercept)\"")
+  if ( !family$family %in% c('binomial', 'poisson') ) {
+    if ( !("dispersion" %in% colnames(post.samples)) )
+      stop("Column names of post.samples must include \"dispersion\" for dispersion parameter")
+  }
+}
+
+
+#' change the variable names of the `draws_df` object obtained from the input `CmdStanMCMC` object and
+#' reorder the variables so that the updated variable names appear at the top of the `draws_df` object.
+#' @param fit      an object of class `CmdStanMCMC`.
+#' @param oldnames a vector of `character` giving the parameter/variable names in fit to be changed.
+#' @param newnames a vector of `character` giving the new parameter/variable names.
+#' @noRd
+rename.params = function(
+    fit, oldnames, newnames
+) {
+  pars = fit$metadata()$model_params
+  pars = c(pars[1], oldnames, (pars[!pars %in% oldnames])[-1])
+  d    = fit$draws(format = 'draws_df', variables = pars)
+  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  return(d)
+}
