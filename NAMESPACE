@@ -3,6 +3,7 @@
 export(glm.bhm)
 export(glm.commensurate)
 export(glm.leap)
+export(glm.logml.bhm)
 export(glm.logml.pp)
 export(glm.napp)
 export(glm.npp)
