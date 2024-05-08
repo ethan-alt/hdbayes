@@ -12,6 +12,7 @@
 #' historical data sets are independent half-normal distributions.
 #'
 #' @include data_checks.R
+#' @include get_stan_data.R
 #'
 #' @export
 #'
@@ -83,82 +84,18 @@ glm.bhm = function(
     chains            = 4,
     ...
 ) {
-  data.checks(formula, family, data.list, offset.list)
-
-  res          = stack.data(formula = formula,
-                            data.list = data.list)
-  y            = res$y
-  X            = res$X
-  start.index  = res$start.index
-  end.index    = res$end.index
-  p            = ncol(X)
-  N            = length(y)
-  K            = length(end.index)
-  fam.indx     = get.dist.link(family)
-  dist         = fam.indx[1]
-  link         = fam.indx[2]
-
-  ## Default offset for each data set is a vector of 0s
-  if ( is.null(offset.list) ){
-    offset = rep(0, N)
-  }else {
-    offset = unlist(offset.list)
-  }
-
-  ## Default normal hyperprior on mean of regression coefficients is N(0, 10^2)
-  if ( !is.null(meta.mean.mean) ){
-    if ( !( is.vector(meta.mean.mean) & (length(meta.mean.mean) %in% c(1, p)) ) )
-      stop("meta.mean.mean must be a scalar or a vector of length ", p, " if meta.mean.mean is not NULL")
-  }
-  meta.mean.mean = to.vector(param = meta.mean.mean, default.value = 0, len = p)
-  if ( !is.null(meta.mean.sd) ){
-    if ( !( is.vector(meta.mean.sd) & (length(meta.mean.sd) %in% c(1, p)) ) )
-      stop("meta.mean.sd must be a scalar or a vector of length ", p, " if meta.mean.sd is not NULL")
-  }
-  meta.mean.sd = to.vector(param = meta.mean.sd, default.value = 10, len = p)
-
-  ## Default half-normal hyperprior on sd of regression coefficients is N^{+}(0, 1)
-  if ( !is.null(meta.sd.mean) ){
-    if ( !( is.vector(meta.sd.mean) & (length(meta.sd.mean) %in% c(1, p)) ) )
-      stop("meta.sd.mean must be a scalar or a vector of length ", p, " if meta.sd.mean is not NULL")
-  }
-  meta.sd.mean = to.vector(param = meta.sd.mean, default.value = 0, len = p)
-  if ( !is.null(meta.sd.sd) ){
-    if ( !( is.vector(meta.sd.sd) & (length(meta.sd.sd) %in% c(1, p)) ) )
-      stop("meta.sd.sd must be a scalar or a vector of length ", p, " if meta.sd.sd is not NULL")
-  }
-  meta.sd.sd = to.vector(param = meta.sd.sd, default.value = 1, len = p)
-
-  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10^2)
-  if ( !is.null(disp.mean) ){
-    if ( !( is.vector(disp.mean) & (length(disp.mean) %in% c(1, K)) ) )
-      stop("disp.mean must be a scalar or a vector of length ", K, " if disp.mean is not NULL")
-  }
-  disp.mean = to.vector(param = disp.mean, default.value = 0, len = K)
-  if ( !is.null(disp.sd) ){
-    if ( !( is.vector(disp.sd) & (length(disp.sd) %in% c(1, K)) ) )
-      stop("disp.sd must be a scalar or a vector of length ", K, " if disp.sd is not NULL")
-  }
-  disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
-
-
-  standat = list(
-    'K'               = K,
-    'N'               = N,
-    'start_idx'       = start.index,
-    'end_idx'         = end.index,
-    'p'               = p,
-    'y'               = y,
-    'X'               = X,
-    'meta_mean_mean'  = meta.mean.mean,
-    'meta_mean_sd'    = meta.mean.sd,
-    'meta_sd_mean'    = meta.sd.mean,
-    'meta_sd_sd'      = meta.sd.sd,
-    'disp_mean'       = disp.mean,
-    'disp_sd'         = disp.sd,
-    'dist'            = dist,
-    'link'            = link,
-    'offs'            = offset
+  ## get Stan data for BHM
+  standat = get.stan.data.bhm(
+    formula        = formula,
+    family         = family,
+    data.list      = data.list,
+    offset.list    = offset.list,
+    meta.mean.mean = meta.mean.mean,
+    meta.mean.sd   = meta.mean.sd,
+    meta.sd.mean   = meta.sd.mean,
+    meta.sd.sd     = meta.sd.sd,
+    disp.mean      = disp.mean,
+    disp.sd        = disp.sd
   )
 
   glm_bhm    = instantiate::stan_package_model(
@@ -170,9 +107,11 @@ glm.bhm = function(
   fit = glm_bhm$sample(data = standat,
                        iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                        ...)
-  pars = fit$metadata()$model_params
 
   ## rename parameters
+  p        = standat$p
+  K        = standat$K
+  X        = standat$X
   oldnames = paste0("beta[", rep(1:p, K), ',', rep(1:K, each = p), "]")
   if ( K == 1 ) {
     newnames = colnames(X)
@@ -188,8 +127,6 @@ glm.bhm = function(
     }
   }
   ## reorder parameters so that regression coefficients appear at the top
-  pars = c(pars[1], pars[pars %in% oldnames], (pars[!pars %in% oldnames])[-1])
-  d   = fit$draws(format = 'draws_df', variables = pars)
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   return(d)
 }
