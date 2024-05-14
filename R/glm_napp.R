@@ -8,6 +8,7 @@
 #' where \eqn{a_0} is the power prior parameter (treated as random).
 #'
 #' @include data_checks.R
+#' @include get_stan_data.R
 #'
 #' @export
 #'
@@ -63,77 +64,14 @@ glm.napp = function(
     chains            = 4,
     ...
 ) {
-  data.checks(formula, family, data.list, offset.list)
-
-  K        = length(data.list) - 1 # number of historical datasets
-  data     = data.list[[1]] # current data
-  y        = data[, all.vars(formula)[1]]
-  n        = length(y)
-  X        = stats::model.matrix(formula, data)
-  p        = ncol(X)
-  fam.indx = get.dist.link(family)
-  dist     = fam.indx[1]
-  link     = fam.indx[2]
-  ind.disp = ifelse(dist > 2, 1, 0)
-
-  res          = stack.data(formula = formula,
-                            data.list = data.list)
-  N            = length(res$y) # total number of observations
-  start.index  = res$start.index
-  end.index    = res$end.index
-  rm(res)
-
-  ## Default offset for each dataset is a vector of 0s
-  if ( is.null(offset.list) ){
-    offset = rep(0, N)
-  }else {
-    offset = unlist(offset.list)
-  }
-
-  offset.curr = offset[1:n] # offset for current data
-
-  ## Fit enriched GLM to get hessian
-  theta.means = matrix(NA, nrow = p + ind.disp, ncol = K)
-  theta.covars = array(NA, c(K, p + ind.disp, p + ind.disp))
-  for(k in 1:K) {
-    histdata = data.list[[1+k]]
-    offs0 = offset[ start.index[1+k]:end.index[1+k] ]
-    histdata$offs0 = offs0
-    fit.glm =
-      suppressWarnings(
-        stats::glm(formula = formula, family = family, data = histdata, offset = offs0)
-      )
-    fit.glm     = enrichwith::enrich(fit.glm)
-    theta.mean  = fit.glm$coefficients
-    theta.covar = fit.glm$expected_information_mle
-
-    if ( !( family$family %in% c('binomial', 'poisson') ) ) {
-      ## theta = (beta, log(dispersion) )
-      theta.mean = c(theta.mean, log(fit.glm$dispersion_mle))
-
-      ## jacobian adjustment to fisher information for dispersion --> log dispersion
-      theta.covar[nrow(theta.covar), nrow(theta.covar)] =
-        fit.glm$dispersion_mle^2 * theta.covar[nrow(theta.covar), nrow(theta.covar)]
-    }
-    theta.covar         = chol2inv(chol(theta.covar))
-    theta.means[, k]    = theta.mean
-    theta.covars[k, , ] = theta.covar
-  }
-
-  standat = list(
-    'K'            = K,
-    'n'            = n,
-    'p'            = p,
-    'ind_disp'     = ind.disp,
-    'y'            = y,
-    'X'            = X,
-    'theta_hats'   = theta.means,
-    'theta_covars' = theta.covars,
-    'a0_shape1'    = a0.shape1,
-    'a0_shape2'    = a0.shape2,
-    'dist'         = dist,
-    'link'         = link,
-    'offs'         = offset.curr
+  ## get Stan data for NAPP
+  standat = get.stan.data.napp(
+    formula     = formula,
+    family      = family,
+    data.list   = data.list,
+    offset.list = offset.list,
+    a0.shape1   = a0.shape1,
+    a0.shape2   = a0.shape2
   )
 
   glm_napp   = instantiate::stan_package_model(
@@ -145,9 +83,11 @@ glm.napp = function(
   fit = glm_napp$sample(data = standat,
                         iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                         ...)
-  d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
+  p        = standat$p
+  X        = standat$X
+  K        = standat$K
   oldnames = paste0("beta[", 1:p, "]")
   newnames = colnames(X)
 
@@ -157,6 +97,6 @@ glm.napp = function(
   }
   oldnames = c(oldnames, paste0('a0s[', 1:K, ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:K))
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   return(d)
 }

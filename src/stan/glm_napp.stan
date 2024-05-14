@@ -16,7 +16,7 @@ functions{
     else reject("Link not supported");
     return eta; // never reached
   }
-  
+
   real normal_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -24,7 +24,7 @@ functions{
       theta = lp2mean(theta, link);
     return normal_lpdf(y | theta, sqrt(phi) );
   }
-  
+
   real bernoulli_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -32,7 +32,7 @@ functions{
       theta = logit( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( log1p_exp(theta) );
   }
-  
+
   real poisson_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     vector[n] theta = X * beta + offs;
@@ -40,7 +40,7 @@ functions{
       theta = log( lp2mean(theta, link) );
     return dot_product(y, theta) - sum( exp(theta) + lgamma(y + 1) );
   }
-  
+
   real gamma_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n           = rows(y);
     real tau        = inv(phi); // shape parameter
@@ -49,7 +49,7 @@ functions{
       theta = inv( lp2mean(theta, link) );
     return gamma_lpdf(y | tau, tau * theta );
   }
-  
+
   real invgauss_glm_lp(vector y, vector beta, real phi, matrix X, int link, vector offs) {
     int n                 = rows(y);
     real tau              = inv(phi); // shape parameter
@@ -62,7 +62,7 @@ functions{
             - tau * dot_self( (y .* sqrt(theta) - 1) .* inv_sqrt(y) )
           );
   }
-  
+
   real glm_lp(vector y, vector beta, real phi, matrix X, int dist, int link, vector offs) {
     // Compute likelihood
     if (dist == 1) {     // Bernoulli
@@ -113,7 +113,7 @@ parameters {
 model {
   // prior of a0s is beta (uniform if 1's)
   if ( a0_shape1 != 1 || a0_shape2 != 1)
-    a0s ~ beta(a0_shape1, a0_shape2);
+    target += beta_lpdf(a0s | a0_shape1, a0_shape2);
 
   if ( dist <= 2 ) {
     target += glm_lp(y,  beta,  1.0, X,  dist, link, offs); // current data likelihood
