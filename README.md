@@ -59,7 +59,25 @@ iter_sampling = 2000   ## number of samples post warmup per chain
 
 Then we simulate some logistic regression data. For simplicity, we
 generate one current and one historical data set. Note that the package
-allows for using multiple historical data sets.
+allows for using multiple historical data sets. Let the current data set
+be denoted by
+![D = \\ (y_i, x_i), i = 1, \ldots, n \\](https://latex.codecogs.com/png.latex?D%20%3D%20%5C%7B%20%28y_i%2C%20x_i%29%2C%20i%20%3D%201%2C%20%5Cldots%2C%20n%20%5C%7D "D = \{ (y_i, x_i), i = 1, \ldots, n \}"),
+where ![n](https://latex.codecogs.com/png.latex?n "n") denotes the
+sample size of the current data. Suppose we have
+![H](https://latex.codecogs.com/png.latex?H "H") historical data sets,
+and let the
+![h^{th}](https://latex.codecogs.com/png.latex?h%5E%7Bth%7D "h^{th}")
+historical data set,
+![h \in \\1, \ldots, H\\](https://latex.codecogs.com/png.latex?h%20%5Cin%20%5C%7B1%2C%20%5Cldots%2C%20H%5C%7D "h \in \{1, \ldots, H\}"),
+be denoted by
+![D\_{0h} = \\ (y\_{0hi}, \bm{x}\_{0hi}), i = 1, \ldots, n\_{0h} \\](https://latex.codecogs.com/png.latex?D_%7B0h%7D%20%3D%20%5C%7B%20%28y_%7B0hi%7D%2C%20%5Cbm%7Bx%7D_%7B0hi%7D%29%2C%20i%20%3D%201%2C%20%5Cldots%2C%20n_%7B0h%7D%20%5C%7D "D_{0h} = \{ (y_{0hi}, \bm{x}_{0hi}), i = 1, \ldots, n_{0h} \}"),
+where
+![n\_{0h}](https://latex.codecogs.com/png.latex?n_%7B0h%7D "n_{0h}")
+denotes the sample size of the
+![h^{th}](https://latex.codecogs.com/png.latex?h%5E%7Bth%7D "h^{th}")
+historical data. Let
+![D_0 = \\D\_{01}, \ldots, D\_{0H}\\](https://latex.codecogs.com/png.latex?D_0%20%3D%20%5C%7BD_%7B01%7D%2C%20%5Cldots%2C%20D_%7B0H%7D%5C%7D "D_0 = \{D_{01}, \ldots, D_{0H}\}")
+denote all the historical data.
 
 ``` r
 ## simulate logistic regression data
@@ -113,7 +131,7 @@ summary(fit.mle.cur)
 #> Number of Fisher Scoring iterations: 4
 ```
 
-We will compare these with the Bayesian analysis results later
+<!-- We will compare these with the Bayesian analysis results later -->
 
 ## Bayesian analysis methods
 
@@ -121,34 +139,35 @@ We now utilize the functions in this package.
 
 ### Bayesian hierarchical model
 
-The Bayesian hierarchical model (BHM) is the following model:
+The Bayesian hierarchical model (BHM) may be expressed hierarhically as
 
 ![\begin{align\*}
-  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta_0) \right) \\
-  \beta, \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right), \\\\i = 1, \ldots, n \\
+  y\_{0hi} \| x\_{0hi}, \beta\_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0hi}'\beta\_{0h}) \right), \\\\h = 1, \ldots, H, \\\\i = 1, \ldots, n\_{0h} \\
+  \beta, \beta\_{01}, \ldots, \beta\_{0H} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  \mu &\sim N_p(\mu_0, \Sigma\_{0}), \text{ where } \Sigma\_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu\_{0,j}, \psi\_{0,j}^2),\\ j = 1, \ldots, p
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta%2C%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_1%5E2%2C%20%5Cldots%2C%20%5Csigma_p%5E2%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma_0%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Csigma_j%20%26%5Csim%20N%5E%7B%2B%7D%28%5Cnu_%7B0%2Cj%7D%2C%20%5Cpsi_%7B0%2Cj%7D%5E2%29%2C%5C%3A%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta, \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n%20%5C%5C%0A%20%20y_%7B0hi%7D%20%7C%20x_%7B0hi%7D%2C%20%5Cbeta_%7B0h%7D%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0hi%7D%27%5Cbeta_%7B0h%7D%29%20%5Cright%29%2C%20%5C%20%5C%20h%20%3D%201%2C%20%5Cldots%2C%20H%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n_%7B0h%7D%20%5C%5C%0A%20%20%5Cbeta%2C%20%5Cbeta_%7B01%7D%2C%20%5Cldots%2C%20%5Cbeta_%7B0H%7D%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_1%5E2%2C%20%5Cldots%2C%20%5Csigma_p%5E2%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%2C%20%5Ctext%7B%20where%20%7D%20%5CSigma_%7B0%7D%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Csigma_j%20%26%5Csim%20N%5E%7B%2B%7D%28%5Cnu_%7B0%2Cj%7D%2C%20%5Cpsi_%7B0%2Cj%7D%5E2%29%2C%5C%3A%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right), \ \ i = 1, \ldots, n \\
+  y_{0hi} | x_{0hi}, \beta_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0h}) \right), \ \ h = 1, \ldots, H, \ \ i = 1, \ldots, n_{0h} \\
+  \beta, \beta_{01}, \ldots, \beta_{0H} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where } \Sigma_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
 \end{align*}")
 
 where ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") is
 the vector of regression coefficients of the current data set,
-![\beta_0](https://latex.codecogs.com/png.latex?%5Cbeta_0 "\beta_0") is
-the vector of regression coefficients for the historical data set,
+![\beta\_{0h}](https://latex.codecogs.com/png.latex?%5Cbeta_%7B0h%7D "\beta_{0h}")
+is the vector of regression coefficients for historical data set
+![D\_{0h}](https://latex.codecogs.com/png.latex?D_%7B0h%7D "D_{0h}"),
 ![\mu](https://latex.codecogs.com/png.latex?%5Cmu "\mu") is the common
 prior mean of
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") and
-![\beta_0](https://latex.codecogs.com/png.latex?%5Cbeta_0 "\beta_0"),
+![\beta\_{0h}](https://latex.codecogs.com/png.latex?%5Cbeta_%7B0h%7D "\beta_{0h}"),
 which is treated as random with a normal hyperprior having mean
 ![\mu_0](https://latex.codecogs.com/png.latex?%5Cmu_0 "\mu_0"), and a
 diagonal covariance matrix
-![\Sigma_0](https://latex.codecogs.com/png.latex?%5CSigma_0 "\Sigma_0").
+![\Sigma\_{0}](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D "\Sigma_{0}").
 ![\Sigma](https://latex.codecogs.com/png.latex?%5CSigma "\Sigma") is
 also treated as random and assumed to be a diagonal matrix. Half-normal
 hyperpriors are elicited on the diagonal entries of
@@ -161,7 +180,7 @@ The defaults in `hdbayes` are
   ![\textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Ctextbf%7B0%7D_p "\textbf{0}_p")
   denotes a ![p](https://latex.codecogs.com/png.latex?p "p")-dimensional
   vector of 0s
-- ![\Sigma_0 = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_0%20%3D%20100%20%5Ctimes%20I_p "\Sigma_0 = 100 \times I_p")
+- ![\Sigma\_{0} = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D%20%3D%20100%20%5Ctimes%20I_p "\Sigma_{0} = 100 \times I_p")
 - ![\nu\_{0,j} = 0](https://latex.codecogs.com/png.latex?%5Cnu_%7B0%2Cj%7D%20%3D%200 "\nu_{0,j} = 0")
   for
   ![j = 1, \ldots, p](https://latex.codecogs.com/png.latex?j%20%3D%201%2C%20%5Cldots%2C%20p "j = 1, \ldots, p")
@@ -184,14 +203,16 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 5.7 seconds.
-#> Chain 3 finished in 6.5 seconds.
-#> Chain 4 finished in 6.9 seconds.
-#> Chain 2 finished in 7.5 seconds.
+#> Chain 3 finished in 6.2 seconds.
+#> Chain 1 finished in 6.8 seconds.
+#> Chain 2 finished in 8.0 seconds.
+#> Chain 4 finished in 8.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 6.6 seconds.
-#> Total execution time: 7.7 seconds.
+#> Mean chain execution time: 7.5 seconds.
+#> Total execution time: 9.1 seconds.
+#> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
+#> See https://mc-stan.org/misc/warnings for details.
 
 suppressWarnings(
   fit.bhm[, 2:7] %>% 
@@ -201,12 +222,12 @@ suppressWarnings(
 #> # A tibble: 6 × 10
 #>   variable         mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>           <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)     0.846  0.844 0.247 0.241  0.437  1.25   1       9511.    6818.
-#> 2 z               0.616  0.616 0.286 0.28   0.153  1.10   1       8318.    6887.
-#> 3 x              -0.788 -0.786 0.169 0.168 -1.06  -0.513  1       9259.    7419.
-#> 4 (Intercept)_h…  0.938  0.931 0.3   0.288  0.461  1.44   1       8168.    7152.
-#> 5 z_hist_1        0.453  0.46  0.36  0.351 -0.138  1.03   1       8292.    7244.
-#> 6 x_hist_1       -0.842 -0.834 0.217 0.208 -1.21  -0.497  1.00    8681.    7295.
+#> 1 (Intercept)     0.841  0.84  0.246 0.245  0.444  1.25      1    9227.    7493.
+#> 2 z               0.625  0.623 0.284 0.281  0.165  1.09      1   10427.    7014.
+#> 3 x              -0.789 -0.787 0.165 0.163 -1.06  -0.522     1    9982.    7062.
+#> 4 (Intercept)_h…  0.929  0.921 0.296 0.284  0.461  1.43      1    9080.    7177.
+#> 5 z_hist_1        0.464  0.472 0.357 0.347 -0.13   1.03      1    8842.    7229.
+#> 6 x_hist_1       -0.839 -0.833 0.213 0.205 -1.20  -0.496     1    9488.    7331.
 ```
 
 ### Commensurate prior
@@ -215,22 +236,25 @@ The commensurate prior assumes the following hierarchical model
 
 ![\begin{align\*}
   y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu_0, \Sigma_0) , \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  y\_{0hi} \| x\_{0hi}, \beta\_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0hi}'\beta\_{0}) \right) \\
+  \beta\_{0} &\sim N_p(\mu_0, \Sigma\_{0}) , \text{ where }\Sigma\_{0} \text{ is a diagonal matrix} \\
   \beta_j &\sim N_1\left( \beta\_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%20%2C%20%5Ctext%7B%20where%20%7D%5CSigma_0%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Cbeta_j%20%26%5Csim%20N_1%5Cleft%28%20%5Cbeta_%7B0j%7D%2C%20%5Ctau_j%5E%7B-1%7D%20%5Cright%29%2C%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0hi%7D%20%7C%20x_%7B0hi%7D%2C%20%5Cbeta_%7B0%7D%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0hi%7D%27%5Cbeta_%7B0%7D%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_%7B0%7D%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%20%2C%20%5Ctext%7B%20where%20%7D%5CSigma_%7B0%7D%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Cbeta_j%20%26%5Csim%20N_1%5Cleft%28%20%5Cbeta_%7B0j%7D%2C%20%5Ctau_j%5E%7B-1%7D%20%5Cright%29%2C%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu_0, \Sigma_0) , \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  y_{0hi} | x_{0hi}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0}) \right) \\
+  \beta_{0} &\sim N_p(\mu_0, \Sigma_{0}) , \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
   \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
 \end{align*}")
 
-where the
+where
+![\beta = (\beta_1, \ldots, \beta_p)'](https://latex.codecogs.com/png.latex?%5Cbeta%20%3D%20%28%5Cbeta_1%2C%20%5Cldots%2C%20%5Cbeta_p%29%27 "\beta = (\beta_1, \ldots, \beta_p)'"),
+![\beta\_{0} = (\beta\_{01}, \ldots, \beta\_{0p})'](https://latex.codecogs.com/png.latex?%5Cbeta_%7B0%7D%20%3D%20%28%5Cbeta_%7B01%7D%2C%20%5Cldots%2C%20%5Cbeta_%7B0p%7D%29%27 "\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'"),
+and the
 ![\tau_j](https://latex.codecogs.com/png.latex?%5Ctau_j "\tau_j")’s are
 elicited by the user. The defaults in `hdbayes` are
 
 - ![\mu_0 = \textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%20%5Ctextbf%7B0%7D_p "\mu_0 = \textbf{0}_p")
-- ![\Sigma_0 = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_0%20%3D%20100%20%5Ctimes%20I_p "\Sigma_0 = 100 \times I_p")
+- ![\Sigma\_{0} = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D%20%3D%20100%20%5Ctimes%20I_p "\Sigma_{0} = 100 \times I_p")
 
 This method can be fit as follows
 
@@ -244,14 +268,14 @@ fit.commensurate = glm.commensurate(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
+#> Chain 1 finished in 0.8 seconds.
 #> Chain 2 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 1.0 seconds.
+#> Total execution time: 0.9 seconds.
 
 fit.commensurate[, -1] %>% 
     summarise_draws() %>% 
@@ -274,17 +298,17 @@ Model (BHM), and takes the form
 
 ![\begin{align\*}
   y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  y\_{0i} \| x\_{0i}, \beta\_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta\_{0h}) \right) \\
+  \beta\_{0h} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
   \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  \mu &\sim N_p(\mu_0, \Sigma\_{0}), \text{ where }\Sigma\_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu\_{0,j}, \psi\_{0,j}^2),\\ j = 1, \ldots, p
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_0%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_0%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_0%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_1%5E2%2C%20%5Cldots%2C%20%5Csigma_p%5E2%29%20%5C%5C%0A%20%20%5Cbeta%20%20%20%26%5Csim%20w%20%5Ctimes%20N_p%28%5Cmu%2C%20%5CSigma%29%20%2B%20%281%20-%20w%29%20N_p%28%5Cmu_v%2C%20%5CSigma_v%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma_0%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Csigma_j%20%26%5Csim%20N%5E%7B%2B%7D%28%5Cnu_%7B0%2Cj%7D%2C%20%5Cpsi_%7B0%2Cj%7D%5E2%29%2C%5C%3A%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta_%7B0h%7D%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_%7B0h%7D%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_%7B0h%7D%20%26%5Csim%20N_p%28%5Cmu%2C%20%5CSigma%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_1%5E2%2C%20%5Cldots%2C%20%5Csigma_p%5E2%29%20%5C%5C%0A%20%20%5Cbeta%20%20%20%26%5Csim%20w%20%5Ctimes%20N_p%28%5Cmu%2C%20%5CSigma%29%20%2B%20%281%20-%20w%29%20N_p%28%5Cmu_v%2C%20%5CSigma_v%29%20%5C%5C%0A%20%20%5Cmu%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma_%7B0%7D%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Csigma_j%20%26%5Csim%20N%5E%7B%2B%7D%28%5Cnu_%7B0%2Cj%7D%2C%20%5Cpsi_%7B0%2Cj%7D%5E2%29%2C%5C%3A%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  y_{0i} | x_{0i}, \beta_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0h}) \right) \\
+  \beta_{0h} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
   \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
 \end{align*}")
 
@@ -324,14 +348,14 @@ fit.hist.bhm = glm.rmap.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 2.7 seconds.
-#> Chain 4 finished in 3.3 seconds.
-#> Chain 3 finished in 3.5 seconds.
-#> Chain 2 finished in 3.6 seconds.
+#> Chain 3 finished in 3.0 seconds.
+#> Chain 4 finished in 3.1 seconds.
+#> Chain 2 finished in 4.4 seconds.
+#> Chain 1 finished in 4.7 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 3.3 seconds.
-#> Total execution time: 3.8 seconds.
+#> Mean chain execution time: 3.8 seconds.
+#> Total execution time: 4.8 seconds.
 ## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
 samples_bhm = fit.hist.bhm$beta_pred
 
@@ -355,13 +379,13 @@ fit.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
+#> Chain 1 finished in 0.8 seconds.
+#> Chain 2 finished in 0.8 seconds.
+#> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.7 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
+#> Mean chain execution time: 0.8 seconds.
 #> Total execution time: 0.9 seconds.
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
@@ -369,44 +393,49 @@ fit.rmap[, -1] %>%
 #> # A tibble: 3 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.841  0.841 0.252 0.249  0.421  1.25   1       3908.    3840.
-#> 2 z            0.625  0.621 0.283 0.286  0.156  1.09   1.00    4365.    4116.
-#> 3 x           -0.79  -0.79  0.167 0.171 -1.07  -0.519  1.00    3938.    3942.
+#> 1 (Intercept)  0.828  0.829 0.253 0.25   0.407  1.24   1.00    3864.    4242.
+#> 2 z            0.618  0.614 0.288 0.286  0.148  1.10   1       4579.    4239.
+#> 3 x           -0.777 -0.773 0.17  0.169 -1.06  -0.502  1.00    4390.    4440.
 ```
 
 ### Power prior
 
-The Power Prior takes the form
+With ![H](https://latex.codecogs.com/png.latex?H "H") historical data
+sets, the power prior takes the form
 
 ![\begin{align\*}
-  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta) \right) \\
-  \pi(\beta \| a_0) &\propto L(\beta \| y_0)^{a_0} \pi_0(\beta)
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
-  \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
+  &y_i \| x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \\\\i = 1, \ldots, n\\
+  &\pi\_{\text{PP}}(\beta \| D_0, a\_{0h}) \propto 
+    \pi_0(\beta) \prod\_{h=1}^H L(\beta \| D\_{0h})^{a\_{0h}}
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%26y_i%20%7C%20x_i%2C%20%5Cbeta%20%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%0A%20%20%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n%5C%5C%0A%20%20%26%5Cpi_%7B%5Ctext%7BPP%7D%7D%28%5Cbeta%20%7C%20D_0%2C%20a_%7B0h%7D%29%20%5Cpropto%20%0A%20%20%20%20%5Cpi_0%28%5Cbeta%29%20%5Cprod_%7Bh%3D1%7D%5EH%20L%28%5Cbeta%20%7C%20D_%7B0h%7D%29%5E%7Ba_%7B0h%7D%7D%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{PP}}(\beta | D_0, a_{0h}) \propto 
+    \pi_0(\beta) \prod_{h=1}^H L(\beta | D_{0h})^{a_{0h}}
 \end{align*}")
 
 where
-![L(\beta \| y_0)](https://latex.codecogs.com/png.latex?L%28%5Cbeta%20%7C%20y_0%29 "L(\beta | y_0)")
-is the likelihood of the GLM based on the historical data,
-![a_0 \in (0,1)](https://latex.codecogs.com/png.latex?a_0%20%5Cin%20%280%2C1%29 "a_0 \in (0,1)")
-is a fixed hyperaparameter controlling the effective sample size
-contributed by the data (e.g.,
-![a_0 = 1](https://latex.codecogs.com/png.latex?a_0%20%3D%201 "a_0 = 1")
-borrows the whole sample size), and
+![L(\beta \| D)](https://latex.codecogs.com/png.latex?L%28%5Cbeta%20%7C%20D%29 "L(\beta | D)")
+is the likelihood of the GLM based on data set
+![D](https://latex.codecogs.com/png.latex?D "D"),
+![a\_{0h} \in (0,1)](https://latex.codecogs.com/png.latex?a_%7B0h%7D%20%5Cin%20%280%2C1%29 "a_{0h} \in (0,1)")
+is a fixed hyperparameter controlling the effective sample size
+contributed by historical data set
+![D\_{0h}](https://latex.codecogs.com/png.latex?D_%7B0h%7D "D_{0h}") ,
+and
 ![\pi_0(\beta)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29 "\pi_0(\beta)")
-is an “initial prior” on
+is an “initial prior” for
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta").
 
-The default in `hdbayes` is a (noninformative) normal prior on
+The default in `hdbayes` is a (noninformative) normal initial prior on
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta"):
 
 ![\beta \sim N_p(\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cbeta%20%5Csim%20N_p%28%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\beta \sim N_p(\textbf{0}_p, 100 \times I_p)")
 
-The power prior (with
-![a_0 = 0.5](https://latex.codecogs.com/png.latex?a_0%20%3D%200.5 "a_0 = 0.5"))
+With ![H = 1](https://latex.codecogs.com/png.latex?H%20%3D%201 "H = 1"),
+the power prior (with
+![a\_{01} = 0.5](https://latex.codecogs.com/png.latex?a_%7B01%7D%20%3D%200.5 "a_{01} = 0.5"))
 may be fit as follows:
 
 ``` r
@@ -419,14 +448,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 2 finished in 0.8 seconds.
-#> Chain 4 finished in 0.8 seconds.
+#> Chain 1 finished in 0.6 seconds.
+#> Chain 2 finished in 0.7 seconds.
+#> Chain 3 finished in 0.7 seconds.
+#> Chain 4 finished in 0.7 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.7 seconds.
-#> Total execution time: 1.0 seconds.
+#> Total execution time: 0.9 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -434,50 +463,49 @@ fit.pp[, -1] %>%
 #> # A tibble: 3 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.834  0.83  0.246 0.247  0.437  1.24   1.00    3560.    3834.
-#> 2 z            0.616  0.615 0.276 0.272  0.157  1.06   1       4675.    4336.
-#> 3 x           -0.788 -0.784 0.166 0.165 -1.06  -0.518  1       3765.    4041.
+#> 1 (Intercept)  0.829  0.825 0.243 0.249  0.438  1.23   1       3647.    4499.
+#> 2 z            0.616  0.616 0.282 0.285  0.155  1.08   1.00    4416.    4031.
+#> 3 x           -0.786 -0.783 0.163 0.165 -1.06  -0.522  1       4073.    4347
 ```
 
 ### Normalized power prior (NPP)
 
 The NPP treats the hyperparameter
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") as random,
-allowing the data to decide what is the best value. For non-Gaussian
-models, this requires estimating the normalizing constant
-![Z(a_0) = \int L(\beta \| y_0)^{a_0} \pi_0(\beta) d\beta](https://latex.codecogs.com/png.latex?Z%28a_0%29%20%3D%20%5Cint%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20d%5Cbeta "Z(a_0) = \int L(\beta | y_0)^{a_0} \pi_0(\beta) d\beta").
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") as
+random, allowing the data to decide what is the best value. For
+non-Gaussian models, this requires estimating the normalizing constant
+![Z(a\_{0h} \| D\_{0h}) = \int L(\beta \| D\_{0h})^{a\_{0h}} \pi_0(\beta)^{1/H} d\beta](https://latex.codecogs.com/png.latex?Z%28a_%7B0h%7D%20%7C%20D_%7B0h%7D%29%20%3D%20%5Cint%20L%28%5Cbeta%20%7C%20D_%7B0h%7D%29%5E%7Ba_%7B0h%7D%7D%20%5Cpi_0%28%5Cbeta%29%5E%7B1%2FH%7D%20d%5Cbeta "Z(a_{0h} | D_{0h}) = \int L(\beta | D_{0h})^{a_{0h}} \pi_0(\beta)^{1/H} d\beta").
 
 In `hdbayes`, there is one function to estimate the normalizing constant
 across a grid of values for
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") and another to
-obtain posterior samples of the normalized power prior.
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") and
+another to obtain posterior samples of the normalized power prior.
 
-The NPP may be summarized as
+The posterior under the NPP may be summarized as
 
 ![\begin{align\*}
-  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta) \right) \\
-  \pi(\beta \| a_0) &\propto \frac{1}{Z(a_0)} L(\beta \| y_0)^{a_0} \pi_0(\beta) \\
-  \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cpi%28%5Cbeta%20%7C%20a_0%29%20%26%5Cpropto%20%5Cfrac%7B1%7D%7BZ%28a_0%29%7D%20L%28%5Cbeta%20%7C%20y_0%29%5E%7Ba_0%7D%20%5Cpi_0%28%5Cbeta%29%20%5C%5C%0A%20%20%5Cpi%28a_0%29%20%20%20%20%20%20%20%20%20%26%5Cpropto%20a_0%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_0%29%5E%7B%5Cgamma_0%20-%201%7D%0A%5Cend%7Balign%2A%7D "\begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
-  \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
-  \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
+  &y_i \| x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \\\\i = 1, \ldots, n\\
+  &\pi\_{\text{NPP}}(\beta, a_0 \| D_0) = \pi_0(\beta) \prod\_{h=1}^H \frac{ L(\beta \| D\_{0h})^{a\_{0h}} }{Z(a\_{0h} \| D\_{0h})} \pi(a\_{0h})
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%26y_i%20%7C%20x_i%2C%20%5Cbeta%20%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%0A%20%20%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n%5C%5C%0A%20%20%26%5Cpi_%7B%5Ctext%7BNPP%7D%7D%28%5Cbeta%2C%20a_0%20%7C%20D_0%29%20%3D%20%5Cpi_0%28%5Cbeta%29%20%5Cprod_%7Bh%3D1%7D%5EH%20%5Cfrac%7B%20L%28%5Cbeta%20%7C%20D_%7B0h%7D%29%5E%7Ba_%7B0h%7D%7D%20%7D%7BZ%28a_%7B0h%7D%20%7C%20D_%7B0h%7D%29%7D%20%5Cpi%28a_%7B0h%7D%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{NPP}}(\beta, a_0 | D_0) = \pi_0(\beta) \prod_{h=1}^H \frac{ L(\beta | D_{0h})^{a_{0h}} }{Z(a_{0h} | D_{0h})} \pi(a_{0h})
 \end{align*}")
 
 The defaults in `hdbayes` are
 
 - ![\pi_0(\beta) \propto N(\beta \| ~\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29%20%5Cpropto%20N%28%5Cbeta%20%7C%20~%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)")
-- ![\alpha_0 = 1](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%201 "\alpha_0 = 1")
-- ![\gamma_0 = 1](https://latex.codecogs.com/png.latex?%5Cgamma_0%20%3D%201 "\gamma_0 = 1")
+- ![\alpha\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0h%7D%20%3D%201 "\alpha_{0h} = 1")
+- ![\gamma\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0h%7D%20%3D%201 "\gamma_{0h} = 1")
 
 when
-![\alpha_0 = 1](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%201 "\alpha_0 = 1")
+![\alpha\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0h%7D%20%3D%201 "\alpha_{0h} = 1")
 and
-![\gamma_0 = 1](https://latex.codecogs.com/png.latex?%5Cgamma_0%20%3D%201 "\gamma_0 = 1"),
-the prior on ![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") is a
-![U(0,1)](https://latex.codecogs.com/png.latex?U%280%2C1%29 "U(0,1)")
+![\gamma\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0h%7D%20%3D%201 "\gamma_{0h} = 1"),
+the prior on
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") is
+a ![U(0,1)](https://latex.codecogs.com/png.latex?U%280%2C1%29 "U(0,1)")
 prior.
 
 ### Estimating the normalizing constant
@@ -525,20 +553,21 @@ head(
 
 The provided function `glm.npp.lognc` estimates the logarithm of the
 normalizing constant,
-![\log Z(a_0)](https://latex.codecogs.com/png.latex?%5Clog%20Z%28a_0%29 "\log Z(a_0)"),
+![\log Z(a\_{0h} \| D\_{0h})](https://latex.codecogs.com/png.latex?%5Clog%20Z%28a_%7B0h%7D%20%7C%20D_%7B0h%7D%29 "\log Z(a_{0h} | D_{0h})"),
 for one specific value of
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") and one
-historical data set. We created the function `logncfun` so that the
-first argument would be
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0"), allowing us to
-use the `parLapply` function in the `parallel` package.
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") and
+one historical data set
+![D\_{0h}](https://latex.codecogs.com/png.latex?D_%7B0h%7D "D_{0h}"). We
+created the function `logncfun` so that the first argument would be
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}"),
+allowing us to use the `parLapply` function in the `parallel` package.
 
 The `hdbayes` function `glm.npp.lognc` outputs
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0"),
-![Z(a_0)](https://latex.codecogs.com/png.latex?Z%28a_0%29 "Z(a_0)"), and
-the minimum bulk effective sample size and maximum R-hat value of the
-MCMC sampling of the power prior. It is a good idea to check that the
-minimum bulk effective sample size is at least 1,000 and the maximum
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}"),
+![Z(a\_{0h} \| D\_{0h})](https://latex.codecogs.com/png.latex?Z%28a_%7B0h%7D%20%7C%20D_%7B0h%7D%29 "Z(a_{0h} | D_{0h})"),
+and the minimum bulk effective sample size and maximum R-hat value of
+the MCMC sampling of the power prior. It is a good idea to check that
+the minimum bulk effective sample size is at least 1,000 and the maximum
 R-hat value is less than 1.10
 
 ``` r
@@ -556,15 +585,15 @@ plot(a0.lognc$a0, a0.lognc$lognc)
 
 ![](README_files/figure-gfm/npp_lognc_plot-1.png)<!-- -->
 
-### Sampling the posterior distribution
+### Sampling from the posterior distribution
 
 We can now sample from the posterior distribution. The function
 `glm.npp` takes, as input, values of
-![a_0](https://latex.codecogs.com/png.latex?a_0 "a_0") and the estimated
-logarithm of the normalizing constant. Linear interpolation is used to
-estimate
-![Z(a_0)](https://latex.codecogs.com/png.latex?Z%28a_0%29 "Z(a_0)") for
-values not in the fine grid. Thus, it may be a good idea to conduct
+![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") and
+the estimated logarithm of the normalizing constant. Linear
+interpolation is used to estimate
+![Z(a\_{0h} \| D\_{0h})](https://latex.codecogs.com/png.latex?Z%28a_%7B0h%7D%20%7C%20D_%7B0h%7D%29 "Z(a_{0h} | D_{0h})")
+for values not in the fine grid. Thus, it may be a good idea to conduct
 smoothing of the function such as using LOESS, but we ignore that here.
 
 ``` r
@@ -578,14 +607,14 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 0.7 seconds.
-#> Chain 3 finished in 0.7 seconds.
 #> Chain 1 finished in 0.8 seconds.
+#> Chain 2 finished in 0.7 seconds.
+#> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 1.0 seconds.
+#> Total execution time: 0.9 seconds.
 fit.npp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -603,7 +632,7 @@ fit.npp[, -1] %>%
 NAPP uses a large sample theory argument to formulate a normal
 approximation to the power prior, i.e., the prior is given by
 
-![\beta \| a_0 \sim N(\hat{\beta}\_0, a_0^{-1} \[I_n(\beta)\]^{-1}),](https://latex.codecogs.com/png.latex?%5Cbeta%20%7C%20a_0%20%5Csim%20N%28%5Chat%7B%5Cbeta%7D_0%2C%20a_0%5E%7B-1%7D%20%5BI_n%28%5Cbeta%29%5D%5E%7B-1%7D%29%2C "\beta | a_0 \sim N(\hat{\beta}_0, a_0^{-1} [I_n(\beta)]^{-1}),")
+![\beta \| a\_{0h} \sim N(\hat{\beta}\_0, a\_{0h}^{-1} \[I_n(\beta)\]^{-1}),](https://latex.codecogs.com/png.latex?%5Cbeta%20%7C%20a_%7B0h%7D%20%5Csim%20N%28%5Chat%7B%5Cbeta%7D_0%2C%20a_%7B0h%7D%5E%7B-1%7D%20%5BI_n%28%5Cbeta%29%5D%5E%7B-1%7D%29%2C "\beta | a_{0h} \sim N(\hat{\beta}_0, a_{0h}^{-1} [I_n(\beta)]^{-1}),")
 
 where
 ![\hat{\beta}\_0](https://latex.codecogs.com/png.latex?%5Chat%7B%5Cbeta%7D_0 "\hat{\beta}_0")
@@ -627,14 +656,14 @@ fit.napp = glm.napp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.5 seconds.
-#> Chain 2 finished in 0.5 seconds.
-#> Chain 3 finished in 0.5 seconds.
-#> Chain 4 finished in 0.5 seconds.
+#> Chain 1 finished in 0.6 seconds.
+#> Chain 2 finished in 0.6 seconds.
+#> Chain 3 finished in 0.6 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.7 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -649,7 +678,7 @@ fit.napp[, -1] %>%
 
 ### Latent exchangeability prior (LEAP)
 
-LEAP assumes that the historical data are generated from a finite
+The LEAP assumes that the historical data are generated from a finite
 mixture model consisting of
 ![K \ge 2](https://latex.codecogs.com/png.latex?K%20%5Cge%202 "K \ge 2")
 components, with the current data generated from the first component of
@@ -657,36 +686,45 @@ this mixture. For single historical data set settings, the posterior
 under the LEAP may be expressed hierarchically as
 
 ![\begin{align\*}
-  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y\_{0i} \| x\_{0i}, \beta, \beta\_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta) \right) + \sum\_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta\_{0k}) \right) \\
-  \beta, \beta\_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_0), \\k = 2, \ldots, K, \text{ where }\Sigma_0 = \text{diag}(\sigma\_{01}^2, \ldots, \sigma\_{0p}^2) \\
-  \gamma &\sim \text{Dirichlet}(\alpha_0)
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%2C%20%5Cbeta_%7B0k%7D%2C%20%5Cgamma%20%26%5Csim%20%5Cgamma_1%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%2B%20%5Csum_%7Bk%3D2%7D%5EK%20%5Cgamma_k%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_%7B0k%7D%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta%2C%20%5Cbeta_%7B0k%7D%20%26%5Coverset%7B%5Ctext%7Bi.i.d.%7D%7D%7B%5Csim%7D%20N%28%5Cmu_0%2C%20%5CSigma_0%29%2C%20%5C%3Ak%20%3D%202%2C%20%5Cldots%2C%20K%2C%20%5Ctext%7B%20where%20%7D%5CSigma_0%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_%7B01%7D%5E2%2C%20%5Cldots%2C%20%5Csigma_%7B0p%7D%5E2%29%20%5C%5C%0A%20%20%5Cgamma%20%26%5Csim%20%5Ctext%7BDirichlet%7D%28%5Calpha_0%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right) \\
-  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_0), \:k = 2, \ldots, K, \text{ where }\Sigma_0 = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
-  \gamma &\sim \text{Dirichlet}(\alpha_0)
+  y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \\\\i = 1, \ldots, n\\
+  y\_{0i} \| x\_{0i}, \beta, \beta\_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta) \right) + \sum\_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0i}'\beta\_{0k}) \right)
+  , \\\\i = 1, \ldots, n_0
+  \\
+  \beta, \beta\_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma\_{0}), \\k = 2, \ldots, K, \text{ where }\Sigma\_{0} = \text{diag}(\sigma\_{01}^2, \ldots, \sigma\_{0p}^2) \\
+  \gamma &\sim \text{Dirichlet}(\alpha\_{0})
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%0A%20%20%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n%5C%5C%0A%20%20y_%7B0i%7D%20%7C%20x_%7B0i%7D%2C%20%5Cbeta%2C%20%5Cbeta_%7B0k%7D%2C%20%5Cgamma%20%26%5Csim%20%5Cgamma_1%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta%29%20%5Cright%29%20%2B%20%5Csum_%7Bk%3D2%7D%5EK%20%5Cgamma_k%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0i%7D%27%5Cbeta_%7B0k%7D%29%20%5Cright%29%0A%20%20%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n_0%0A%20%20%5C%5C%0A%20%20%5Cbeta%2C%20%5Cbeta_%7B0k%7D%20%26%5Coverset%7B%5Ctext%7Bi.i.d.%7D%7D%7B%5Csim%7D%20N%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%2C%20%5C%3Ak%20%3D%202%2C%20%5Cldots%2C%20K%2C%20%5Ctext%7B%20where%20%7D%5CSigma_%7B0%7D%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_%7B01%7D%5E2%2C%20%5Cldots%2C%20%5Csigma_%7B0p%7D%5E2%29%20%5C%5C%0A%20%20%5Cgamma%20%26%5Csim%20%5Ctext%7BDirichlet%7D%28%5Calpha_%7B0%7D%29%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right)
+  , \ \ i = 1, \ldots, n_0
+  \\
+  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_{0}), \:k = 2, \ldots, K, \text{ where }\Sigma_{0} = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
+  \gamma &\sim \text{Dirichlet}(\alpha_{0})
 \end{align*}")
 
 where
 ![\gamma = (\gamma_1, \ldots, \gamma_K)'](https://latex.codecogs.com/png.latex?%5Cgamma%20%3D%20%28%5Cgamma_1%2C%20%5Cldots%2C%20%5Cgamma_K%29%27 "\gamma = (\gamma_1, \ldots, \gamma_K)'")
 is a vector of mixing probabilities,
-![\alpha_0 = (\alpha_1, \ldots, \alpha_K)'](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%20%28%5Calpha_1%2C%20%5Cldots%2C%20%5Calpha_K%29%27 "\alpha_0 = (\alpha_1, \ldots, \alpha_K)'")
+![\alpha\_{0} = (\alpha_1, \ldots, \alpha_K)'](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%20%28%5Calpha_1%2C%20%5Cldots%2C%20%5Calpha_K%29%27 "\alpha_{0} = (\alpha_1, \ldots, \alpha_K)'")
 is a vector of concentration parameters, and
 ![\mu_0](https://latex.codecogs.com/png.latex?%5Cmu_0 "\mu_0") and
-![\Sigma_0](https://latex.codecogs.com/png.latex?%5CSigma_0 "\Sigma_0")
+![\Sigma\_{0}](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D "\Sigma_{0}")
 are respectively the prior mean and covariance matrices for the
 ![K](https://latex.codecogs.com/png.latex?K "K") regression
 coefficients. The defaults in `hdbayes` are
 
 - ![\mu_0 = \textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%20%5Ctextbf%7B0%7D_p "\mu_0 = \textbf{0}_p")
-- ![\Sigma_0 = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_0%20%3D%20100%20%5Ctimes%20I_p "\Sigma_0 = 100 \times I_p")
-- ![\alpha_0 = \textbf{1}\_K](https://latex.codecogs.com/png.latex?%5Calpha_0%20%3D%20%5Ctextbf%7B1%7D_K "\alpha_0 = \textbf{1}_K"),
+- ![\Sigma\_{0} = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D%20%3D%20100%20%5Ctimes%20I_p "\Sigma_{0} = 100 \times I_p")
+- ![\alpha\_{0} = \textbf{1}\_K](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%20%5Ctextbf%7B1%7D_K "\alpha_{0} = \textbf{1}_K"),
   where
   ![\textbf{1}\_K](https://latex.codecogs.com/png.latex?%5Ctextbf%7B1%7D_K "\textbf{1}_K")
   denotes a ![K](https://latex.codecogs.com/png.latex?K "K")-dimensional
   vector of 1s
 - ![K = 2](https://latex.codecogs.com/png.latex?K%20%3D%202 "K = 2")
+
+For multiple historical data sets, `hdbayes` assumes that all historical
+data sets come from a single finite mixture model.
 
 The LEAP can be fit as follows:
 
@@ -699,14 +737,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 4 finished in 3.8 seconds.
-#> Chain 2 finished in 4.0 seconds.
-#> Chain 1 finished in 4.1 seconds.
-#> Chain 3 finished in 4.6 seconds.
+#> Chain 4 finished in 3.9 seconds.
+#> Chain 2 finished in 4.3 seconds.
+#> Chain 1 finished in 4.4 seconds.
+#> Chain 3 finished in 4.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.1 seconds.
-#> Total execution time: 4.7 seconds.
+#> Mean chain execution time: 4.3 seconds.
+#> Total execution time: 5.0 seconds.
 
 suppressWarnings(
  fit.leap[, c(2:4, 11)] %>% 
@@ -772,20 +810,20 @@ post.sd = cbind(
 ## posterior means
 round( post.mean, 3 )
 #>             truth mle.cur mle.hist    bhm commensurate robustmap   napp    npp
-#> (Intercept)   1.0   0.760    1.036  0.846        0.847     0.841  0.842  0.845
-#> z             0.5   0.677    0.313  0.616        0.607     0.625  0.592  0.598
-#> x            -1.0  -0.750   -0.856 -0.788       -0.786    -0.790 -0.787 -0.793
+#> (Intercept)   1.0   0.760    1.036  0.841        0.847     0.828  0.842  0.845
+#> z             0.5   0.677    0.313  0.625        0.607     0.618  0.592  0.598
+#> x            -1.0  -0.750   -0.856 -0.789       -0.786    -0.777 -0.787 -0.793
 #>                 pp   leap
-#> (Intercept)  0.834  0.845
+#> (Intercept)  0.829  0.845
 #> z            0.616  0.602
-#> x           -0.788 -0.785
+#> x           -0.786 -0.785
 
 ## posterior std dev.
 round( post.sd, 3 )
 #>             mle.cur mle.hist   bhm commensurate robustmap  napp   npp    pp
-#> (Intercept)   0.274    0.377 0.247        0.251     0.252 0.241 0.244 0.246
-#> z             0.308    0.442 0.286        0.278     0.283 0.275 0.273 0.276
-#> x             0.181    0.266 0.169        0.169     0.167 0.159 0.164 0.166
+#> (Intercept)   0.274    0.377 0.246        0.251     0.253 0.241 0.244 0.243
+#> z             0.308    0.442 0.284        0.278     0.288 0.275 0.273 0.282
+#> x             0.181    0.266 0.165        0.169     0.170 0.159 0.164 0.163
 #>              leap
 #> (Intercept) 0.243
 #> z           0.272

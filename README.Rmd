@@ -67,7 +67,12 @@ iter_sampling = 2000   ## number of samples post warmup per chain
 ## Simulating logistic regression data
 Then we simulate some logistic regression data. For simplicity, we generate one 
 current and one historical data set. Note that the package allows for using multiple
-historical data sets.
+historical data sets. Let the current data set be denoted by $D = \{ (y_i, x_i), i = 1, \ldots, n \}$, 
+where $n$ denotes the sample size of the current data. Suppose we have $H$ historical 
+data sets, and let the $h^{th}$ historical data set, $h \in \{1, \ldots, H\}$, be 
+denoted by $D_{0h} = \{ (y_{0hi}, \bm{x}_{0hi}), i = 1, \ldots, n_{0h} \}$, where 
+$n_{0h}$ denotes the sample size of the $h^{th}$ historical data. Let 
+$D_0 = \{D_{01}, \ldots, D_{0H}\}$ denote all the historical data.
 ```{r simdata}
 ## simulate logistic regression data
 set.seed(391)
@@ -99,34 +104,34 @@ pars         = names(coefficients(fit.mle.cur))
 summary(fit.mle.cur)
 ```
 
-We will compare these with the Bayesian analysis results later
+<!-- We will compare these with the Bayesian analysis results later -->
 
 ## Bayesian analysis methods
 We now utilize the functions in this package.
 
 ### Bayesian hierarchical model
-The Bayesian hierarchical model (BHM) is the following model:
+The Bayesian hierarchical model (BHM) may be expressed hierarhically as
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta, \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right), \ \ i = 1, \ldots, n \\
+  y_{0hi} | x_{0hi}, \beta_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0h}) \right), \ \ h = 1, \ldots, H, \ \ i = 1, \ldots, n_{0h} \\
+  \beta, \beta_{01}, \ldots, \beta_{0H} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where } \Sigma_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
 \end{align*}
 $$
 where $\beta$ is the vector of regression coefficients of the current data
-set, $\beta_0$ is the vector of regression coefficients for the historical
-data set, $\mu$ is the common prior mean of $\beta$ and $\beta_0$, which is
+set, $\beta_{0h}$ is the vector of regression coefficients for historical data
+set $D_{0h}$, $\mu$ is the common prior mean of $\beta$ and $\beta_{0h}$, which is
 treated as random with a normal hyperprior having mean $\mu_0$, and a diagonal
-covariance matrix $\Sigma_0$. $\Sigma$ is also treated as random and assumed 
+covariance matrix $\Sigma_{0}$. $\Sigma$ is also treated as random and assumed 
 to be a diagonal matrix. Half-normal hyperpriors are elicited on the diagonal 
 entries of $\Sigma$.
 
 The defaults in `hdbayes` are
 
 * $\mu_0 = \textbf{0}_p$, where $\textbf{0}_p$ denotes a $p$-dimensional vector of 0s
-* $\Sigma_0 = 100 \times I_p$
+* $\Sigma_{0} = 100 \times I_p$
 * $\nu_{0,j} = 0$ for $j = 1, \ldots, p$
 * $\psi_{0,j} = 1$ for $j = 1, \ldots, p$
 where $p$ is the number of predictors (including the intercept if applicable).
@@ -155,15 +160,15 @@ The commensurate prior assumes the following hierarchical model
 $$
 \begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu_0, \Sigma_0) , \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  y_{0hi} | x_{0hi}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0}) \right) \\
+  \beta_{0} &\sim N_p(\mu_0, \Sigma_{0}) , \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
   \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
 \end{align*}
 $$
-where the $\tau_j$'s are elicited by the user. The defaults in `hdbayes` are
+where $\beta = (\beta_1, \ldots, \beta_p)'$, $\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'$, and the $\tau_j$'s are elicited by the user. The defaults in `hdbayes` are
 
 * $\mu_0 = \textbf{0}_p$
-* $\Sigma_0 = 100 \times I_p$
+* $\Sigma_{0} = 100 \times I_p$
 
 This method can be fit as follows
 ```{r commensurate}
@@ -188,10 +193,10 @@ The Robust MAP prior is a generalization of the Bayesian Hierarchical Model
 $$
 \begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta_0 &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_0) \right) \\
-  \beta_0 &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  y_{0i} | x_{0i}, \beta_{0h} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0h}) \right) \\
+  \beta_{0h} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
   \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
-  \mu &\sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 \text{ is a diagonal matrix} \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
   \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
 \end{align*}
 $$
@@ -250,25 +255,26 @@ fit.rmap[, -1] %>%
 
 
 ### Power prior
-The Power Prior takes the form
+With $H$ historical data sets, the power prior takes the form
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
-  \pi(\beta | a_0) &\propto L(\beta | y_0)^{a_0} \pi_0(\beta)
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{PP}}(\beta | D_0, a_{0h}) \propto 
+    \pi_0(\beta) \prod_{h=1}^H L(\beta | D_{0h})^{a_{0h}}
 \end{align*}
 $$
-where $L(\beta | y_0)$ is the likelihood of the GLM based on the historical data,
-$a_0 \in (0,1)$ is a fixed hyperaparameter controlling the effective
-sample size contributed by the data (e.g., $a_0 = 1$ borrows the whole sample size),
-and $\pi_0(\beta)$ is an "initial prior" on $\beta$.
+where $L(\beta | D)$ is the likelihood of the GLM based on data set $D$,
+$a_{0h} \in (0,1)$ is a fixed hyperparameter controlling the effective
+sample size contributed by historical data set $D_{0h}$
+, and $\pi_0(\beta)$ is an "initial prior" for $\beta$.
 
-The default in `hdbayes` is a (noninformative) normal prior on $\beta$:
+The default in `hdbayes` is a (noninformative) normal initial prior on $\beta$:
 $$
 \beta \sim N_p(\textbf{0}_p, 100 \times I_p)
 $$
 
-The power prior (with $a_0 = 0.5$) may be fit as follows:
+With $H = 1$, the power prior (with $a_{01} = 0.5$) may be fit as follows:
 ```{r powerprior}
 fit.pp = glm.pp(
   formula = formula, family = family, data.list = data.list,
@@ -285,32 +291,31 @@ fit.pp[, -1] %>%
 
 
 ### Normalized power prior (NPP)
-The NPP treats the hyperparameter $a_0$ as random, allowing the data to decide
+The NPP treats the hyperparameter $a_{0h}$ as random, allowing the data to decide
 what is the best value. For non-Gaussian models, this requires estimating
 the normalizing constant
-$Z(a_0) = \int L(\beta | y_0)^{a_0} \pi_0(\beta) d\beta$.
+$Z(a_{0h} | D_{0h}) = \int L(\beta | D_{0h})^{a_{0h}} \pi_0(\beta)^{1/H} d\beta$.
 
 In `hdbayes`, there is one function to estimate the normalizing constant across
-a grid of values for $a_0$ and another to obtain posterior samples of the
+a grid of values for $a_{0h}$ and another to obtain posterior samples of the
 normalized power prior.
 
-The NPP may be summarized as
+The posterior under the NPP may be summarized as
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) \\
-  \pi(\beta | a_0) &\propto \frac{1}{Z(a_0)} L(\beta | y_0)^{a_0} \pi_0(\beta) \\
-  \pi(a_0)         &\propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{NPP}}(\beta, a_0 | D_0) = \pi_0(\beta) \prod_{h=1}^H \frac{ L(\beta | D_{0h})^{a_{0h}} }{Z(a_{0h} | D_{0h})} \pi(a_{0h})
 \end{align*}
 $$
 
 The defaults in `hdbayes` are
 
 * $\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)$
-* $\alpha_0 = 1$
-* $\gamma_0 = 1$
+* $\alpha_{0h} = 1$
+* $\gamma_{0h} = 1$
 
-when $\alpha_0 = 1$ and $\gamma_0 = 1$, the prior on $a_0$ is a $U(0,1)$
+when $\alpha_{0h} = 1$ and $\gamma_{0h} = 1$, the prior on $a_{0h}$ is a $U(0,1)$
 prior.
 
 ### Estimating the normalizing constant
@@ -349,12 +354,12 @@ head(
 ```
 
 The provided function `glm.npp.lognc` estimates the logarithm of the
-normalizing constant, $\log Z(a_0)$, for one specific value of $a_0$ and one 
-historical data set. We created the function `logncfun` so that the first 
-argument would be $a_0$, allowing us to use the `parLapply` function in the 
+normalizing constant, $\log Z(a_{0h} | D_{0h})$, for one specific value of $a_{0h}$ and one 
+historical data set $D_{0h}$. We created the function `logncfun` so that the first 
+argument would be $a_{0h}$, allowing us to use the `parLapply` function in the 
 `parallel` package.
 
-The `hdbayes` function `glm.npp.lognc` outputs $a_0$, $Z(a_0)$, and the
+The `hdbayes` function `glm.npp.lognc` outputs $a_{0h}$, $Z(a_{0h} | D_{0h})$, and the
 minimum bulk effective sample size and maximum R-hat value of the MCMC sampling
 of the power prior. It is a good idea to check that the minimum bulk
 effective sample size is at least 1,000 and the maximum R-hat value is
@@ -371,11 +376,11 @@ plot(a0.lognc$a0, a0.lognc$lognc)
 ```
 
 
-### Sampling the posterior distribution
+### Sampling from the posterior distribution
 We can now sample from the posterior distribution. The function
-`glm.npp` takes, as input, values of $a_0$ and the estimated logarithm
+`glm.npp` takes, as input, values of $a_{0h}$ and the estimated logarithm
 of the normalizing constant. Linear interpolation is used to estimate
-$Z(a_0)$ for values not in the fine grid. Thus, it may be a good idea to
+$Z(a_{0h} | D_{0h})$ for values not in the fine grid. Thus, it may be a good idea to
 conduct smoothing of the function such as using LOESS, but we ignore that here.
 
 
@@ -398,7 +403,7 @@ fit.npp[, -1] %>%
 NAPP uses a large sample theory argument to formulate a normal approximation
 to the power prior, i.e., the prior is given by
 $$
-\beta | a_0 \sim N(\hat{\beta}_0, a_0^{-1} [I_n(\beta)]^{-1}),
+\beta | a_{0h} \sim N(\hat{\beta}_0, a_{0h}^{-1} [I_n(\beta)]^{-1}),
 $$
 where $\hat{\beta}_0$ is the maximum likelihood estimate (MLE) of $\beta$
 based on the historical data and $I_n(\beta)$ is the associated information
@@ -422,21 +427,27 @@ fit.napp[, -1] %>%
 
 
 ### Latent exchangeability prior (LEAP)
-LEAP assumes that the historical data are generated from a finite mixture model consisting of $K \ge 2$ components, with the current data generated from the first component of this mixture. For single historical data set settings, the posterior under the LEAP may be expressed hierarchically as
+The LEAP assumes that the historical data are generated from a finite mixture model consisting of $K \ge 2$ components, with the current data generated from the first component of this mixture. For single historical data set settings, the posterior under the LEAP may be expressed hierarchically as
 $$
 \begin{align*}
-  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
-  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right) \\
-  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_0), \:k = 2, \ldots, K, \text{ where }\Sigma_0 = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
-  \gamma &\sim \text{Dirichlet}(\alpha_0)
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right)
+  , \ \ i = 1, \ldots, n_0
+  \\
+  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_{0}), \:k = 2, \ldots, K, \text{ where }\Sigma_{0} = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
+  \gamma &\sim \text{Dirichlet}(\alpha_{0})
 \end{align*}
 $$
-where $\gamma = (\gamma_1, \ldots, \gamma_K)'$ is a vector of mixing probabilities, $\alpha_0 = (\alpha_1, \ldots, \alpha_K)'$ is a vector of concentration parameters, and $\mu_0$ and $\Sigma_0$ are respectively the prior mean and covariance matrices for the $K$ regression coefficients. The defaults in `hdbayes` are
+where $\gamma = (\gamma_1, \ldots, \gamma_K)'$ is a vector of mixing probabilities, $\alpha_{0} = (\alpha_1, \ldots, \alpha_K)'$ is a vector of concentration parameters, and $\mu_0$ and $\Sigma_{0}$ are respectively the prior mean and covariance matrices for the $K$ regression coefficients. The defaults in `hdbayes` are
 
 * $\mu_0 = \textbf{0}_p$
-* $\Sigma_0 = 100 \times I_p$
-* $\alpha_0 = \textbf{1}_K$, where $\textbf{1}_K$ denotes a $K$-dimensional vector of 1s
+* $\Sigma_{0} = 100 \times I_p$
+* $\alpha_{0} = \textbf{1}_K$, where $\textbf{1}_K$ denotes a $K$-dimensional vector of 1s
 * $K = 2$
+
+For multiple historical data sets, `hdbayes` assumes that all historical data sets come from
+a single finite mixture model.
 
 The LEAP can be fit as follows:
 ```{r leap}
@@ -507,6 +518,3 @@ round( post.mean, 3 )
 ## posterior std dev.
 round( post.sd, 3 )
 ```
-
-
-
