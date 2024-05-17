@@ -34,7 +34,8 @@ Imports:
     posterior,
     enrichwith,
     mclust,
-    bridgesampling
+    bridgesampling,
+    mvtnorm
 Suggests:
     cmdstanr (>= 0.6.0),
     ggplot2,
@@ -65,8 +66,11 @@ Collate:
     'glm_bhm.R'
     'glm_commensurate.R'
     'glm_leap.R'
+    'glm_logml_bhm.R'
+    'glm_logml_map.R'
+    'glm_logml_napp.R'
     'glm_npp_lognc.R'
-    'glm_logml.R'
+    'glm_logml_pp.R'
     'glm_napp.R'
     'glm_npp.R'
     'glm_pp.R'
