@@ -83,6 +83,11 @@ functions{
     else reject("Distribution not supported");
     return 0; // never reached;
   }
+
+  real logit_beta_lpdf(real x, real shape1, real shape2) {
+    return
+      -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p_exp(-x);
+  }
 }
 data {
   int<lower=0>                        K; // total number of historical datasets (excluding the current data)
@@ -104,22 +109,23 @@ data {
 parameters {
   vector[p] beta;
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
-  vector<lower=0,upper=1>[K] a0s;
+  vector[K] logit_a0s;
 }
-
+transformed parameters {
+  vector<lower=0,upper=1>[K] a0s;
+  a0s = inv_logit(logit_a0s);
+}
 // The model to be estimated. We model the output
 // 'y' to be normally distributed with mean 'mu'
 // and standard deviation 'sigma'.
 model {
-  // prior of a0s is beta (uniform if 1's)
-  if ( a0_shape1 != 1 || a0_shape2 != 1)
-    target += beta_lpdf(a0s | a0_shape1, a0_shape2);
-
   if ( dist <= 2 ) {
     target += glm_lp(y,  beta,  1.0, X,  dist, link, offs); // current data likelihood
 
-    // asympt. power prior
     for ( k in 1:K ) {
+      // prior on logit(a0)
+      target += logit_beta_lpdf(logit_a0s[k] | a0_shape1, a0_shape2);
+      // asympt. power prior
       target += multi_normal_lpdf(beta | theta_hats[, k], inv(a0s[k]) * theta_covars[k]);
     }
   }
@@ -131,6 +137,7 @@ model {
     real log_disp      = log(dispersion[1]);
     vector[p+1] theta  = append_row( beta, log_disp );  // theta = ( beta, log(phi) )'
     for ( k in 1:K ) {
+      target          += logit_beta_lpdf(logit_a0s[k] | a0_shape1, a0_shape2);
       target          += multi_normal_lpdf(theta | theta_hats[, k], inv(a0s[k]) * theta_covars[k]);
     }
     target            += -log_disp;   // jacobian
