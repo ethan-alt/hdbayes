@@ -109,21 +109,14 @@ glm.logml.napp = function(
   if ( !family$family %in% c('binomial', 'poisson') ) {
     oldnames = c(oldnames, 'dispersion')
   }
-  oldnames = c(oldnames, paste0('a0_hist_', 1:K))
+  oldnames = c(oldnames, paste0('logit_a0s[', 1:K, "]"))
   d = d[, oldnames, drop=F]
-  ## remove posterior samples with a0s being exactly 0 or 1
-  a0s.cols = which(colnames(d) %in% paste0('a0_hist_', 1:K))
-  idx = apply(d, 1, function(r){
-    any(r[a0s.cols] == 0) || any(r[a0s.cols] == 1)
-  })
-  if ( sum(idx) != 0){
-    d = d[!idx, ]
-  }
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
     beta       = pars[paste0("beta[", 1:data$p,"]")]
-    a0s        = pars[paste0('a0_hist_', 1:K)]
+    logit_a0s  = pars[paste0('logit_a0s[', 1:K, "]")]
+    a0s        = binomial('logit')$linkinv(logit_a0s)
     a0_shape1  = data$a0_shape1
     a0_shape2  = data$a0_shape2
     y          = data$y
@@ -132,11 +125,8 @@ glm.logml.napp = function(
     link       = data$link
     offs       = data$offs
     K          = data$K
-    ## prior on a0s
-    prior_lp   = 0
-    if ( a0_shape1 != 1 || a0_shape2 != 1){
-      prior_lp   = sum( stats::dbeta(a0s, shape1 = a0_shape1, shape2 = a0_shape2, log = T) )
-    }
+    ## prior on logit(a0)
+    prior_lp   = sum( sapply(logit_a0s, logit_beta_lp, shape1 = a0_shape1, shape2 = a0_shape2) )
     dispersion = 1
     log_disp   = 0
     theta      = beta
@@ -147,13 +137,11 @@ glm.logml.napp = function(
       prior_lp   = prior_lp - log_disp ## jacobian
     }
     data_lp    = glm_lp(y, beta, X, dist, link, offs, dispersion)
-    for (k in 1:K) {
+    prior_lp   = prior_lp + sum( sapply(1:K, function(k){
       theta_mean  = as.numeric(data$theta_hats[, k])
       theta_covar = as.matrix( 1/a0s[k] * data$theta_covars[k, , ] )
-      ## prior on (beta, log(dispersion))
-      prior_lp   = prior_lp +
-        mvtnorm::dmvnorm(theta, mean = theta_mean, sigma = theta_covar, log = T)
-    }
+      mvtnorm::dmvnorm(theta, mean = theta_mean, sigma = theta_covar, log = T)
+    }) )
     return(data_lp + prior_lp)
   }
 
@@ -163,8 +151,8 @@ glm.logml.napp = function(
     lb = c(lb, 0)
     ub = c(ub, Inf)
   }
-  lb        = c(lb, rep(0, standat$K))
-  ub        = c(ub, rep(1, standat$K))
+  lb        = c(lb, rep(-Inf, standat$K))
+  ub        = c(ub, rep(Inf, standat$K))
   names(ub) = colnames(d)
   names(lb) = names(ub)
 
