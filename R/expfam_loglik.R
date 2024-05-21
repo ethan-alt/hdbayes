@@ -143,3 +143,12 @@ glm_lp = function(y, beta, X, dist, link, offs, phi) {
     stop("Distribution not supported")
   }
 }
+
+#' compute density for logit(beta)
+#' @param x real number
+#' @param shape1 first shape parameter for Beta distribution
+#' @param shape2 second shape parameter for Beta distribution
+#' @noRd
+logit_beta_lp = function(x, shape1, shape2){
+  -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p( exp(-x) )
+}
