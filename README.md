@@ -70,7 +70,7 @@ and let the
 historical data set,
 ![h \in \\1, \ldots, H\\](https://latex.codecogs.com/png.latex?h%20%5Cin%20%5C%7B1%2C%20%5Cldots%2C%20H%5C%7D "h \in \{1, \ldots, H\}"),
 be denoted by
-![D\_{0h} = \\ (y\_{0hi}, \bm{x}\_{0hi}), i = 1, \ldots, n\_{0h} \\](https://latex.codecogs.com/png.latex?D_%7B0h%7D%20%3D%20%5C%7B%20%28y_%7B0hi%7D%2C%20%5Cbm%7Bx%7D_%7B0hi%7D%29%2C%20i%20%3D%201%2C%20%5Cldots%2C%20n_%7B0h%7D%20%5C%7D "D_{0h} = \{ (y_{0hi}, \bm{x}_{0hi}), i = 1, \ldots, n_{0h} \}"),
+![D\_{0h} = \\ (y\_{0hi}, x\_{0hi}), i = 1, \ldots, n\_{0h} \\](https://latex.codecogs.com/png.latex?D_%7B0h%7D%20%3D%20%5C%7B%20%28y_%7B0hi%7D%2C%20x_%7B0hi%7D%29%2C%20i%20%3D%201%2C%20%5Cldots%2C%20n_%7B0h%7D%20%5C%7D "D_{0h} = \{ (y_{0hi}, x_{0hi}), i = 1, \ldots, n_{0h} \}"),
 where
 ![n\_{0h}](https://latex.codecogs.com/png.latex?n_%7B0h%7D "n_{0h}")
 denotes the sample size of the
@@ -203,14 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 6.2 seconds.
-#> Chain 1 finished in 6.8 seconds.
-#> Chain 2 finished in 8.0 seconds.
-#> Chain 4 finished in 8.9 seconds.
+#> Chain 3 finished in 5.8 seconds.
+#> Chain 1 finished in 6.3 seconds.
+#> Chain 2 finished in 7.4 seconds.
+#> Chain 4 finished in 8.4 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.5 seconds.
-#> Total execution time: 9.1 seconds.
+#> Mean chain execution time: 7.0 seconds.
+#> Total execution time: 8.6 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 
@@ -268,14 +268,14 @@ fit.commensurate = glm.commensurate(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
+#> Chain 1 finished in 0.7 seconds.
 #> Chain 2 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 0.9 seconds.
+#> Total execution time: 1.0 seconds.
 
 fit.commensurate[, -1] %>% 
     summarise_draws() %>% 
@@ -348,14 +348,14 @@ fit.hist.bhm = glm.rmap.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 3.0 seconds.
-#> Chain 4 finished in 3.1 seconds.
-#> Chain 2 finished in 4.4 seconds.
-#> Chain 1 finished in 4.7 seconds.
+#> Chain 3 finished in 2.7 seconds.
+#> Chain 4 finished in 2.8 seconds.
+#> Chain 2 finished in 4.0 seconds.
+#> Chain 1 finished in 4.3 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 3.8 seconds.
-#> Total execution time: 4.8 seconds.
+#> Mean chain execution time: 3.5 seconds.
+#> Total execution time: 4.4 seconds.
 ## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
 samples_bhm = fit.hist.bhm$beta_pred
 
@@ -379,14 +379,14 @@ fit.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
-#> Chain 2 finished in 0.8 seconds.
-#> Chain 3 finished in 0.8 seconds.
-#> Chain 4 finished in 0.7 seconds.
+#> Chain 1 finished in 0.6 seconds.
+#> Chain 2 finished in 0.6 seconds.
+#> Chain 3 finished in 0.6 seconds.
+#> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 0.9 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -448,14 +448,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
+#> Chain 1 finished in 0.7 seconds.
 #> Chain 2 finished in 0.7 seconds.
-#> Chain 3 finished in 0.7 seconds.
-#> Chain 4 finished in 0.7 seconds.
+#> Chain 3 finished in 0.6 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.7 seconds.
-#> Total execution time: 0.9 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -496,13 +496,13 @@ The posterior under the NPP may be summarized as
 The defaults in `hdbayes` are
 
 - ![\pi_0(\beta) \propto N(\beta \| ~\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29%20%5Cpropto%20N%28%5Cbeta%20%7C%20~%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)")
-- ![\alpha\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0h%7D%20%3D%201 "\alpha_{0h} = 1")
-- ![\gamma\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0h%7D%20%3D%201 "\gamma_{0h} = 1")
+- ![\alpha\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%201 "\alpha_{0} = 1")
+- ![\gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0%7D%20%3D%201 "\gamma_{0} = 1")
 
 when
-![\alpha\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0h%7D%20%3D%201 "\alpha_{0h} = 1")
+![\alpha\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%201 "\alpha_{0} = 1")
 and
-![\gamma\_{0h} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0h%7D%20%3D%201 "\gamma_{0h} = 1"),
+![\gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0%7D%20%3D%201 "\gamma_{0} = 1"),
 the prior on
 ![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") is
 a ![U(0,1)](https://latex.codecogs.com/png.latex?U%280%2C1%29 "U(0,1)")
@@ -607,14 +607,14 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
 #> Chain 2 finished in 0.7 seconds.
-#> Chain 3 finished in 0.8 seconds.
+#> Chain 1 finished in 0.8 seconds.
+#> Chain 3 finished in 0.7 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 0.9 seconds.
+#> Mean chain execution time: 0.7 seconds.
+#> Total execution time: 0.8 seconds.
 fit.npp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -656,24 +656,25 @@ fit.napp = glm.napp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.5 seconds.
+#> Chain 2 finished in 0.5 seconds.
+#> Chain 3 finished in 0.5 seconds.
+#> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Mean chain execution time: 0.5 seconds.
+#> Total execution time: 0.6 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
-#> # A tibble: 4 × 10
-#>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
-#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.842  0.837 0.241 0.24   0.453  1.24   1.00    4511.    4506.
-#> 2 z            0.592  0.587 0.275 0.27   0.14   1.06   1.00    4990.    4505.
-#> 3 x           -0.787 -0.785 0.159 0.159 -1.05  -0.528  1       4638.    4442.
-#> 4 a0_hist_1    0.671  0.704 0.225 0.253  0.258  0.97   1.00    5304.    3853.
+#> # A tibble: 5 × 10
+#>   variable       mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
+#>   <chr>         <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
+#> 1 (Intercept)   0.844  0.841 0.244 0.248  0.451  1.25   1.00    3685.    4208.
+#> 2 z             0.593  0.589 0.271 0.275  0.148  1.03   1.00    5602.    4555.
+#> 3 x            -0.788 -0.783 0.161 0.161 -1.06  -0.532  1.00    4078.    4873.
+#> 4 a0_hist_1     0.668  0.703 0.227 0.257  0.253  0.972  1.00    5636.    3594.
+#> 5 logit_a0s[1]  0.99   0.861 1.46  1.32  -1.08   3.53   1.00    5636.    3594.
 ```
 
 ### Latent exchangeability prior (LEAP)
@@ -737,14 +738,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 4 finished in 3.9 seconds.
-#> Chain 2 finished in 4.3 seconds.
-#> Chain 1 finished in 4.4 seconds.
-#> Chain 3 finished in 4.8 seconds.
+#> Chain 4 finished in 3.8 seconds.
+#> Chain 2 finished in 4.1 seconds.
+#> Chain 1 finished in 4.2 seconds.
+#> Chain 3 finished in 4.7 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.3 seconds.
-#> Total execution time: 5.0 seconds.
+#> Mean chain execution time: 4.2 seconds.
+#> Total execution time: 4.8 seconds.
 
 suppressWarnings(
  fit.leap[, c(2:4, 11)] %>% 
@@ -810,9 +811,9 @@ post.sd = cbind(
 ## posterior means
 round( post.mean, 3 )
 #>             truth mle.cur mle.hist    bhm commensurate robustmap   napp    npp
-#> (Intercept)   1.0   0.760    1.036  0.841        0.847     0.828  0.842  0.845
-#> z             0.5   0.677    0.313  0.625        0.607     0.618  0.592  0.598
-#> x            -1.0  -0.750   -0.856 -0.789       -0.786    -0.777 -0.787 -0.793
+#> (Intercept)   1.0   0.760    1.036  0.841        0.847     0.828  0.844  0.845
+#> z             0.5   0.677    0.313  0.625        0.607     0.618  0.593  0.598
+#> x            -1.0  -0.750   -0.856 -0.789       -0.786    -0.777 -0.788 -0.793
 #>                 pp   leap
 #> (Intercept)  0.829  0.845
 #> z            0.616  0.602
@@ -821,9 +822,9 @@ round( post.mean, 3 )
 ## posterior std dev.
 round( post.sd, 3 )
 #>             mle.cur mle.hist   bhm commensurate robustmap  napp   npp    pp
-#> (Intercept)   0.274    0.377 0.246        0.251     0.253 0.241 0.244 0.243
-#> z             0.308    0.442 0.284        0.278     0.288 0.275 0.273 0.282
-#> x             0.181    0.266 0.165        0.169     0.170 0.159 0.164 0.163
+#> (Intercept)   0.274    0.377 0.246        0.251     0.253 0.244 0.244 0.243
+#> z             0.308    0.442 0.284        0.278     0.288 0.271 0.273 0.282
+#> x             0.181    0.266 0.165        0.169     0.170 0.161 0.164 0.163
 #>              leap
 #> (Intercept) 0.243
 #> z           0.272

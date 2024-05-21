@@ -70,7 +70,7 @@ current and one historical data set. Note that the package allows for using mult
 historical data sets. Let the current data set be denoted by $D = \{ (y_i, x_i), i = 1, \ldots, n \}$, 
 where $n$ denotes the sample size of the current data. Suppose we have $H$ historical 
 data sets, and let the $h^{th}$ historical data set, $h \in \{1, \ldots, H\}$, be 
-denoted by $D_{0h} = \{ (y_{0hi}, \bm{x}_{0hi}), i = 1, \ldots, n_{0h} \}$, where 
+denoted by $D_{0h} = \{ (y_{0hi}, x_{0hi}), i = 1, \ldots, n_{0h} \}$, where 
 $n_{0h}$ denotes the sample size of the $h^{th}$ historical data. Let 
 $D_0 = \{D_{01}, \ldots, D_{0H}\}$ denote all the historical data.
 ```{r simdata}
@@ -312,10 +312,10 @@ $$
 The defaults in `hdbayes` are
 
 * $\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)$
-* $\alpha_{0h} = 1$
-* $\gamma_{0h} = 1$
+* $\alpha_{0} = 1$
+* $\gamma_{0} = 1$
 
-when $\alpha_{0h} = 1$ and $\gamma_{0h} = 1$, the prior on $a_{0h}$ is a $U(0,1)$
+when $\alpha_{0} = 1$ and $\gamma_{0} = 1$, the prior on $a_{0h}$ is a $U(0,1)$
 prior.
 
 ### Estimating the normalizing constant
