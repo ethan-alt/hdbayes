@@ -10,6 +10,7 @@
 #' for the current and historical data sets are independent half-normal distributions.
 #'
 #' @include data_checks.R
+#' @include get_stan_data.R
 #'
 #' @export
 #'
@@ -80,79 +81,17 @@ glm.commensurate = function(
     chains            = 4,
     ...
 ) {
-  data.checks(formula, family, data.list, offset.list)
-
-  res          = stack.data(formula = formula,
-                            data.list = data.list)
-  y            = res$y
-  X            = res$X
-  start.index  = res$start.index
-  end.index    = res$end.index
-  p            = ncol(X)
-  N            = length(y)
-  K            = length(end.index)
-  fam.indx     = get.dist.link(family)
-  dist         = fam.indx[1]
-  link         = fam.indx[2]
-
-  ## Default offset for each data set is a vector of 0s
-  if ( is.null(offset.list) ){
-    offset = rep(0, N)
-  }else {
-    offset = unlist(offset.list)
-  }
-
-  ## check tau
-  if ( !( is.vector(tau) & (length(tau) %in% c(1, p)) ) )
-    stop("tau must be a scalar or a vector of length ", p)
-  tau = to.vector(param = tau, len = p)
-  ## Check if each element of tau is positive
-  if ( any(is.na(tau) ) )
-    stop('tau must be a vector of non-missing values')
-  if ( any(tau <= 0) )
-    stop("Each element of tau must be positive")
-
-  ## Default prior on regression coefficients is N(0, 10^2)
-  if ( !is.null(beta0.mean) ){
-    if ( !( is.vector(beta0.mean) & (length(beta0.mean) %in% c(1, p)) ) )
-      stop("beta0.mean must be a scalar or a vector of length ", p, " if beta0.mean is not NULL")
-  }
-  beta0.mean = to.vector(param = beta0.mean, default.value = 0, len = p)
-  if ( !is.null(beta0.sd) ){
-    if ( !( is.vector(beta0.sd) & (length(beta0.sd) %in% c(1, p)) ) )
-      stop("beta0.sd must be a scalar or a vector of length ", p, " if beta0.sd is not NULL")
-  }
-  beta0.sd = to.vector(param = beta0.sd, default.value = 10, len = p)
-
-  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10^2)
-  if ( !is.null(disp.mean) ){
-    if ( !( is.vector(disp.mean) & (length(disp.mean) %in% c(1, K)) ) )
-      stop("disp.mean must be a scalar or a vector of length ", K, " if disp.mean is not NULL")
-  }
-  disp.mean = to.vector(param = disp.mean, default.value = 0, len = K)
-  if ( !is.null(disp.sd) ){
-    if ( !( is.vector(disp.sd) & (length(disp.sd) %in% c(1, K)) ) )
-      stop("disp.sd must be a scalar or a vector of length ", K, " if disp.sd is not NULL")
-  }
-  disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
-
-
-  standat = list(
-    'K'               = K,
-    'N'               = N,
-    'start_idx'       = start.index,
-    'end_idx'         = end.index,
-    'p'               = p,
-    'y'               = y,
-    'X'               = X,
-    'beta0_mean'      = beta0.mean,
-    'beta0_sd'        = beta0.sd,
-    'disp_mean'       = disp.mean,
-    'disp_sd'         = disp.sd,
-    'tau'             = tau,
-    'dist'            = dist,
-    'link'            = link,
-    'offs'            = offset
+  ## get Stan data for CP
+  standat = get.stan.data.cp(
+    formula        = formula,
+    family         = family,
+    data.list      = data.list,
+    tau            = tau,
+    offset.list    = offset.list,
+    beta0.mean     = beta0.mean,
+    beta0.sd       = beta0.sd,
+    disp.mean      = disp.mean,
+    disp.sd        = disp.sd
   )
 
   glm_commensurate = instantiate::stan_package_model(
@@ -164,9 +103,11 @@ glm.commensurate = function(
   fit = glm_commensurate$sample(data = standat,
                                 iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                                 ...)
-  d   = fit$draws(format = 'draws_df')
 
   ## rename parameters
+  p        = standat$p
+  K        = standat$K
+  X        = standat$X
   oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"))
   newnames = c(colnames(X), paste0( colnames(X), '_hist') )
 
@@ -174,6 +115,6 @@ glm.commensurate = function(
     oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
     newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
   }
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   return(d)
 }
