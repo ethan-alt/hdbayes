@@ -16,7 +16,7 @@
 #' @include get_stan_data.R
 #' @include data_checks.R
 #' @include expfam_loglik.R
-#' @include glm_cp_lognc.R
+#' @include glm_commensurate_lognc.R
 #'
 #' @export
 #'
@@ -33,7 +33,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"CP"}
+#'    \item{model}{"Commensurate"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -68,7 +68,7 @@
 #'     tau = rep(5, 4),
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
-#'   glm.logml.cp(
+#'   glm.logml.commensurate(
 #'     formula = formula, family = family,
 #'     data.list = data_list,
 #'     tau = rep(5, 4),
@@ -77,7 +77,7 @@
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
 #' }
-glm.logml.cp = function(
+glm.logml.commensurate = function(
     post.samples,
     formula,
     family,
@@ -198,7 +198,7 @@ glm.logml.cp = function(
   if ( !is.null(disp.sd) && (length(disp.sd) != 1) ){
     disp.sd = disp.sd[-1]
   }
-  res.hist = glm.cp.lognc(
+  res.hist = glm.commensurate.lognc(
     formula           = formula,
     family            = family,
     hist.data.list    = data.list[-1],
@@ -217,7 +217,7 @@ glm.logml.cp = function(
 
   ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
   res = list(
-    'model'   = "CP",
+    'model'   = "Commensurate",
     'logml'   = bs$logml - res.hist$lognc,
     'bs'      = bs,
     'bs.hist' = res.hist$bs

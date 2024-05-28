@@ -2,10 +2,10 @@
 
 export(glm.bhm)
 export(glm.commensurate)
-export(glm.cp.lognc)
+export(glm.commensurate.lognc)
 export(glm.leap)
 export(glm.logml.bhm)
-export(glm.logml.cp)
+export(glm.logml.commensurate)
 export(glm.logml.map)
 export(glm.logml.napp)
 export(glm.logml.pp)

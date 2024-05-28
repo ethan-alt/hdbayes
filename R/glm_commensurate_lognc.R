@@ -65,7 +65,7 @@
 #'   data(actg036)
 #'   ## take subset for speed purposes
 #'   actg036 = actg036[1:50, ]
-#'   glm.cp.lognc(
+#'   glm.commensurate.lognc(
 #'     formula = cd4 ~ treatment + age + race,
 #'     family = poisson(),
 #'     hist.data.list = list(histdata = actg036),
@@ -73,7 +73,7 @@
 #'     chains = 1, iter_warmup = 500, iter_sampling = 2000
 #'   )
 #' }
-glm.cp.lognc = function(
+glm.commensurate.lognc = function(
     formula,
     family,
     hist.data.list,
@@ -102,13 +102,13 @@ glm.cp.lognc = function(
     disp.sd        = hist.disp.sd
   )
 
-  glm_cp_prior = instantiate::stan_package_model(
-    name = "glm_cp_prior",
+  glm_commensurate_prior = instantiate::stan_package_model(
+    name = "glm_commensurate_prior",
     package = "hdbayes"
   )
 
   ## fit model in cmdstanr
-  fit      = glm_cp_prior$sample(data = standat,
+  fit      = glm_commensurate_prior$sample(data = standat,
                                  iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                                  ...)
   d        = fit$draws(format = 'draws_df')

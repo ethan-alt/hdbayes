@@ -81,6 +81,11 @@ glm.commensurate = function(
     chains            = 4,
     ...
 ) {
+  K = length(data.list)
+  if ( K == 1 ){
+    stop("data.list should include at least one historical data set")
+  }
+
   ## get Stan data for CP
   standat = get.stan.data.cp(
     formula        = formula,
@@ -106,7 +111,6 @@ glm.commensurate = function(
 
   ## rename parameters
   p        = standat$p
-  K        = standat$K
   X        = standat$X
   oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"))
   newnames = c(colnames(X), paste0( colnames(X), '_hist') )
