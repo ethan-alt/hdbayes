@@ -69,10 +69,10 @@
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #'   glm.logml.commensurate(
+#'     post.samples = d.cp,
 #'     formula = formula, family = family,
 #'     data.list = data_list,
 #'     tau = rep(5, 4),
-#'     post.samples = d.cp,
 #'     bridge.args = list(silent = TRUE),
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
@@ -222,4 +222,5 @@ glm.logml.commensurate = function(
     'bs'      = bs,
     'bs.hist' = res.hist$bs
   )
+  return(res)
 }

@@ -211,4 +211,5 @@ glm.logml.bhm = function(
     'logml' = bs$logml,
     'bs'    = bs
   )
+  return(res)
 }
