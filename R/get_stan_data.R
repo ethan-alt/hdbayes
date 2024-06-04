@@ -279,7 +279,6 @@ get.stan.data.napp = function(
 }
 
 
-
 #' get Stan data for commensurate prior (CP)
 #'
 #' @include data_checks.R
@@ -369,5 +368,157 @@ get.stan.data.cp = function(
     'link'            = link,
     'offs'            = offset
   )
+  return(standat)
+}
+
+
+#' get Stan data for LEAP
+#'
+#' @include data_checks.R
+#'
+#' @noRd
+get.stan.data.leap = function(
+    formula,
+    family,
+    data.list,
+    K                 = 2,
+    prob.conc         = NULL,
+    offset.list       = NULL,
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL,
+    all.hist          = FALSE ## indicator for whether data.list consists of historical data sets only
+) {
+  data.checks.leap(formula, family, data.list, K, offset.list)
+
+  ## get model information
+  if (all.hist){
+    hist.data.list   = data.list
+    hist.offset.list = offset.list
+  }else {
+    data             = data.list[[1]]
+    offset           = offset.list[[1]]
+    y                = data[, all.vars(formula)[1]]
+    n                = length(y)
+    X                = model.matrix(formula, data)
+    hist.data.list   = data.list[-1]
+    hist.offset.list = offset.list[-1]
+
+    ## Default offsets are matrices of 0s
+    if ( is.null(offset) )
+      offset = matrix(rep(0, n*K), ncol=K)
+  }
+
+  ## stack all historical data sets into one historical data set
+  res.hist = stack.data(formula, hist.data.list)
+  y0       = res.hist$y
+  n0       = length(y0)
+  X0       = res.hist$X
+  p        = ncol(X0)
+  fam.indx = get.dist.link(family)
+  dist     = fam.indx[1]
+  link     = fam.indx[2]
+
+  ## Default prob.conc is a vector of 1s
+  if ( !is.null(prob.conc) ){
+    if ( !( is.vector(prob.conc) & (length(prob.conc) %in% c(1, K)) ) )
+      stop("prob.conc must be a scalar or a vector of length ", K, " if prob.conc is not NULL")
+  }
+  prob.conc = to.vector(param = prob.conc, default.value = 1, len = K)
+
+  ## Default offsets are matrices of 0s
+  if ( is.null(hist.offset.list) ){
+    offset0 = matrix(rep(0, n0*K), ncol=K)
+  }else {
+    offset0 = do.call(rbind, hist.offset.list)
+  }
+
+  ## Default prior on regression coefficients is N(0, 10^2)
+  if ( is.null(beta.mean) ){
+    beta.mean = matrix(rep(0, p*K), ncol=K)
+  }else {
+    if ( length(beta.mean) == 1 ){
+      beta.mean = matrix(rep(as.numeric(beta.mean), p*K), ncol=K)
+    }else {
+      if ( !( is.matrix(beta.mean) ) )
+        stop("beta.mean must be a matrix")
+      if ( nrow(beta.mean) != p )
+        stop("beta.mean must have ", p, " row(s) if it is not NULL")
+      if ( ncol(beta.mean) != K )
+        stop("beta.mean must have ", K, " column(s) if it is not NULL")
+      beta.mean = matrix(as.numeric(beta.mean), nrow = p, ncol = K)
+    }
+  }
+
+  if ( is.null(beta.sd) ){
+    beta.sd = matrix(rep(10, p*K), ncol=K)
+  }else {
+    if ( length(beta.sd) == 1 ){
+      beta.sd = matrix(rep(as.numeric(beta.sd), p*K), ncol=K)
+    }else {
+      if ( !( is.matrix(beta.sd) ) )
+        stop("beta.sd must be a matrix")
+      if ( nrow(beta.sd) != p )
+        stop("beta.sd must have ", p, " row(s) if it is not NULL")
+      if ( ncol(beta.sd) != K )
+        stop("beta.sd must have ", K, " column(s) if it is not NULL")
+      beta.sd = matrix(as.numeric(beta.sd), nrow = p, ncol = K)
+    }
+  }
+
+  ## Default half-normal hyperprior on dispersion parameters (if exist) is N^{+}(0, 10^2)
+  if ( !is.null(disp.mean) ){
+    if ( !( is.vector(disp.mean) & (length(disp.mean) %in% c(1, K)) ) )
+      stop("disp.mean must be a scalar or a vector of length ", K, " if disp.mean is not NULL")
+  }
+  disp.mean = to.vector(param = disp.mean, default.value = 0, len = K)
+  if ( !is.null(disp.sd) ){
+    if ( !( is.vector(disp.sd) & (length(disp.sd) %in% c(1, K)) ) )
+      stop("disp.sd must be a scalar or a vector of length ", K, " if disp.sd is not NULL")
+  }
+  disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
+
+  if (all.hist){
+    standat = list(
+      'n0'          = n0,
+      'p'           = p,
+      'K'           = K,
+      'y0'          = y0,
+      'X0'          = X0,
+      'mean_beta'   = beta.mean,
+      'sd_beta'     = beta.sd,
+      'disp_mean'   = disp.mean,
+      'disp_sd'     = disp.sd,
+      'conc'        = prob.conc,
+      'gamma_lower' = 0,
+      'gamma_upper' = 1,
+      'dist'        = dist,
+      'link'        = link,
+      'offs0'       = offset0
+    )
+  }else {
+    standat = list(
+      'n'           = n,
+      'n0'          = n0,
+      'p'           = p,
+      'K'           = K,
+      'y'           = y,
+      'X'           = X,
+      'y0'          = y0,
+      'X0'          = X0,
+      'mean_beta'   = beta.mean,
+      'sd_beta'     = beta.sd,
+      'disp_mean'   = disp.mean,
+      'disp_sd'     = disp.sd,
+      'conc'        = prob.conc,
+      'gamma_lower' = 0,
+      'gamma_upper' = 1,
+      'dist'        = dist,
+      'link'        = link,
+      'offs'        = offset,
+      'offs0'       = offset0
+    )
+  }
   return(standat)
 }
