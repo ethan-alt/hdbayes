@@ -157,17 +157,23 @@ to.vector = function(
 #'                          dispersion parameter, if applicable.
 #' @param covariate.names   a vector of `character` giving the names of the covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
+#' @param is.LEAP           an indicator of whether the posterior samples are from LEAP. Defaults to false.
 #' @noRd
 post.samples.checks = function(
-    post.samples, covariate.names, family
+    post.samples, covariate.names, family, is.LEAP = FALSE
 ) {
   if ( !any( class(post.samples) %in% c("draws_df", "draws_matrix", "matrix", "data.frame") ) )
     stop("post.samples must be in one of the following formats: draws_df, draws_matrix, matrix, or data.frame")
   if ( !all( covariate.names %in% colnames(post.samples) ) )
     stop("Column names of post.samples must include the names of covariates for regression coefficients, such as \"(Intercept)\"")
   if ( !family$family %in% c('binomial', 'poisson') ) {
-    if ( !("dispersion" %in% colnames(post.samples)) )
-      stop("Column names of post.samples must include \"dispersion\" for dispersion parameter")
+    if( is.LEAP ){
+      if ( !("dispersion[1]" %in% colnames(post.samples)) )
+        stop("Column names of post.samples must include names of dispersion parameters (e.g., \"dispersion[1]\")")
+    }else {
+      if ( !("dispersion" %in% colnames(post.samples)) )
+        stop("Column names of post.samples must include names of dispersion parameters (e.g., \"dispersion\", \"dispersion_hist_1\")")
+    }
   }
 }
 
