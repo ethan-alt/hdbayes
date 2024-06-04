@@ -26,7 +26,7 @@ get_lp2mean = function(eta, link) {
   }
 }
 
-#' compute density for normal GLM
+#' compute log density for normal GLM
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -43,7 +43,7 @@ normal_glm_lp = function(y, beta, X, link, offs, phi) {
   return( sum( dnorm(y, mean = theta, sd = sqrt(phi), log = T) ) )
 }
 
-#' compute density for bernoulli GLM
+#' compute log density for bernoulli GLM
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -60,7 +60,7 @@ bernoulli_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   return( sum( y*theta - log1p(exp(theta)) ) )
 }
 
-#' compute density for poisson GLM
+#' compute log density for poisson GLM
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -77,7 +77,7 @@ poisson_glm_lp = function(y, beta, X, link, offs, phi = 1) {
   return( sum( y*theta - exp(theta) - lgamma(y + 1) ) )
 }
 
-#' compute density for gamma GLM
+#' compute log density for gamma GLM
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -95,7 +95,7 @@ gamma_glm_lp = function(y, beta, X, link, offs, phi) {
   return( sum( dgamma(y, shape = tau, rate = tau * theta, log = T) ) )
 }
 
-#' compute density for inverse-gaussian GLM
+#' compute log density for inverse-Gaussian GLM
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -118,7 +118,7 @@ invgauss_glm_lp = function(y, beta, X, link, offs, phi) {
   )
 }
 
-#' wrapper function compute density for a given link function and a given distribution
+#' wrapper function to compute log density for a given link function and a given distribution
 #' @param y    response vector
 #' @param beta regression coefficients
 #' @param X    design matrix
@@ -144,7 +144,7 @@ glm_lp = function(y, beta, X, dist, link, offs, phi) {
   }
 }
 
-#' compute density for logit(beta)
+#' compute log density for logit(beta)
 #' @param x real number
 #' @param shape1 first shape parameter for Beta distribution
 #' @param shape2 second shape parameter for Beta distribution
