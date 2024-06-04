@@ -26,7 +26,9 @@ glm.leap(
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{data.list}{a list of two \code{data.frame}s giving the current data followed by one historical data set.}
+\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
+are the historical data sets. For LEAP implementation, all historical data sets will be
+stacked into one historical data set.}
 
 \item{K}{the desired number of classes to identify. Defaults to 2.}
 
@@ -36,13 +38,16 @@ prob.conc will be a vector of repeated elements of the given scalar. Defaults to
 
 \item{offset.list}{a list of matrices giving the offset for current data followed by historical data. For each
 matrix, the number of rows corresponds to observations and columns correspond to classes.
-Defaults to a list of matrices of 0s.}
+Defaults to a list of matrices of 0s. Note that the first element of offset.list (corresponding
+to the offset for current data) should be a matrix of repeated columns if offset.list is not NULL.}
 
-\item{beta.mean}{a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients (including
-intercept). Defaults to a matrix of 0s.}
+\item{beta.mean}{a scalar or a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients,
+where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
+beta.mean will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.}
 
-\item{beta.sd}{a \verb{p x K} matrix of sd parameters for the initial prior on regression coefficients (including
-intercept). Defaults to a matrix of 10s.}
+\item{beta.sd}{a scalar or a \verb{p x K} matrix of sd parameters for the initial prior on regression coefficients,
+where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
+same as for beta.mean. Defaults to a matrix of 10s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the means for
 the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, disp.mean will
