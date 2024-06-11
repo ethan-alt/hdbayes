@@ -131,6 +131,9 @@ glm.logml.leap = function(
   }
   d = d[, oldnames, drop=F]
 
+  ## compute log normalizing constants (lognc) for half-normal prior on dispersion
+  standat$lognc_disp  = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
+
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
     p          = data$p
@@ -162,8 +165,7 @@ glm.logml.leap = function(
     if ( dist > 2 ) {
       dispersion = pars[paste0("dispersion[", 1:K,"]")]
       prior_lp   = prior_lp +
-        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) -
-        sum( pnorm(0, mean = data$disp_mean, sd = data$disp_sd, lower.tail = F, log.p = T) )
+        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) - data$lognc_disp
     }else {
       dispersion = rep(1.0, K)
     }

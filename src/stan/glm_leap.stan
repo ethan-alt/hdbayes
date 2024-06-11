@@ -406,10 +406,11 @@ data {
   matrix[n0,K]          offs0;
 }
 transformed data {
-  real gamma_shape1 = conc[1];
-  real gamma_shape2 = sum(conc[2:K]);
-  int K_gt_2 = (K > 2) ? (1) : (0);
+  real gamma_shape1      = conc[1];
+  real gamma_shape2      = sum(conc[2:K]);
+  int K_gt_2             = (K > 2) ? (1) : (0);
   vector[K-1] conc_delta = conc[2:K];
+  real lognc_disp        = normal_lccdf(0 | disp_mean, disp_sd);
 }
 parameters {
   matrix[p,K] betaMat;       // pxK matrix of regression coefficients; p = number of covars, K = number of components
@@ -438,7 +439,7 @@ model {
     // historical data likelihood
     target += glm_mixture_lp(y0, betaMat, dispersion, probs, X0, dist, link, offs0);
     // half-normal prior for dispersion
-    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;
     // current data likelihood
     target += glm_lp(y, betaMat[, 1], dispersion[1], X, dist, link, offs[,1]);
   }

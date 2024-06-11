@@ -101,6 +101,9 @@ data {
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
 }
+transformed data{
+  real lognc_disp = normal_lccdf(0 | disp_mean, disp_sd);
+}
 parameters {
   vector[p]     beta;
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
@@ -115,7 +118,7 @@ model {
     }
   }
   else {
-    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);  // half-normal prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;  // half-normal prior for dispersion
     for ( k in 1:K ) {
       target += a0_vals[k] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, dispersion[1], X[ start_idx[k]:end_idx[k], ], dist, link,

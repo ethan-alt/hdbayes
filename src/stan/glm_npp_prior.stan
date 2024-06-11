@@ -98,23 +98,20 @@ data {
   vector[n0]            offs0;
   real<lower=0,upper=1> a0;
 }
-// The parameters accepted by the model. Our model
-// accepts two parameters 'mu' and 'sigma'.
+transformed data {
+  real lognc_disp  = normal_lccdf(0 | disp_mean, disp_sd);
+}
 parameters {
   vector[p] beta;
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
 }
-
-// The model to be estimated. We model the output
-// 'y' to be normally distributed with mean 'mu'
-// and standard deviation 'sigma'.
 model {
   target += normal_lpdf(beta|beta_mean, beta_sd);
   if ( dist <= 2 ) {
     target += a0 * glm_lp(y0, beta, 1.0, X0, dist, link, offs0);   // historical data likelihood
   }
   else {
-    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd); // prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp; // prior for dispersion
     target += a0 * glm_lp(y0, beta, dispersion[1], X0, dist, link, offs0); // historical data likelihood
   }
 }

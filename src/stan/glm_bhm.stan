@@ -102,6 +102,10 @@ data {
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
 }
+transformed data {
+  real lognc_beta_sd = normal_lccdf(0 | meta_sd_mean, meta_sd_sd);
+  real lognc_disp    = normal_lccdf(0 | disp_mean, disp_sd);
+}
 parameters {
   //matrix[p, K]                        beta; // kth column is the vector of coefficients for the kth dataset
   matrix[p, K]                        beta_raw; // for non-centered parameterization
@@ -117,7 +121,7 @@ transformed parameters{
 }
 model {
   target += normal_lpdf(beta_mean | meta_mean_mean, meta_mean_sd); // hyperprior for mean of coefficients
-  target += normal_lpdf(beta_sd | meta_sd_mean, meta_sd_sd)- normal_lccdf(0 | meta_sd_mean, meta_sd_sd); // hyperprior for sd of coefficients (half-normal)
+  target += normal_lpdf(beta_sd | meta_sd_mean, meta_sd_sd) - lognc_beta_sd; // hyperprior for sd of coefficients (half-normal)
   for ( j in 1:p ) {
     target += std_normal_lpdf(beta_raw[j, ]); // implies beta[j, ] ~ normal(beta_mean[j], beta_sd[j]);
   }
@@ -130,7 +134,7 @@ model {
       }
   }
   else {
-    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);  // half-normal prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;  // half-normal prior for dispersion
     for ( k in 1:K ) {
       target += glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta[, k], dispersion[k], X[ start_idx[k]:end_idx[k], ], dist, link,

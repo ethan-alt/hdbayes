@@ -139,6 +139,10 @@ glm.logml.bhm = function(
   }
   d = d[, oldnames, drop=F]
 
+  ## compute log normalizing constants for half-normal priors
+  standat$lognc_beta_sd = sum( pnorm(0, mean = standat$meta_sd_mean, sd = standat$meta_sd_sd, lower.tail = F, log.p = T) )
+  standat$lognc_disp    = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
+
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
     p          = data$p
@@ -147,10 +151,8 @@ glm.logml.bhm = function(
     beta_mean  = pars[paste0("beta_mean[", 1:p, "]")]
     beta_sd    = pars[paste0("beta_sd[", 1:p, "]")]
     ## prior on beta_mean and beta_sd
-    prior_lp   = sum( dnorm(beta_mean, mean = data$meta_mean_mean, sd = data$meta_mean_sd, log = T) +
-      dnorm(beta_sd, mean = data$meta_sd_mean, sd = data$meta_sd_sd, log = T) -
-        pnorm(0, mean = data$meta_sd_mean, sd = data$meta_sd_sd, lower.tail = F, log.p = T)
-    )
+    prior_lp   = sum( dnorm(beta_mean, mean = data$meta_mean_mean, sd = data$meta_mean_sd, log = T) ) +
+      sum( dnorm(beta_sd, mean = data$meta_sd_mean, sd = data$meta_sd_sd, log = T) ) - data$lognc_beta_sd
     ## prior on beta_raw (equivalent to prior on beta)
     prior_lp   = prior_lp + sum( dnorm(beta_raw, mean = 0, sd = 1, log = T) )
     beta_raw   = matrix(beta_raw, nrow = p, ncol = K)
@@ -165,10 +167,8 @@ glm.logml.bhm = function(
       }else {
         dispersion = pars[c("dispersion", paste0( "dispersion", "_hist_", 1:(K-1) ))]
       }
-      prior_lp   = prior_lp + sum(
-        dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) -
-          pnorm(0, mean = data$disp_mean, sd = data$disp_sd, lower.tail = F, log.p = T)
-      )
+      prior_lp   = prior_lp +
+        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) - data$lognc_disp
     }
     data_lp = sum(
       sapply(1:K, function(k){

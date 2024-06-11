@@ -139,8 +139,10 @@ glm.commensurate.lognc = function(
     as.matrix(d[, oldnames, drop=F])
   )
 
+  ## compute log normalizing constants for half-normal priors
   standat$lognc_spike = pnorm(0, mean = standat$mu_spike, sd = standat$sigma_spike, lower.tail = F, log.p = T)
   standat$lognc_slab  = pnorm(0, mean = standat$mu_slab, sd = standat$sigma_slab, lower.tail = F, log.p = T)
+  standat$lognc_disp  = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
 
   ## estimate log normalizing constant
   log_density = function(pars, data){
@@ -168,8 +170,7 @@ glm.commensurate.lognc = function(
     if ( dist > 2 ) {
       dispersion = pars[paste0("dispersion[", 1:K,"]")]
       prior_lp   = prior_lp +
-        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) -
-        sum( pnorm(0, mean = data$disp_mean, sd = data$disp_sd, lower.tail = F, log.p = T) )
+        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) - data$lognc_disp
       hist_lp    = sum( sapply(1:data$K, function(k){
         start.idx = data$start_idx[k]
         end.idx   = data$end_idx[k]
