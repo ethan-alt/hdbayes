@@ -8,12 +8,16 @@ glm.commensurate.lognc(
   formula,
   family,
   hist.data.list,
-  tau,
   hist.offset.list = NULL,
   beta0.mean = NULL,
   beta0.sd = NULL,
   hist.disp.mean = NULL,
   hist.disp.sd = NULL,
+  p.spike = 0.1,
+  spike.mean = 200,
+  spike.sd = 0.1,
+  slab.mean = 0,
+  slab.sd = 5,
   bridge.args = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -27,11 +31,6 @@ glm.commensurate.lognc(
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
 
 \item{hist.data.list}{a list of \code{data.frame}s giving historical data sets.}
-
-\item{tau}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the commensurate prior parameters. If a scalar is provided, tau will be a vector of repeated
-elements of the given scalar. Each element of tau must be positive, corresponding to a normal
-precision parameter.}
 
 \item{hist.offset.list}{a list of vectors giving the offsets for each historical data. The length of hist.offset.list
 is equal to the length of hist.data.list. The length of each element of offset.list is equal to
@@ -53,6 +52,21 @@ for tau. Defaults to a vector of 0s.}
 \item{hist.disp.sd}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 sds for the half-normal priors on the dispersion parameters. If a scalar is provided, same as
 for tau. Defaults to a vector of 10s.}
+
+\item{p.spike}{a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
+on commensurability parameter \eqn{\tau}. Defaults to 0.1.}
+
+\item{spike.mean}{a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
+Defaults to 200.}
+
+\item{spike.sd}{a scalar giving the scale parameter for the half-normal prior (spike component) on \eqn{\tau}.
+Defaults to 0.1.}
+
+\item{slab.mean}{a scalar giving the location parameter for the half-normal prior (slab component) on \eqn{\tau}.
+Defaults to 0.}
+
+\item{slab.sd}{a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
+Defaults to 5.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
@@ -94,7 +108,7 @@ if (instantiate::stan_cmdstan_exists()) {
     formula = cd4 ~ treatment + age + race,
     family = poisson(),
     hist.data.list = list(histdata = actg036),
-    tau = 5,
+    p.spike = 0.1,
     chains = 1, iter_warmup = 500, iter_sampling = 2000
   )
 }
