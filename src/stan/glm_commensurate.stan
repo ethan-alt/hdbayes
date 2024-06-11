@@ -94,24 +94,45 @@ data {
   matrix[N,p]                         X; // design matrix for the stacked data
   vector[p]                           beta0_mean;
   vector<lower=0>[p]                  beta0_sd;
-  vector[K]                           disp_mean; // mean for the half-normal prior for dispersion of each dataset
-  vector<lower=0>[K]                  disp_sd; // sd for the half-normal prior for dispersion of each dataset
-  vector<lower=0>[p]                  tau; // commensurate prior parameter
+  vector[K]                           disp_mean;    // location parameter for the half-normal prior on dispersion of each dataset
+  vector<lower=0>[K]                  disp_sd;      // scale parameter for the half-normal prior on dispersion of each dataset
+  real<lower=0,upper=1>               p_spike;      // prior probability of spike
+  real                                mu_spike;     // location parameter for half-normal prior (spike)
+  real<lower=0>                       sigma_spike;  // scale parameter for half-normal prior (spike)
+  real                                mu_slab;      // location parameter for half-normal prior (slab)
+  real<lower=0>                       sigma_slab;   // scale parameter for half-normal prior (slab)
   int<lower=1,upper=5>                dist;
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
 }
-transformed data{
-  vector[p] comm_sd = inv_sqrt(tau);   // sd hyperparameter for commensurate prior
+transformed data {
+  real lognc_spike = normal_lccdf(0 | mu_spike, sigma_spike); // \Phi(mu_spike / sigma_spike)
+  real lognc_slab  = normal_lccdf(0 | mu_slab, sigma_slab); // \Phi(mu_slab / sigma_slab)
+  real lognc_disp  = normal_lccdf(0 | disp_mean, disp_sd);
 }
 parameters {
   vector[p] beta;  // regression coefficients for current data
   vector[p] beta0; // regression coefficients for historical datasets
   vector<lower=0>[(dist > 2) ? K : 0] dispersion;
+  vector<lower=0>[p] comm_prec;  // commensurability parameter
+}
+transformed parameters {
+  vector[p] comm_sd = inv_sqrt(comm_prec);   // sd for commensurate prior
 }
 model {
-  target += normal_lpdf(beta0 | beta0_mean, beta0_sd); // initial prior for beta0
-  target += normal_lpdf(beta  | beta0, comm_sd);       // commensurate prior for beta
+  // spike and slab prior for commensurability:
+  for ( i in 1:p ) {
+    target += log_mix(
+      p_spike
+      , normal_lpdf(comm_prec[i] | mu_spike, sigma_spike) - lognc_spike
+      , normal_lpdf(comm_prec[i] | mu_slab, sigma_slab) - lognc_slab
+    );
+  }
+  // initial prior for beta0
+  target += normal_lpdf(beta0 | beta0_mean, beta0_sd);
+  // commensurate prior for beta
+  target += normal_lpdf(beta  | beta0, comm_sd);
+
   if ( dist <= 2 ) {
     target += glm_lp(y[ start_idx[1]:end_idx[1] ],
     beta, 1.0, X[ start_idx[1]:end_idx[1], ], dist, link,
@@ -124,7 +145,7 @@ model {
     }
   }
   else {
-    target += normal_lpdf(dispersion | disp_mean, disp_sd) - normal_lccdf(0 | disp_mean, disp_sd);  // half-normal prior for dispersion
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;  // half-normal prior for dispersion
     target += glm_lp(y[ start_idx[1]:end_idx[1] ],
     beta, dispersion[1], X[ start_idx[1]:end_idx[1], ], dist, link,
     offs[ start_idx[1]:end_idx[1] ]);    // current data likelihood

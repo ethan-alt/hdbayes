@@ -288,12 +288,16 @@ get.stan.data.cp = function(
     formula,
     family,
     data.list,
-    tau,
     offset.list       = NULL,
     beta0.mean        = NULL,
     beta0.sd          = NULL,
     disp.mean         = NULL,
-    disp.sd           = NULL
+    disp.sd           = NULL,
+    p.spike           = 0.1,
+    spike.mean        = 200,
+    spike.sd          = 0.1,
+    slab.mean         = 0,
+    slab.sd           = 5
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -316,16 +320,6 @@ get.stan.data.cp = function(
   }else {
     offset = unlist(offset.list)
   }
-
-  ## check tau
-  if ( !( is.vector(tau) & (length(tau) %in% c(1, p)) ) )
-    stop("tau must be a scalar or a vector of length ", p)
-  tau = to.vector(param = tau, len = p)
-  ## Check if each element of tau is positive
-  if ( any(is.na(tau) ) )
-    stop('tau must be a vector of non-missing values')
-  if ( any(tau <= 0) )
-    stop("Each element of tau must be positive")
 
   ## Default prior on regression coefficients is N(0, 10^2)
   if ( !is.null(beta0.mean) ){
@@ -351,6 +345,19 @@ get.stan.data.cp = function(
   }
   disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
 
+  ## check p.spike
+  p.spike = as.numeric(p.spike)
+  if ( p.spike < 0 | p.spike > 1 )
+    stop("p.spike must be a scalar between 0 and 1")
+
+  ## Default half-normal prior (spike component) on commensurability parameter is N^{+}(200, 0.1)
+  spike.mean = as.numeric(spike.mean)
+  spike.sd   = as.numeric(spike.sd)
+
+  ## Default half-normal prior (slab component) on commensurability parameter is N^{+}(0, 5)
+  slab.mean = as.numeric(slab.mean)
+  slab.sd   = as.numeric(slab.sd)
+
   standat = list(
     'K'               = K,
     'N'               = N,
@@ -363,7 +370,11 @@ get.stan.data.cp = function(
     'beta0_sd'        = beta0.sd,
     'disp_mean'       = disp.mean,
     'disp_sd'         = disp.sd,
-    'tau'             = tau,
+    'p_spike'         = p.spike,
+    'mu_spike'        = spike.mean,
+    'sigma_spike'     = spike.sd,
+    'mu_slab'         = slab.mean,
+    'sigma_slab'      = slab.sd,
     'dist'            = dist,
     'link'            = link,
     'offs'            = offset
@@ -520,5 +531,122 @@ get.stan.data.leap = function(
       'offs0'       = offset0
     )
   }
+  return(standat)
+}
+
+#' get Stan data for NPP
+#'
+#' @include data_checks.R
+#'
+#' @noRd
+get.stan.data.npp = function(
+    formula,
+    family,
+    data.list,
+    a0.lognc,
+    lognc,
+    offset.list       = NULL,
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL,
+    a0.shape1         = 1,
+    a0.shape2         = 1,
+    a0.lower          = NULL,
+    a0.upper          = NULL
+) {
+  data.checks(formula, family, data.list, offset.list)
+
+  res          = stack.data(formula = formula,
+                            data.list = data.list)
+  y            = res$y
+  X            = res$X
+  start.index  = res$start.index
+  end.index    = res$end.index
+  p            = ncol(X)
+  N            = length(y)
+  K            = length(end.index)
+  fam.indx     = get.dist.link(family)
+  dist         = fam.indx[1]
+  link         = fam.indx[2]
+
+  ## Default offset for each data set is a vector of 0s
+  if ( is.null(offset.list) ){
+    offset = rep(0, N)
+  }else {
+    offset = unlist(offset.list)
+  }
+
+  ## Default prior on regression coefficients is N(0, 10^2)
+  if ( !is.null(beta.mean) ){
+    if ( !( is.vector(beta.mean) & (length(beta.mean) %in% c(1, p)) ) )
+      stop("beta.mean must be a scalar or a vector of length ", p, " if beta.mean is not NULL")
+  }
+  beta.mean = to.vector(param = beta.mean, default.value = 0, len = p)
+  if ( !is.null(beta.sd) ){
+    if ( !( is.vector(beta.sd) & (length(beta.sd) %in% c(1, p)) ) )
+      stop("beta.sd must be a scalar or a vector of length ", p, " if beta.sd is not NULL")
+  }
+  beta.sd = to.vector(param = beta.sd, default.value = 10, len = p)
+
+  ## check a0.lognc and lognc
+  if ( length(a0.lognc) != nrow(lognc) )
+    stop('the number of rows in lognc must be the same as the length of a0.lognc')
+  if ( ncol(lognc) != (K - 1) )
+    stop('the number of columns in lognc must be the same as the number of historical data sets')
+  if ( any(is.na(a0.lognc) ) )
+    stop('a0.lognc must not have missing values')
+  if ( any(is.na(lognc)) )
+    stop('lognc must not have missing values')
+  if ( any(a0.lognc < 0) || any(a0.lognc > 1) )
+    stop('each element of a0.lognc should be between 0 and 1')
+
+  ## Default half-normal prior on dispersion parameters (if exist) is N^{+}(0, 10^2)
+  if ( !is.null(disp.mean) ){
+    if ( !( is.vector(disp.mean) & (length(disp.mean) == 1) ) )
+      stop("disp.mean must be a scalar if disp.mean is not NULL")
+  }
+  disp.mean = to.vector(param = disp.mean, default.value = 0, len = 1)
+  if ( !is.null(disp.sd) ){
+    if ( !( is.vector(disp.sd) & (length(disp.sd) == 1) ) )
+      stop("disp.sd must be a scalar if disp.sd is not NULL")
+  }
+  disp.sd = to.vector(param = disp.sd, default.value = 10, len = 1)
+
+  ## Default lower bound for each a0 is 0; default upper bound for each a0 is 1
+  if ( !is.null(a0.lower) ){
+    if ( !( is.vector(a0.lower) & (length(a0.lower) %in% c(1, K - 1)) ) )
+      stop("a0.lower must be a scalar or a vector of length ", K - 1, " if a0.lower is not NULL")
+  }
+  a0.lower = to.vector(param = a0.lower, default.value = 0, len = K - 1)
+  if ( !is.null(a0.upper) ){
+    if ( !( is.vector(a0.upper) & (length(a0.upper) %in% c(1, K - 1)) ) )
+      stop("a0.upper must be a scalar or a vector of length ", K - 1, " if a0.upper is not NULL")
+  }
+  a0.upper = to.vector(param = a0.upper, default.value = 1, len = K - 1)
+
+  standat = list(
+    'K'               = K,
+    'N'               = N,
+    'start_idx'       = start.index,
+    'end_idx'         = end.index,
+    'p'               = p,
+    'y'               = y,
+    'X'               = X,
+    'mean_beta'       = beta.mean,
+    'sd_beta'         = beta.sd,
+    'disp_mean'       = disp.mean,
+    'disp_sd'         = disp.sd,
+    's'               = length(a0.lognc),
+    'a0_lognc'        = a0.lognc,
+    'lognc'           = lognc,
+    'a0_shape1'       = a0.shape1,
+    'a0_shape2'       = a0.shape2,
+    'a0_lower'        = a0.lower,
+    'a0_upper'        = a0.upper,
+    'dist'            = dist,
+    'link'            = link,
+    'offs'            = offset
+  )
   return(standat)
 }

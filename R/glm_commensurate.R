@@ -4,10 +4,13 @@
 #'
 #' The CP assumes that the regression coefficients for the current data conditional on those for the historical
 #' data are independent normal distributions with mean equal to the corresponding regression coefficients
-#' for the historical data and variance equal to the inverse of the corresponding elements of a user-specified
-#' vector (tau) of precision parameters. The number of current data regression coefficients is assumed to be the
-#' same as that of historical data regression coefficients. The priors on the dispersion parameters (if applicable)
-#' for the current and historical data sets are independent half-normal distributions.
+#' for the historical data and variance equal to the inverse of the corresponding elements of a vector of precision
+#' parameters (referred to as the commensurability parameter \eqn{\tau}). We regard \eqn{\tau} as random and elicit
+#' a spike-and-slab prior, which is specified as a mixture of two half-normal priors, on \eqn{\tau}.
+#'
+#' The number of current data regression coefficients is assumed to be the same as that of historical data regression
+#' coefficients. The priors on the dispersion parameters (if applicable) for the current and historical data sets are
+#' independent half-normal distributions.
 #'
 #' @include data_checks.R
 #' @include get_stan_data.R
@@ -21,22 +24,29 @@
 #' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
 #'                          the length of data.list. The length of each element of offset.list is equal to the number
 #'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
-#' @param tau               a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the commensurate prior parameters. If a scalar is provided, tau will be a vector of repeated
-#'                          elements of the given scalar. Each element of tau must be positive, corresponding to a normal
-#'                          precision parameter.
 #' @param beta0.mean        a scalar or a vector whose dimension is equal to the number of regression coefficients
 #'                          giving the mean parameters for the prior on the historical data regression coefficients. If a
-#'                          scalar is provided, same as for tau. Defaults to a vector of 0s.
+#'                          scalar is provided, beta0.mean will be a vector of repeated elements of the given scalar.
+#'                          Defaults to a vector of 0s.
 #' @param beta0.sd          a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the prior on the historical data regression coefficients. If a scalar is
-#'                          provided, same as for tau. Defaults to a vector of 10s.
+#'                          provided, same as for beta0.mean. Defaults to a vector of 10s.
 #' @param disp.mean         a scalar or a vector whose dimension is equal to the number of data sets (including the current
-#'                          data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
-#'                          provided, same as for tau. Defaults to a vector of 0s.
+#'                          data) giving the location parameters for the half-normal priors on the dispersion parameters.
+#'                          If a scalar is provided, same as for beta0.mean. Defaults to a vector of 0s.
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
-#'                          data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
-#'                          provided, same as for tau. Defaults to a vector of 10s.
+#'                          data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
+#'                          scalar is provided, same as for beta0.mean. Defaults to a vector of 10s.
+#' @param p.spike           a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
+#'                          on commensurability parameter \eqn{\tau}. Defaults to 0.1.
+#' @param spike.mean        a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
+#'                          Defaults to 200.
+#' @param spike.sd          a scalar giving the scale parameter for the half-normal prior (spike component) on \eqn{\tau}.
+#'                          Defaults to 0.1.
+#' @param slab.mean         a scalar giving the location parameter for the half-normal prior (slab component) on \eqn{\tau}.
+#'                          Defaults to 0.
+#' @param slab.sd           a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
+#'                          Defaults to 5.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -62,7 +72,7 @@
 #'   glm.commensurate(
 #'     formula = cd4 ~ treatment + age + race,
 #'     family = poisson(), data.list = data_list,
-#'     tau = rep(5, 4),    ## 4 parameters including intercept
+#'     p.spike = 0.1,
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #' }
@@ -70,12 +80,16 @@ glm.commensurate = function(
     formula,
     family,
     data.list,
-    tau,
     offset.list       = NULL,
     beta0.mean        = NULL,
     beta0.sd          = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
+    p.spike           = 0.1,
+    spike.mean        = 200,
+    spike.sd          = 0.1,
+    slab.mean         = 0,
+    slab.sd           = 5,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -91,12 +105,16 @@ glm.commensurate = function(
     formula        = formula,
     family         = family,
     data.list      = data.list,
-    tau            = tau,
     offset.list    = offset.list,
     beta0.mean     = beta0.mean,
     beta0.sd       = beta0.sd,
     disp.mean      = disp.mean,
-    disp.sd        = disp.sd
+    disp.sd        = disp.sd,
+    p.spike        = p.spike,
+    spike.mean     = spike.mean,
+    spike.sd       = spike.sd,
+    slab.mean      = slab.mean,
+    slab.sd        = slab.sd
   )
 
   glm_commensurate = instantiate::stan_package_model(

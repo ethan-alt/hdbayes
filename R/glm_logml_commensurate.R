@@ -16,6 +16,7 @@
 #' @include get_stan_data.R
 #' @include data_checks.R
 #' @include expfam_loglik.R
+#' @include mixture_loglik.R
 #' @include glm_commensurate_lognc.R
 #'
 #' @export
@@ -65,14 +66,14 @@
 #'     formula = formula,
 #'     family = family,
 #'     data.list = data_list,
-#'     tau = rep(5, 4),
+#'     p.spike = 0.1,
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #'   glm.logml.commensurate(
 #'     post.samples = d.cp,
 #'     formula = formula, family = family,
 #'     data.list = data_list,
-#'     tau = rep(5, 4),
+#'     p.spike = 0.1,
 #'     bridge.args = list(silent = TRUE),
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
@@ -82,12 +83,16 @@ glm.logml.commensurate = function(
     formula,
     family,
     data.list,
-    tau,
     offset.list       = NULL,
     beta0.mean        = NULL,
     beta0.sd          = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
+    p.spike           = 0.1,
+    spike.mean        = 200,
+    spike.sd          = 0.1,
+    slab.mean         = 0,
+    slab.sd           = 5,
     bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
@@ -104,12 +109,16 @@ glm.logml.commensurate = function(
     formula        = formula,
     family         = family,
     data.list      = data.list,
-    tau            = tau,
     offset.list    = offset.list,
     beta0.mean     = beta0.mean,
     beta0.sd       = beta0.sd,
     disp.mean      = disp.mean,
-    disp.sd        = disp.sd
+    disp.sd        = disp.sd,
+    p.spike        = p.spike,
+    spike.mean     = spike.mean,
+    spike.sd       = spike.sd,
+    slab.mean      = slab.mean,
+    slab.sd        = slab.sd
   )
 
   ## check the format of post.samples
@@ -125,7 +134,13 @@ glm.logml.commensurate = function(
   if ( !family$family %in% c('binomial', 'poisson') ) {
     oldnames = c(oldnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
   }
+  oldnames = c(oldnames, paste0("comm_prec[", 1:p,"]"))
   d = d[, oldnames, drop=F]
+
+  ## compute log normalizing constants for half-normal priors
+  standat$lognc_spike = pnorm(0, mean = standat$mu_spike, sd = standat$sigma_spike, lower.tail = F, log.p = T)
+  standat$lognc_slab  = pnorm(0, mean = standat$mu_slab, sd = standat$sigma_slab, lower.tail = F, log.p = T)
+  standat$lognc_disp  = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
@@ -134,8 +149,21 @@ glm.logml.commensurate = function(
     N          = data$N
     beta       = pars[paste0("beta[", 1:p,"]")]
     beta0      = pars[paste0("beta0[", 1:p,"]")]
+    comm_prec  = pars[paste0("comm_prec[", 1:p,"]")]
+    comm_sd    = 1/sqrt(comm_prec)
+
+    ## prior on beta0 and beta
     prior_lp   = sum( dnorm(beta0, mean = data$beta0_mean, sd = data$beta0_sd, log = T) ) +
-      sum( dnorm(beta, mean = beta0, sd = 1/sqrt(data$tau), log = T) )
+      sum( dnorm(beta, mean = beta0, sd = comm_sd, log = T) )
+
+    ## spike and slab prior on commensurability
+    prior_lp   = prior_lp + sum( sapply(1:p, function(i){
+      p_spike    = data$p_spike
+      spike_lp   = dnorm(comm_prec[i], mean = data$mu_spike, sd = data$sigma_spike, log = T) - data$lognc_spike
+      slab_lp    = dnorm(comm_prec[i], mean = data$mu_slab, sd = data$sigma_slab, log = T) - data$lognc_slab
+      log_sum_exp( c( log(p_spike) + spike_lp, log(1 - p_spike) + slab_lp ) )
+    }) )
+
     dist       = data$dist
     link       = data$link
     start.idx  = data$start_idx
@@ -145,8 +173,7 @@ glm.logml.commensurate = function(
       ## prior on dispersion
       dispersion = pars[c("dispersion", paste0( "dispersion", "_hist_", 1:(K-1) ))]
       prior_lp   = prior_lp +
-        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) -
-        sum( pnorm(0, mean = data$disp_mean, sd = data$disp_sd, lower.tail = F, log.p = T) )
+        sum( dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) ) - data$lognc_disp
       ## historical data likelihood
       prior_lp    = prior_lp + sum( sapply(2:K, function(k){
         y         = data$y[ start.idx[k]:end.idx[k] ]
@@ -175,6 +202,8 @@ glm.logml.commensurate = function(
     lb = c(lb, rep(0, K))
     ub = c(ub, rep(Inf, K))
   }
+  lb = c(lb, rep(0, p))
+  ub = c(ub, rep(Inf, p))
   names(ub) = colnames(d)
   names(lb) = names(ub)
 
@@ -202,12 +231,16 @@ glm.logml.commensurate = function(
     formula           = formula,
     family            = family,
     hist.data.list    = data.list[-1],
-    tau               = tau,
     hist.offset.list  = offset.list[-1],
     beta0.mean        = beta0.mean,
     beta0.sd          = beta0.sd,
     hist.disp.mean    = disp.mean,
     hist.disp.sd      = disp.sd,
+    p.spike           = p.spike,
+    spike.mean        = spike.mean,
+    spike.sd          = spike.sd,
+    slab.mean         = slab.mean,
+    slab.sd           = slab.sd,
     bridge.args       = bridge.args,
     iter_warmup       = iter_warmup,
     iter_sampling     = iter_sampling,

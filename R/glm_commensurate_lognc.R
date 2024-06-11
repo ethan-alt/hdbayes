@@ -6,6 +6,7 @@
 #' @include get_stan_data.R
 #' @include data_checks.R
 #' @include expfam_loglik.R
+#' @include mixture_loglik.R
 #'
 #' @export
 #'
@@ -16,10 +17,6 @@
 #'                          is equal to the length of hist.data.list. The length of each element of offset.list is equal to
 #'                          the number of rows in the corresponding element of hist.data.list. Defaults to a list of vectors
 #'                          of 0s.
-#' @param tau               a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the commensurate prior parameters. If a scalar is provided, tau will be a vector of repeated
-#'                          elements of the given scalar. Each element of tau must be positive, corresponding to a normal
-#'                          precision parameter.
 #' @param beta0.mean        a scalar or a vector whose dimension is equal to the number of regression coefficients
 #'                          giving the mean parameters for the prior on the historical data regression coefficients. If a
 #'                          scalar is provided, same as for tau. Defaults to a vector of 0s.
@@ -32,6 +29,16 @@
 #' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          sds for the half-normal priors on the dispersion parameters. If a scalar is provided, same as
 #'                          for tau. Defaults to a vector of 10s.
+#' @param p.spike           a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
+#'                          on commensurability parameter \eqn{\tau}. Defaults to 0.1.
+#' @param spike.mean        a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
+#'                          Defaults to 200.
+#' @param spike.sd          a scalar giving the scale parameter for the half-normal prior (spike component) on \eqn{\tau}.
+#'                          Defaults to 0.1.
+#' @param slab.mean         a scalar giving the location parameter for the half-normal prior (slab component) on \eqn{\tau}.
+#'                          Defaults to 0.
+#' @param slab.sd           a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
+#'                          Defaults to 5.
 #' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 #'                          onto [bridgesampling::bridge_sampler()].
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -69,7 +76,7 @@
 #'     formula = cd4 ~ treatment + age + race,
 #'     family = poisson(),
 #'     hist.data.list = list(histdata = actg036),
-#'     tau = 5,
+#'     p.spike = 0.1,
 #'     chains = 1, iter_warmup = 500, iter_sampling = 2000
 #'   )
 #' }
@@ -77,12 +84,16 @@ glm.commensurate.lognc = function(
     formula,
     family,
     hist.data.list,
-    tau,
     hist.offset.list  = NULL,
     beta0.mean        = NULL,
     beta0.sd          = NULL,
     hist.disp.mean    = NULL,
     hist.disp.sd      = NULL,
+    p.spike           = 0.1,
+    spike.mean        = 200,
+    spike.sd          = 0.1,
+    slab.mean         = 0,
+    slab.sd           = 5,
     bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
@@ -94,12 +105,16 @@ glm.commensurate.lognc = function(
     formula        = formula,
     family         = family,
     data.list      = hist.data.list,
-    tau            = tau,
     offset.list    = hist.offset.list,
     beta0.mean     = beta0.mean,
     beta0.sd       = beta0.sd,
     disp.mean      = hist.disp.mean,
-    disp.sd        = hist.disp.sd
+    disp.sd        = hist.disp.sd,
+    p.spike        = p.spike,
+    spike.mean     = spike.mean,
+    spike.sd       = spike.sd,
+    slab.mean      = slab.mean,
+    slab.sd        = slab.sd
   )
 
   glm_commensurate_prior = instantiate::stan_package_model(
@@ -116,7 +131,7 @@ glm.commensurate.lognc = function(
 
   p        = standat$p
   K        = standat$K
-  oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"))
+  oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"), paste0("comm_prec[", 1:p,"]"))
   if ( !family$family %in% c('binomial', 'poisson') ) {
     oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
   }
@@ -124,14 +139,30 @@ glm.commensurate.lognc = function(
     as.matrix(d[, oldnames, drop=F])
   )
 
+  standat$lognc_spike = pnorm(0, mean = standat$mu_spike, sd = standat$sigma_spike, lower.tail = F, log.p = T)
+  standat$lognc_slab  = pnorm(0, mean = standat$mu_slab, sd = standat$sigma_slab, lower.tail = F, log.p = T)
+
   ## estimate log normalizing constant
   log_density = function(pars, data){
     p          = data$p
     K          = data$K
     beta       = pars[paste0("beta[", 1:p,"]")]
     beta0      = pars[paste0("beta0[", 1:p,"]")]
+    comm_prec  = pars[paste0("comm_prec[", 1:p,"]")]
+    comm_sd    = 1/sqrt(comm_prec)
+
+    ## prior on beta0 and beta
     prior_lp   = sum( dnorm(beta0, mean = data$beta0_mean, sd = data$beta0_sd, log = T) ) +
-      sum( dnorm(beta, mean = beta0, sd = 1/sqrt(data$tau), log = T) )
+      sum( dnorm(beta, mean = beta0, sd = comm_sd, log = T) )
+
+    ## spike and slab prior on commensurability
+    prior_lp   = prior_lp + sum( sapply(1:p, function(i){
+      p_spike    = data$p_spike
+      spike_lp   = dnorm(comm_prec[i], mean = data$mu_spike, sd = data$sigma_spike, log = T) - data$lognc_spike
+      slab_lp    = dnorm(comm_prec[i], mean = data$mu_slab, sd = data$sigma_slab, log = T) - data$lognc_slab
+      log_sum_exp( c( log(p_spike) + spike_lp, log(1 - p_spike) + slab_lp ) )
+    }) )
+
     dist       = data$dist
     link       = data$link
     if ( dist > 2 ) {
@@ -154,8 +185,8 @@ glm.commensurate.lognc = function(
     return(hist_lp + prior_lp)
   }
 
-  lb = rep(-Inf, p*2)
-  ub = rep(Inf, p*2)
+  lb = c(rep(-Inf, p*2), rep(0, p))
+  ub = rep(Inf, p*3)
   if( standat$dist > 2 ) {
     lb = c(lb, rep(0, K) )
     ub = c(ub, rep(Inf, K) )
