@@ -650,3 +650,51 @@ get.stan.data.npp = function(
   )
   return(standat)
 }
+
+
+#' get Stan data for reference prior
+#'
+#' @include data_checks.R
+#'
+#' @noRd
+get.stan.data.ref = function(
+    formula,
+    family,
+    data.list,
+    offset.list       = NULL,
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL
+) {
+  if( length(data.list) > 1 )
+    stop("data.list should contain only one data.frame giving the current data")
+
+  standat_pp = get.stan.data.pp(
+    formula     = formula,
+    family      = family,
+    data.list   = data.list,
+    a0.vals     = 0,
+    offset.list = offset.list,
+    beta.mean   = beta.mean,
+    beta.sd     = beta.sd,
+    disp.mean   = disp.mean,
+    disp.sd     = disp.sd
+  )
+
+  standat = list(
+    'n'               = standat_pp$N,
+    'p'               = standat_pp$p,
+    'y'               = standat_pp$y,
+    'X'               = standat_pp$X,
+    'mean_beta'       = standat_pp$mean_beta,
+    'sd_beta'         = standat_pp$sd_beta,
+    'disp_mean'       = standat_pp$disp_mean,
+    'disp_sd'         = standat_pp$disp_sd,
+    'dist'            = standat_pp$dist,
+    'link'            = standat_pp$link,
+    'offs'            = standat_pp$offs
+  )
+  return(standat)
+}
+
