@@ -114,9 +114,8 @@ glm.logml.napp = function(
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
-    beta       = pars[paste0("beta[", 1:data$p,"]")]
-    logit_a0s  = pars[paste0('logit_a0s[', 1:K, "]")]
-    a0s        = binomial('logit')$linkinv(logit_a0s)
+    p          = data$p
+    K          = data$K
     a0_shape1  = data$a0_shape1
     a0_shape2  = data$a0_shape2
     y          = data$y
@@ -124,11 +123,14 @@ glm.logml.napp = function(
     dist       = data$dist
     link       = data$link
     offs       = data$offs
-    K          = data$K
+
+    beta       = pars[paste0("beta[", 1:p,"]")]
+    logit_a0s  = pars[paste0('logit_a0s[', 1:K, "]")]
+    a0s        = binomial('logit')$linkinv(logit_a0s)
+
     ## prior on logit(a0)
     prior_lp   = sum( sapply(logit_a0s, logit_beta_lp, shape1 = a0_shape1, shape2 = a0_shape2) )
     dispersion = 1
-    log_disp   = 0
     theta      = beta
     if ( dist > 2 ){
       dispersion = pars[["dispersion"]]
