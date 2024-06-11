@@ -5,7 +5,7 @@
 #' @noRd
 log_sum_exp = function(x){
   x_max = max(x)
-  log( exp(x_max) ) + log( sum(exp(x - x_max)) )
+  x_max + log( sum(exp(x - x_max)) )
 }
 
 
