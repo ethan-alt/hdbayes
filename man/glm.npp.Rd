@@ -133,8 +133,8 @@ NPP can be computed. See the implementation in \code{\link[=lm.npp]{lm.npp()}}.
 
       ## sample from normalized power prior
       glm.npp(
-        formula = cd4 ~ treatment + age + race,
-        family = poisson(),
+        formula = formula,
+        family = family,
         data.list = data.list,
         a0.lognc = a0.lognc$a0,
         lognc = matrix(a0.lognc$lognc, ncol = 1),
