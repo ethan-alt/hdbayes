@@ -152,3 +152,57 @@ glm_lp = function(y, beta, X, dist, link, offs, phi) {
 logit_beta_lp = function(x, shape1, shape2){
   -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p( exp(-x) )
 }
+
+#' find index of x, j, such that x0 is closest to x[j] without going over. Uses binary search algorithm
+#' @param x0 real number
+#' @param x vector, sorted in increasing order
+#' @noRd
+findClosestIndex = function(x0, x) {
+  K = length(x)
+  i = 1
+  j = K
+  ## check corner cases
+  if ( x0 < x[2] )
+    return(1)
+  if ( x0 == x[K] ) {
+    return(K)
+  }
+  ## conduct binary search
+  while ( i <= j ) {
+    mid = floor( (i + j) / 2 )
+    ## if x0 < x[mid], index must lie in left half
+    ## otherwise, index must lie in right half
+    if ( x0 < x[mid] ) {
+      ## if x0 is larger than x[mid-1], return mid-1; else update j
+      if ( mid > 2 & x0 > x[mid - 1] )
+        return(mid - 1)
+      j = mid
+    }else {
+      ## if x0 is less than x[mid + 1], return mid; else update i
+      if ( mid < K & x0 < x[mid + 1] )
+        return(mid)
+      i = mid + 1
+    }
+  }
+  stop("Error in finding midpoint")
+}
+
+#' approximate lognc of power prior
+#' @param a0       real number, power prior param to obtain lognc
+#' @param a0vec    vector, fine grid of power prior parameters for which we have estimates
+#' @param lognca0  vector of estimated lognc pertaining to fine grid a0vec
+#' @return linearly interpolated log normalizing constant
+#' @noRd
+pp_lognc = function(a0, a0vec, lognca0) {
+  ## find index of a0vec closest to a0
+  i = findClosestIndex(a0, a0vec)
+  ## if not exact match, use linear interpolation to get estimated lognc
+  if ( a0 != a0vec[i] ) {
+    x1 = a0vec[i]
+    x2 = a0vec[i + 1]
+    y1 = lognca0[i]
+    y2 = lognca0[i + 1]
+    return( y1 + (y2 - y1) * (a0 - x1) / (x2 - x1) )
+  }
+  return(lognca0[i])
+}
