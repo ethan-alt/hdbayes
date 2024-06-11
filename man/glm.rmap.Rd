@@ -44,7 +44,7 @@ the means for the half-normal hyperpriors on the sd hyperparameters of regressio
 \item{curr.offset}{a vector whose dimension is equal to the rows of the current data set giving an offset for
 the current data. Defaults to a vector of 0s.}
 
-\item{w}{a scalar between 0 and 1 giving how much weight to put on the historical data.}
+\item{w}{a scalar between 0 and 1 giving how much weight to put on the historical data. Defaults to 0.1.}
 
 \item{norm.vague.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the means for the vague normal prior on regression coefficients. If a scalar is provided,
@@ -55,11 +55,11 @@ vector of 0s.}
 the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
 for norm.vague.mean. Defaults to a vector of 10s.}
 
-\item{curr.disp.mean}{a scalar giving the mean for the half-normal hyperprior on the dispersion parameter for the current
-data. Defaults to a vector of 0s.}
+\item{curr.disp.mean}{a scalar giving the location parameter for the half-normal prior on the dispersion parameter for
+the current data. Defaults to a vector of 0s.}
 
-\item{curr.disp.sd}{a scalar giving the sd for the half-normal hyperprior on the dispersion parameter for the current
-data. Defaults to a vector of 10s.}
+\item{curr.disp.sd}{a scalar giving the scale parameter for the half-normal prior on the dispersion parameter for the
+current data. Defaults to a vector of 10s.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}

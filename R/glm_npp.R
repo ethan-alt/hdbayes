@@ -30,8 +30,8 @@
 #' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
 #'                          same as for beta.mean. Defaults to a vector of 10s.
-#' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
-#' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
+#' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
+#' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param a0.lognc          a vector giving values of the power prior parameter for which the logarithm of the normalizing
 #'                          constant has been evaluated.
 #' @param lognc             an S by T matrix where S is the length of a0.lognc, T is the number of historical data sets, and

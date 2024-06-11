@@ -47,13 +47,13 @@ beta.mean will be a matrix of repeated elements of the given scalar. Defaults to
 where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
 same as for beta.mean. Defaults to a matrix of 10s.}
 
-\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the means for
-the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, disp.mean will
-be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
+\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the location
+parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
+disp.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
-\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the sds for
-the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same as for
-disp.mean. Defaults to a vector of 10s.}
+\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the scale
+parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
+as for disp.mean. Defaults to a vector of 10s.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}

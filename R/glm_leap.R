@@ -29,12 +29,12 @@
 #' @param beta.sd           a scalar or a `p x K` matrix of sd parameters for the initial prior on regression coefficients,
 #'                          where `p` is the number of regression coefficients (including intercept). If a scalar is provided,
 #'                          same as for beta.mean. Defaults to a matrix of 10s.
-#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the means for
-#'                          the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, disp.mean will
-#'                          be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
-#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the sds for
-#'                          the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same as for
-#'                          disp.mean. Defaults to a vector of 10s.
+#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the location
+#'                          parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
+#'                          disp.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the scale
+#'                          parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
+#'                          as for disp.mean. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`

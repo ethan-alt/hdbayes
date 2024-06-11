@@ -25,17 +25,17 @@
 #'                          the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If a
 #'                          scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.
 #' @param meta.sd.mean      a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
+#'                          the location parameters for the half-normal hyperpriors on the sd hyperparameters of regression
+#'                          coefficients. If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 #' @param meta.sd.sd        a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-#'                          If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
+#'                          the scale parameters for the half-normal hyperpriors on the sd hyperparameters of regression
+#'                          coefficients. If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param hist.disp.mean    a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          means for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided,
-#'                          same as for meta.mean.mean. Defaults to a vector of 0s.
+#'                          location parameters for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for meta.mean.mean. Defaults to a vector of 0s.
 #' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          sds for the half-normal hyperpriors on the dispersion parameters. If a scalar is provided, same
-#'                          as for meta.mean.mean. Defaults to a vector of 10s.
+#'                          scale parameters for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for meta.mean.mean. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`

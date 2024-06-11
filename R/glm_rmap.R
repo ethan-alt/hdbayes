@@ -25,7 +25,7 @@
 #' @param covs              a 3-dimensional array giving the covariance matrices for the mixture approximation to the prior
 #'                          induced by the BHM. Obtained from the outputs of the [glm.rmap.bhm.approx()] function.
 #'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-#' @param w                 a scalar between 0 and 1 giving how much weight to put on the historical data.
+#' @param w                 a scalar between 0 and 1 giving how much weight to put on the historical data. Defaults to 0.1.
 #' @param norm.vague.mean   a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the means for the vague normal prior on regression coefficients. If a scalar is provided,
 #'                          norm.vague.mean will be a vector of repeated elements of the given scalar. Defaults to a
@@ -33,10 +33,10 @@
 #' @param norm.vague.sd     a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
 #'                          for norm.vague.mean. Defaults to a vector of 10s.
-#' @param curr.disp.mean    a scalar giving the mean for the half-normal hyperprior on the dispersion parameter for the current
-#'                          data. Defaults to a vector of 0s.
-#' @param curr.disp.sd      a scalar giving the sd for the half-normal hyperprior on the dispersion parameter for the current
-#'                          data. Defaults to a vector of 10s.
+#' @param curr.disp.mean    a scalar giving the location parameter for the half-normal prior on the dispersion parameter for
+#'                          the current data. Defaults to a vector of 0s.
+#' @param curr.disp.sd      a scalar giving the scale parameter for the half-normal prior on the dispersion parameter for the
+#'                          current data. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`

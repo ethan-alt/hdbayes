@@ -24,11 +24,11 @@
 #'                          the sd parameters for the prior on the historical data regression coefficients. If a scalar is
 #'                          provided, same as for tau. Defaults to a vector of 10s.
 #' @param hist.disp.mean    a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          means for the half-normal priors on the dispersion parameters. If a scalar is provided, same as
-#'                          for tau. Defaults to a vector of 0s.
+#'                          location parameters for the half-normal priors on the dispersion parameters. If a scalar is
+#'                          provided, same as for tau. Defaults to a vector of 0s.
 #' @param hist.disp.sd      a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          sds for the half-normal priors on the dispersion parameters. If a scalar is provided, same as
-#'                          for tau. Defaults to a vector of 10s.
+#'                          scale parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
+#'                          same as for tau. Defaults to a vector of 10s.
 #' @param p.spike           a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
 #'                          on commensurability parameter \eqn{\tau}. Defaults to 0.1.
 #' @param spike.mean        a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.

@@ -60,12 +60,12 @@ the sds for the half-normal hyperpriors on the sd hyperparameters of regression 
 If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
-data) giving the means for the half-normal priors on the dispersion parameters. If a scalar is
-provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
+data) giving the location parameters for the half-normal priors on the dispersion parameters. If
+a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
 
 \item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
-data) giving the sds for the half-normal priors on the dispersion parameters. If a scalar is
-provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
+data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
+scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}

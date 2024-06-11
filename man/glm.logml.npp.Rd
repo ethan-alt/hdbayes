@@ -56,9 +56,9 @@ beta.mean will be a vector of repeated elements of the given scalar. Defaults to
 the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
 same as for beta.mean. Defaults to a vector of 10s.}
 
-\item{disp.mean}{mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
+\item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
 
-\item{disp.sd}{sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
+\item{disp.sd}{scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
 
 \item{a0.shape1}{first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}

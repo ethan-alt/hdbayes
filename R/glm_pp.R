@@ -27,8 +27,8 @@
 #' @param a0.vals           a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
 #'                          data sets giving the (fixed) power prior parameter for each historical data set. Each element of
 #'                          vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.
-#' @param disp.mean         mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.
-#' @param disp.sd           sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.
+#' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
+#' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`

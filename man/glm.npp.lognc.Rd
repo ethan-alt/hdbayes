@@ -43,9 +43,9 @@ the sd parameters for the initial prior on regression coefficients. The sd used 
 \code{sqrt(dispersion) * beta.sd}. If a scalar is provided, same as for beta.mean. Defaults to
 a vector of 10s.}
 
-\item{disp.mean}{mean parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
+\item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
 
-\item{disp.sd}{sd parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
+\item{disp.sd}{scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
