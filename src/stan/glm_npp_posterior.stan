@@ -99,7 +99,7 @@ functions{
     }
     // conduct binary search
     while ( i <= j ) {
-      mid = (i + j) / 2;
+      mid = (i + j) %/% 2;
       // if x0 < x[mid], index must lie in left half
       if ( x0 < x[mid] ) {
         // if x0 is larger than x[mid-1], return mid-1; else update j
@@ -139,6 +139,11 @@ functions{
     }
     return lognca0[i];
   }
+
+  real logit_beta_lpdf(real x, real shape1, real shape2) {
+    return
+      -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p_exp(-x);
+  }
 }
 data {
   int<lower=0>                        K; // total number of datasets (including the current data)
@@ -157,53 +162,68 @@ data {
   matrix[s,K-1]                       lognc; // the j-th column is the log nc for a0_lognc using the j-th historical datasets
   real<lower=0>                       a0_shape1;
   real<lower=0>                       a0_shape2;
-  vector<lower=0,upper=1>[K-1]        a0_lower; // lower bounds for a0_vals
-  vector<lower=a0_lower,upper=1>[K-1] a0_upper; // upper bounds for a0_vals
+  vector<lower=0,upper=1>[K-1]        a0_lower; // lower bounds for a0s
+  vector<lower=a0_lower,upper=1>[K-1] a0_upper; // upper bounds for a0s
   int<lower=1,upper=5>                dist;
   int<lower=1,upper=9>                link;
   vector[N]                           offs; // offset
 }
-// The parameters accepted by the model. Our model
-// accepts two parameters 'mu' and 'sigma'.
+transformed data{
+  real lognc_disp      = normal_lccdf(0 | disp_mean, disp_sd);
+  real lognc_logit_a0s = 0;
+
+  for ( i in 1:(K-1) ) {
+    if( a0_upper[i] != 1 || a0_lower[i] != 0 ) {
+      lognc_logit_a0s = lognc_logit_a0s + log_diff_exp( beta_lcdf(a0_upper[i] | a0_shape1, a0_shape2), beta_lcdf(a0_lower[i] | a0_shape1, a0_shape2) );
+    }
+  }
+}
 parameters {
   vector[p] beta;
   vector<lower=0>[(dist > 2) ? 1 :  0] dispersion;
-  vector<lower=a0_lower,upper=a0_upper>[K-1] a0_vals;
+  vector<lower=logit(a0_lower),upper=logit(a0_upper)>[K-1] logit_a0s;
 }
-
-// The model to be estimated. We model the output
-// 'y' to be normally distributed with mean 'mu'
-// and standard deviation 'sigma'.
+transformed parameters {
+  vector<lower=a0_lower,upper=a0_upper>[K-1] a0s;
+  a0s = inv_logit(logit_a0s);
+}
 model {
-  if ( a0_shape1 != 1 || a0_shape2 != 1)
-    a0_vals ~ beta(a0_shape1, a0_shape2);
-  beta ~ normal(mean_beta, sd_beta); // prior for beta
+  // prior on beta
+  target += normal_lpdf(beta  | mean_beta, sd_beta);
   if ( dist <= 2 ) {
     target += glm_lp(y[ start_idx[1]:end_idx[1] ],
     beta, 1.0, X[ start_idx[1]:end_idx[1], ], dist, link,
     offs[ start_idx[1]:end_idx[1] ]); // current data likelihood
 
     for ( k in 2:K ) {
-      target += a0_vals[k-1] * glm_lp(y[ start_idx[k]:end_idx[k] ],
+      // prior on logit(a0)
+      target += logit_beta_lpdf(logit_a0s[k-1] | a0_shape1, a0_shape2);
+
+      target += a0s[k-1] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, 1.0, X[ start_idx[k]:end_idx[k], ], dist, link,
       offs[ start_idx[k]:end_idx[k] ]); // power prior
     }
   }
   else {
-    dispersion ~ normal(disp_mean, disp_sd); // half-normal prior for dispersion
-    target +=  glm_lp(y[ start_idx[1]:end_idx[1] ],
+    target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;  // half-normal prior for dispersion
+    target += glm_lp(y[ start_idx[1]:end_idx[1] ],
     beta, dispersion[1], X[ start_idx[1]:end_idx[1], ], dist, link,
     offs[ start_idx[1]:end_idx[1] ]); // current data likelihood
 
     for ( k in 2:K ) {
-      target += a0_vals[k-1] * glm_lp(y[ start_idx[k]:end_idx[k] ],
+      // prior on logit(a0)
+      target += logit_beta_lpdf(logit_a0s[k-1] | a0_shape1, a0_shape2);
+
+      target += a0s[k-1] * glm_lp(y[ start_idx[k]:end_idx[k] ],
       beta, dispersion[1], X[ start_idx[k]:end_idx[k], ], dist, link,
       offs[ start_idx[k]:end_idx[k] ]);  // power prior
     }
   }
+  target += -lognc_logit_a0s;
+
   // Subtract log nc from power prior
   for ( k in 2:K ) {
-      target += -pp_lognc(a0_vals[k-1], a0_lognc, lognc[, k-1]);
-    }
+      target += -pp_lognc(a0s[k-1], a0_lognc, lognc[, k-1]);
+  }
 }
 
