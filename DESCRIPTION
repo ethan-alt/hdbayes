@@ -74,6 +74,7 @@ Collate:
     'glm_logml_leap.R'
     'glm_logml_map.R'
     'glm_logml_napp.R'
+    'glm_logml_npp.R'
     'glm_npp_lognc.R'
     'glm_logml_pp.R'
     'glm_napp.R'
