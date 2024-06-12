@@ -162,27 +162,35 @@ $$
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0hi} | x_{0hi}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0}) \right) \\
   \beta_{0} &\sim N_p(\mu_0, \Sigma_{0}) , \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
-  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
+  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p \\
+  \tau_j &\overset{\text{i.i.d.}}{\sim} p_{\text{spike}} \cdot N^{+}(\mu_{\text{spike}}, \sigma_{\text{spike}}^2) + (1 - p_{\text{spike}}) \cdot N^{+}(\mu_{\text{slab}}, \sigma_{\text{slab}}^2),\: j = 1, \ldots, p 
 \end{align*}
 $$
-where $\beta = (\beta_1, \ldots, \beta_p)'$, $\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'$, and the $\tau_j$'s are elicited by the user. The defaults in `hdbayes` are
+where $\beta = (\beta_1, \ldots, \beta_p)'$, $\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'$. The commensurability parameters (i.e., $\tau_j$'s) are treated as random with a spike-and-slab prior, which is specified as a mixture of two half-normal priors. The defaults in `hdbayes` are
 
 * $\mu_0 = \textbf{0}_p$
 * $\Sigma_{0} = 100 \times I_p$
+* $p_{\text{spike}}  = 0.1$
+* $\mu_{\text{spike}} = 200$
+* $\sigma_{\text{spike}} = 0.1$
+* $\mu_{\text{slab}} = 0$
+* $\sigma_{\text{slab}} = 5$
 
 This method can be fit as follows
 ```{r commensurate}
 fit.commensurate = glm.commensurate(
   formula = formula, family = family, data.list = data.list,
-  tau = rep(5, 3),
+  p.spike = 0.1,
   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
   chains = chains, parallel_chains = ncores,
   refresh = 0
 )
 
-fit.commensurate[, -1] %>% 
+suppressWarnings(
+  fit.commensurate[, 2:10] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
+)
 ```
 
 
@@ -393,7 +401,7 @@ fit.npp = glm.npp(
   chains = chains, parallel_chains = ncores,
   refresh = 0
 )
-fit.npp[, -1] %>% 
+fit.npp[, -c(1, 6)] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 ```
@@ -459,7 +467,7 @@ fit.leap = glm.leap(
 )
 
 suppressWarnings(
- fit.leap[, c(2:4, 11)] %>% 
+ fit.leap[, 2:6] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3)) 
 )

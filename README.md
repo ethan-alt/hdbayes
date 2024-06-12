@@ -204,13 +204,13 @@ fit.bhm = glm.bhm(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 3 finished in 5.8 seconds.
-#> Chain 1 finished in 6.3 seconds.
-#> Chain 2 finished in 7.4 seconds.
-#> Chain 4 finished in 8.4 seconds.
+#> Chain 1 finished in 6.4 seconds.
+#> Chain 2 finished in 7.5 seconds.
+#> Chain 4 finished in 8.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.0 seconds.
-#> Total execution time: 8.6 seconds.
+#> Mean chain execution time: 7.1 seconds.
+#> Total execution time: 8.8 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 
@@ -238,57 +238,70 @@ The commensurate prior assumes the following hierarchical model
   y_i \| x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y\_{0hi} \| x\_{0hi}, \beta\_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x\_{0hi}'\beta\_{0}) \right) \\
   \beta\_{0} &\sim N_p(\mu_0, \Sigma\_{0}) , \text{ where }\Sigma\_{0} \text{ is a diagonal matrix} \\
-  \beta_j &\sim N_1\left( \beta\_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0hi%7D%20%7C%20x_%7B0hi%7D%2C%20%5Cbeta_%7B0%7D%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0hi%7D%27%5Cbeta_%7B0%7D%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_%7B0%7D%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%20%2C%20%5Ctext%7B%20where%20%7D%5CSigma_%7B0%7D%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Cbeta_j%20%26%5Csim%20N_1%5Cleft%28%20%5Cbeta_%7B0j%7D%2C%20%5Ctau_j%5E%7B-1%7D%20%5Cright%29%2C%20j%20%3D%201%2C%20%5Cldots%2C%20p%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  \beta_j &\sim N_1\left( \beta\_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p \\
+  \tau_j &\overset{\text{i.i.d.}}{\sim} p\_{\text{spike}} \cdot N^{+}(\mu\_{\text{spike}}, \sigma\_{\text{spike}}^2) + (1 - p\_{\text{spike}}) \cdot N^{+}(\mu\_{\text{slab}}, \sigma\_{\text{slab}}^2),\\ j = 1, \ldots, p 
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20y_i%20%7C%20x_i%2C%20%5Cbeta%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%20%5C%5C%0A%20%20y_%7B0hi%7D%20%7C%20x_%7B0hi%7D%2C%20%5Cbeta_%7B0%7D%20%26%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_%7B0hi%7D%27%5Cbeta_%7B0%7D%29%20%5Cright%29%20%5C%5C%0A%20%20%5Cbeta_%7B0%7D%20%26%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_%7B0%7D%29%20%2C%20%5Ctext%7B%20where%20%7D%5CSigma_%7B0%7D%20%5Ctext%7B%20is%20a%20diagonal%20matrix%7D%20%5C%5C%0A%20%20%5Cbeta_j%20%26%5Csim%20N_1%5Cleft%28%20%5Cbeta_%7B0j%7D%2C%20%5Ctau_j%5E%7B-1%7D%20%5Cright%29%2C%20j%20%3D%201%2C%20%5Cldots%2C%20p%20%5C%5C%0A%20%20%5Ctau_j%20%26%5Coverset%7B%5Ctext%7Bi.i.d.%7D%7D%7B%5Csim%7D%20p_%7B%5Ctext%7Bspike%7D%7D%20%5Ccdot%20N%5E%7B%2B%7D%28%5Cmu_%7B%5Ctext%7Bspike%7D%7D%2C%20%5Csigma_%7B%5Ctext%7Bspike%7D%7D%5E2%29%20%2B%20%281%20-%20p_%7B%5Ctext%7Bspike%7D%7D%29%20%5Ccdot%20N%5E%7B%2B%7D%28%5Cmu_%7B%5Ctext%7Bslab%7D%7D%2C%20%5Csigma_%7B%5Ctext%7Bslab%7D%7D%5E2%29%2C%5C%3A%20j%20%3D%201%2C%20%5Cldots%2C%20p%20%0A%5Cend%7Balign%2A%7D "\begin{align*}
   y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
   y_{0hi} | x_{0hi}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0hi}'\beta_{0}) \right) \\
   \beta_{0} &\sim N_p(\mu_0, \Sigma_{0}) , \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
-  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p
+  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p \\
+  \tau_j &\overset{\text{i.i.d.}}{\sim} p_{\text{spike}} \cdot N^{+}(\mu_{\text{spike}}, \sigma_{\text{spike}}^2) + (1 - p_{\text{spike}}) \cdot N^{+}(\mu_{\text{slab}}, \sigma_{\text{slab}}^2),\: j = 1, \ldots, p 
 \end{align*}")
 
 where
 ![\beta = (\beta_1, \ldots, \beta_p)'](https://latex.codecogs.com/png.latex?%5Cbeta%20%3D%20%28%5Cbeta_1%2C%20%5Cldots%2C%20%5Cbeta_p%29%27 "\beta = (\beta_1, \ldots, \beta_p)'"),
-![\beta\_{0} = (\beta\_{01}, \ldots, \beta\_{0p})'](https://latex.codecogs.com/png.latex?%5Cbeta_%7B0%7D%20%3D%20%28%5Cbeta_%7B01%7D%2C%20%5Cldots%2C%20%5Cbeta_%7B0p%7D%29%27 "\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'"),
-and the
-![\tau_j](https://latex.codecogs.com/png.latex?%5Ctau_j "\tau_j")’s are
-elicited by the user. The defaults in `hdbayes` are
+![\beta\_{0} = (\beta\_{01}, \ldots, \beta\_{0p})'](https://latex.codecogs.com/png.latex?%5Cbeta_%7B0%7D%20%3D%20%28%5Cbeta_%7B01%7D%2C%20%5Cldots%2C%20%5Cbeta_%7B0p%7D%29%27 "\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'").
+The commensurability parameters (i.e.,
+![\tau_j](https://latex.codecogs.com/png.latex?%5Ctau_j "\tau_j")’s) are
+treated as random with a spike-and-slab prior, which is specified as a
+mixture of two half-normal priors. The defaults in `hdbayes` are
 
 - ![\mu_0 = \textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%20%5Ctextbf%7B0%7D_p "\mu_0 = \textbf{0}_p")
 - ![\Sigma\_{0} = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D%20%3D%20100%20%5Ctimes%20I_p "\Sigma_{0} = 100 \times I_p")
+- ![p\_{\text{spike}}  = 0.1](https://latex.codecogs.com/png.latex?p_%7B%5Ctext%7Bspike%7D%7D%20%20%3D%200.1 "p_{\text{spike}}  = 0.1")
+- ![\mu\_{\text{spike}} = 200](https://latex.codecogs.com/png.latex?%5Cmu_%7B%5Ctext%7Bspike%7D%7D%20%3D%20200 "\mu_{\text{spike}} = 200")
+- ![\sigma\_{\text{spike}} = 0.1](https://latex.codecogs.com/png.latex?%5Csigma_%7B%5Ctext%7Bspike%7D%7D%20%3D%200.1 "\sigma_{\text{spike}} = 0.1")
+- ![\mu\_{\text{slab}} = 0](https://latex.codecogs.com/png.latex?%5Cmu_%7B%5Ctext%7Bslab%7D%7D%20%3D%200 "\mu_{\text{slab}} = 0")
+- ![\sigma\_{\text{slab}} = 5](https://latex.codecogs.com/png.latex?%5Csigma_%7B%5Ctext%7Bslab%7D%7D%20%3D%205 "\sigma_{\text{slab}} = 5")
 
 This method can be fit as follows
 
 ``` r
 fit.commensurate = glm.commensurate(
   formula = formula, family = family, data.list = data.list,
-  tau = rep(5, 3),
+  p.spike = 0.1,
   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
   chains = chains, parallel_chains = ncores,
   refresh = 0
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
-#> Chain 2 finished in 0.8 seconds.
-#> Chain 3 finished in 0.8 seconds.
-#> Chain 4 finished in 0.8 seconds.
+#> Chain 1 finished in 0.9 seconds.
+#> Chain 3 finished in 0.9 seconds.
+#> Chain 2 finished in 1.0 seconds.
+#> Chain 4 finished in 1.0 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 1.0 seconds.
+#> Mean chain execution time: 1.0 seconds.
+#> Total execution time: 1.1 seconds.
 
-fit.commensurate[, -1] %>% 
+suppressWarnings(
+  fit.commensurate[, 2:10] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
-#> # A tibble: 6 × 10
+)
+#> # A tibble: 9 × 10
 #>   variable         mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>           <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)     0.847  0.841 0.251 0.245  0.441  1.27   1.00    4970.    4803.
-#> 2 z               0.607  0.603 0.278 0.272  0.156  1.08   1       5846.    5657.
-#> 3 x              -0.786 -0.782 0.169 0.17  -1.07  -0.513  1       5863.    5660.
-#> 4 (Intercept)_h…  0.936  0.931 0.296 0.295  0.46   1.43   1       5207.    5165.
-#> 5 z_hist          0.479  0.475 0.339 0.34  -0.077  1.04   1.00    5903.    5601.
-#> 6 x_hist         -0.854 -0.852 0.221 0.22  -1.22  -0.501  1       5515.    5819.
+#> 1 (Intercept)     0.84   0.838 0.25  0.249  0.43   1.25      1    5213.    5334.
+#> 2 z               0.618  0.617 0.285 0.286  0.145  1.08      1    6147.    5499.
+#> 3 x              -0.784 -0.78  0.174 0.167 -1.08  -0.502     1    5742.    5226.
+#> 4 (Intercept)_h…  0.951  0.944 0.302 0.3    0.465  1.46      1    5398.    5545.
+#> 5 z_hist          0.462  0.458 0.357 0.355 -0.124  1.05      1    6093.    5317.
+#> 6 x_hist         -0.858 -0.855 0.228 0.23  -1.24  -0.483     1    6225.    5229.
+#> 7 comm_prec[1]    4.79   4.30  3.07  3.06   0.75  10.5       1    5374.    2879.
+#> 8 comm_prec[2]    4.62   4.08  3.01  2.96   0.69  10.3       1    5740.    3697.
+#> 9 comm_prec[3]    4.91   4.43  3.08  3.16   0.855 10.6       1    5472.    3404.
 ```
 
 ### Robust meta-analytic predictive (MAP) prior
@@ -349,13 +362,13 @@ fit.hist.bhm = glm.rmap.bhm(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 3 finished in 2.7 seconds.
-#> Chain 4 finished in 2.8 seconds.
+#> Chain 4 finished in 2.7 seconds.
 #> Chain 2 finished in 4.0 seconds.
-#> Chain 1 finished in 4.3 seconds.
+#> Chain 1 finished in 4.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 3.5 seconds.
-#> Total execution time: 4.4 seconds.
+#> Mean chain execution time: 3.4 seconds.
+#> Total execution time: 4.3 seconds.
 ## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
 samples_bhm = fit.hist.bhm$beta_pred
 
@@ -382,11 +395,11 @@ fit.rmap = glm.rmap(
 #> Chain 1 finished in 0.6 seconds.
 #> Chain 2 finished in 0.6 seconds.
 #> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.5 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Total execution time: 0.7 seconds.
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -448,14 +461,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
-#> Chain 2 finished in 0.7 seconds.
+#> Chain 1 finished in 0.6 seconds.
+#> Chain 2 finished in 0.6 seconds.
 #> Chain 3 finished in 0.6 seconds.
 #> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Total execution time: 0.7 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -607,24 +620,24 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 0.7 seconds.
+#> Chain 2 finished in 0.8 seconds.
 #> Chain 1 finished in 0.8 seconds.
-#> Chain 3 finished in 0.7 seconds.
+#> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.7 seconds.
-#> Total execution time: 0.8 seconds.
-fit.npp[, -1] %>% 
+#> Mean chain execution time: 0.8 seconds.
+#> Total execution time: 0.9 seconds.
+fit.npp[, -c(1, 6)] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 #> # A tibble: 4 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.845  0.844 0.244 0.243  0.454  1.25   1.00    4453.    4320.
-#> 2 z            0.598  0.593 0.273 0.274  0.155  1.05   1.00    5437.    5044.
-#> 3 x           -0.793 -0.789 0.164 0.167 -1.07  -0.532  1.00    4785.    4421.
-#> 4 a0_hist_1    0.676  0.713 0.222 0.249  0.266  0.972  1.00    5552.    3683.
+#> 1 (Intercept)  0.846  0.845 0.24  0.238  0.457  1.24   1.00    4910.    4219.
+#> 2 z            0.596  0.59  0.272 0.275  0.162  1.05   1.00    5541.    4996.
+#> 3 x           -0.794 -0.791 0.159 0.159 -1.06  -0.538  1       4967.    4873.
+#> 4 a0_hist_1    0.677  0.715 0.226 0.253  0.255  0.975  1.00    5406.    3718.
 ```
 
 ### Normalized asymptotic power prior (NAPP)
@@ -658,12 +671,12 @@ fit.napp = glm.napp(
 #> 
 #> Chain 1 finished in 0.5 seconds.
 #> Chain 2 finished in 0.5 seconds.
-#> Chain 3 finished in 0.5 seconds.
+#> Chain 3 finished in 0.6 seconds.
 #> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.6 seconds.
+#> Total execution time: 0.7 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -738,27 +751,30 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 4 finished in 3.8 seconds.
-#> Chain 2 finished in 4.1 seconds.
-#> Chain 1 finished in 4.2 seconds.
-#> Chain 3 finished in 4.7 seconds.
+#> Chain 2 finished in 3.9 seconds.
+#> Chain 4 finished in 4.0 seconds.
+#> Chain 1 finished in 4.1 seconds.
+#> Chain 3 finished in 4.3 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.2 seconds.
-#> Total execution time: 4.8 seconds.
+#> Mean chain execution time: 4.1 seconds.
+#> Total execution time: 4.5 seconds.
+#> Warning: 1 of 8000 (0.0%) transitions ended with a divergence.
+#> See https://mc-stan.org/misc/warnings for details.
 
 suppressWarnings(
- fit.leap[, c(2:4, 11)] %>% 
+ fit.leap[, 2:6] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3)) 
 )
-#> # A tibble: 4 × 10
+#> # A tibble: 5 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.845  0.84  0.243 0.241  0.455  1.24   1       2789.    3011.
-#> 2 z            0.602  0.606 0.272 0.267  0.155  1.05   1       3928.    4047.
-#> 3 x           -0.785 -0.78  0.173 0.173 -1.07  -0.514  1.00    2303.    2434.
-#> 4 gamma        0.859  0.886 0.11  0.104  0.643  0.99   1.00    1708.    2429.
+#> 1 (Intercept)  0.851  0.848 0.242 0.242  0.458  1.25   1       3161.    3491.
+#> 2 z            0.595  0.589 0.262 0.26   0.166  1.03   1       4127.    4338.
+#> 3 x           -0.786 -0.782 0.175 0.175 -1.07  -0.505  1       2879.    2813.
+#> 4 probs[1]     0.86   0.888 0.111 0.102  0.635  0.989  1.00    1618.    3204.
+#> 5 probs[2]     0.14   0.112 0.111 0.102  0.011  0.365  1.00    1618.    3204.
 ```
 
 ## Comparison of methods
@@ -811,22 +827,22 @@ post.sd = cbind(
 ## posterior means
 round( post.mean, 3 )
 #>             truth mle.cur mle.hist    bhm commensurate robustmap   napp    npp
-#> (Intercept)   1.0   0.760    1.036  0.841        0.847     0.828  0.844  0.845
-#> z             0.5   0.677    0.313  0.625        0.607     0.618  0.593  0.598
-#> x            -1.0  -0.750   -0.856 -0.789       -0.786    -0.777 -0.788 -0.793
+#> (Intercept)   1.0   0.760    1.036  0.841        0.840     0.828  0.844  0.846
+#> z             0.5   0.677    0.313  0.625        0.618     0.618  0.593  0.596
+#> x            -1.0  -0.750   -0.856 -0.789       -0.784    -0.777 -0.788 -0.794
 #>                 pp   leap
-#> (Intercept)  0.829  0.845
-#> z            0.616  0.602
-#> x           -0.786 -0.785
+#> (Intercept)  0.829  0.851
+#> z            0.616  0.595
+#> x           -0.786 -0.786
 
 ## posterior std dev.
 round( post.sd, 3 )
 #>             mle.cur mle.hist   bhm commensurate robustmap  napp   npp    pp
-#> (Intercept)   0.274    0.377 0.246        0.251     0.253 0.244 0.244 0.243
-#> z             0.308    0.442 0.284        0.278     0.288 0.271 0.273 0.282
-#> x             0.181    0.266 0.165        0.169     0.170 0.161 0.164 0.163
+#> (Intercept)   0.274    0.377 0.246        0.250     0.253 0.244 0.240 0.243
+#> z             0.308    0.442 0.284        0.285     0.288 0.271 0.272 0.282
+#> x             0.181    0.266 0.165        0.174     0.170 0.161 0.159 0.163
 #>              leap
-#> (Intercept) 0.243
-#> z           0.272
-#> x           0.173
+#> (Intercept) 0.242
+#> z           0.262
+#> x           0.175
 ```
