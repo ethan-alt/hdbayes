@@ -667,8 +667,20 @@ get.stan.data.ref = function(
     disp.mean         = NULL,
     disp.sd           = NULL
 ) {
-  if( length(data.list) > 1 )
-    stop("data.list should contain only one data.frame giving the current data")
+  if( length(data.list) > 1 ){
+    message("The first element of data.list will be used as the current data.")
+    data.list   = list(data.list[[1]])
+  }
+  if ( length(offset.list) > 1 ) {
+    message("The first element of offset.list will be used as the offset for current data.")
+    offset.list = list(offset.list[[1]])
+  }
+  if ( length(disp.mean) > 1 ) {
+    disp.mean = disp.mean[1]
+  }
+  if ( length(disp.sd) > 1 ) {
+    disp.sd = disp.sd[1]
+  }
 
   standat_pp = get.stan.data.pp(
     formula     = formula,

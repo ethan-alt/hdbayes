@@ -28,11 +28,13 @@ as "(Intercept)", and "dispersion" for the dispersion parameter, if applicable.}
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{data.list}{a list consisting of only one \code{data.frame} containing the current data.}
+\item{data.list}{a list consisting of one \code{data.frame} giving the current data. If data.list has more
+than one \code{data.frame}, only the first element will be used as the current data.}
 
-\item{offset.list}{a list consisting of only one vector giving the offset for the current data. The length of
+\item{offset.list}{a list consisting of one vector giving the offset for the current data. The length of
 the vector is equal to the number of rows in the current data. The vector has all values
-set to 0 by default.}
+set to 0 by default. If offset.list has more than one vector, only the first element will be
+used as the offset for the current data.}
 
 \item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the mean parameters for the normal prior on regression coefficients. If a scalar is provided,

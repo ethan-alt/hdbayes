@@ -25,10 +25,12 @@
 #'                          as "(Intercept)", and "dispersion" for the dispersion parameter, if applicable.
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param data.list         a list consisting of only one `data.frame` containing the current data.
-#' @param offset.list       a list consisting of only one vector giving the offset for the current data. The length of
+#' @param data.list         a list consisting of one `data.frame` giving the current data. If data.list has more
+#'                          than one `data.frame`, only the first element will be used as the current data.
+#' @param offset.list       a list consisting of one vector giving the offset for the current data. The length of
 #'                          the vector is equal to the number of rows in the current data. The vector has all values
-#'                          set to 0 by default.
+#'                          set to 0 by default. If offset.list has more than one vector, only the first element will be
+#'                          used as the offset for the current data.
 #' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the mean parameters for the normal prior on regression coefficients. If a scalar is provided,
 #'                          beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
