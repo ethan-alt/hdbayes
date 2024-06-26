@@ -1,46 +1,17 @@
-#' Log marginal likelihood of a GLM under a non-informative reference prior
+#' Log marginal likelihood of a GLM under non-informative reference prior
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under a non-informative reference prior (referred to as Ref prior).
+#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a GLM under the non-informative reference
+#' prior (also referred to as the vague prior).
 #'
-#' This function mirrors the same arguments as [glm.reference()] (except for those relevant for MCMC sampling),
-#' and introduces two additional parameters: `post.samples` and `bridge.args`. `post.samples` provides posterior
-#' samples generated from the GLM under a Ref prior (e.g., the output from [glm.reference()]), whereas
-#' `bridge.args` specifies arguments to pass onto [bridgesampling::bridge_sampler()] (other than `samples`,
-#' `log_posterior`, `data`, `lb`, and `ub`).
-#'
-#' It is important to ensure that the values assigned to the shared arguments in this function and
-#' [glm.reference()] align with those used in generating `post.samples`.
-#'
-#' @include get_stan_data.R
-#' @include data_checks.R
 #' @include expfam_loglik.R
 #'
 #' @export
 #'
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under a Ref prior, such as the output from [glm.reference()]. Each row
-#'                          corresponds to the posterior samples obtained from one iteration of MCMC. The column names
-#'                          of `post.samples` should include the names of covariates for regression coefficients, such
-#'                          as "(Intercept)", and "dispersion" for the dispersion parameter, if applicable.
-#' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
-#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param data.list         a list consisting of one `data.frame` giving the current data. If data.list has more
-#'                          than one `data.frame`, only the first element will be used as the current data.
-#' @param offset.list       a list consisting of one vector giving the offset for the current data. The length of
-#'                          the vector is equal to the number of rows in the current data. The vector has all values
-#'                          set to 0 by default. If offset.list has more than one vector, only the first element will be
-#'                          used as the offset for the current data.
-#' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the mean parameters for the normal prior on regression coefficients. If a scalar is provided,
-#'                          beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
-#' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the sd parameters for the normal prior on regression coefficients. If a scalar is provided,
-#'                          same as for beta.mean. Defaults to a vector of 10s.
-#' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
-#' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
-#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-#'                          onto [bridgesampling::bridge_sampler()].
+#' @param post.samples      output from [glm.reference()] giving posterior samples of a GLM under the non-informative
+#'                          reference prior, with an attribute called 'data' which includes the list of variables
+#'                          specified in the data block of the Stan program.
+#' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
+#'                          pass onto [bridgesampling::bridge_sampler()].
 #'
 #' @return
 #'  The function returns a `list` with the following objects
@@ -50,7 +21,8 @@
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
-#'    \item{bs}{an object of class `bridge` or `bridge_list` giving the output from [bridgesampling::bridge_sampler()]}
+#'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
+#'    to compute the logarithm of the normalizing constant of the non-informative reference prior}
 #'  }
 #'
 #' @references
@@ -70,52 +42,28 @@
 #'   )
 #'   glm.logml.reference(
 #'     post.samples = d.ref,
-#'     formula = formula, family = family,
-#'     data.list = data.list,
 #'     bridge.args = list(silent = TRUE)
 #'   )
 #' }
 glm.logml.reference = function(
     post.samples,
-    formula,
-    family,
-    data.list,
-    offset.list       = NULL,
-    beta.mean         = NULL,
-    beta.sd           = NULL,
-    disp.mean         = NULL,
-    disp.sd           = NULL,
     bridge.args       = NULL
 ) {
-  ## get Stan data for reference prior
-  standat = get.stan.data.ref(
-    formula     = formula,
-    family      = family,
-    data.list   = data.list,
-    offset.list = offset.list,
-    beta.mean   = beta.mean,
-    beta.sd     = beta.sd,
-    disp.mean   = disp.mean,
-    disp.sd     = disp.sd
-  )
-
-  ## check the format of post.samples
-  post.samples.checks(post.samples, colnames(standat$X), family)
-
-  d        = as.matrix(post.samples)
+  stan.data = attr(post.samples, 'data')
+  d         = as.matrix(post.samples)
   ## rename parameters
-  p        = standat$p
-  X        = standat$X
-  oldnames = paste0("beta[", 1:p, "]")
-  newnames = colnames(X)
+  p         = stan.data$p
+  X         = stan.data$X
+  oldnames  = paste0("beta[", 1:p, "]")
+  newnames  = colnames(X)
   colnames(d)[colnames(d) %in% newnames] = oldnames
-  if ( !family$family %in% c('binomial', 'poisson') ) {
+  if ( stan.data$dist > 2 ) {
     oldnames = c(oldnames, 'dispersion')
   }
   d = d[, oldnames, drop=F]
 
   ## compute log normalizing constants (lognc) for half-normal prior on dispersion
-  standat$lognc_disp  = pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T)
+  stan.data$lognc_disp  = pnorm(0, mean = stan.data$disp_mean, sd = stan.data$disp_sd, lower.tail = F, log.p = T)
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
@@ -135,7 +83,7 @@ glm.logml.reference = function(
 
   lb           = rep(-Inf, p)
   ub           = rep(Inf, p)
-  if( standat$dist > 2 ) {
+  if( stan.data$dist > 2 ) {
     lb = c(lb, 0)
     ub = c(ub, Inf)
   }
@@ -148,7 +96,7 @@ glm.logml.reference = function(
       list(
         "samples" = d,
         'log_posterior' = log_density,
-        'data' = standat,
+        'data' = stan.data,
         'lb' = lb,
         'ub' = ub),
       bridge.args
