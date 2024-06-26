@@ -668,11 +668,9 @@ get.stan.data.ref = function(
     disp.sd           = NULL
 ) {
   if( length(data.list) > 1 ){
-    message("The first element of data.list will be used as the current data.")
     data.list   = list(data.list[[1]])
   }
   if ( length(offset.list) > 1 ) {
-    message("The first element of offset.list will be used as the offset for current data.")
     offset.list = list(offset.list[[1]])
   }
   if ( length(disp.mean) > 1 ) {
