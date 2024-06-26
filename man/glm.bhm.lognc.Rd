@@ -25,7 +25,7 @@ The function returns a \code{list} with the following objects
 }
 \description{
 Uses bridge sampling to estimate the logarithm of the normalizing constant for Bayesian hierarchical
-model (BHM).
+model (BHM) using all data sets or using historical data sets only.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
