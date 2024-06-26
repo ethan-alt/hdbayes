@@ -15,30 +15,32 @@
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param data.list         a list consisting of one `data.frame` giving the current data. If data.list has more
+#' @param data.list         a list consisting of one `data.frame` giving the current data. If `data.list` has more
 #'                          than one `data.frame`, only the first element will be used as the current data.
 #' @param offset.list       a list consisting of one vector giving the offset for the current data. The length of
 #'                          the vector is equal to the number of rows in the current data. The vector has all values
-#'                          set to 0 by default. If offset.list has more than one vector, only the first element will be
-#'                          used as the offset for the current data.
+#'                          set to 0 by default. If `offset.list` has more than one vector, same as for `data.list`.
 #' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the mean parameters for the normal prior on regression coefficients. If a scalar is provided,
-#'                          beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#'                          `beta.mean` will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
 #' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the normal prior on regression coefficients. If a scalar is provided,
-#'                          same as for beta.mean. Defaults to a vector of 10s.
-#' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
-#' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
+#'                          same as for `beta.mean`. Defaults to a vector of 10s.
+#' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0. If
+#'                          `disp.mean` is a vector with length > 1, only the first element will be used as `disp.mean`.
+#' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10. If
+#'                          `disp.sd` is a vector with length > 1, same as for `disp.mean`.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
 #'                          in `sample()` method in cmdstanr package.
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
 #'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -101,5 +103,7 @@ glm.reference = function(
     newnames = c(newnames, 'dispersion')
   }
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }

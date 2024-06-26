@@ -1,9 +1,9 @@
 #' Posterior of commensurate prior (CP)
 #'
-#' Sample from the posterior distribution of a GLM using the CP by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>.
+#' Sample from the posterior distribution of a GLM using the commensurate prior (CP) by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>.
 #'
-#' The CP assumes that the regression coefficients for the current data conditional on those for the historical
-#' data are independent normal distributions with mean equal to the corresponding regression coefficients
+#' The commensurate prior (CP) assumes that the regression coefficients for the current data conditional on those for
+#' the historical data are independent normal distributions with mean equal to the corresponding regression coefficients
 #' for the historical data and variance equal to the inverse of the corresponding elements of a vector of precision
 #' parameters (referred to as the commensurability parameter \eqn{\tau}). We regard \eqn{\tau} as random and elicit
 #' a spike-and-slab prior, which is specified as a mixture of two half-normal priors, on \eqn{\tau}.
@@ -21,22 +21,22 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                          are the historical data sets.
-#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
-#'                          the length of data.list. The length of each element of offset.list is equal to the number
-#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of `offset.list` is equal to
+#'                          the length of `data.list`. The length of each element of `offset.list` is equal to the number
+#'                          of rows in the corresponding element of `data.list`. Defaults to a list of vectors of 0s.
 #' @param beta0.mean        a scalar or a vector whose dimension is equal to the number of regression coefficients
 #'                          giving the mean parameters for the prior on the historical data regression coefficients. If a
-#'                          scalar is provided, beta0.mean will be a vector of repeated elements of the given scalar.
+#'                          scalar is provided, `beta0.mean` will be a vector of repeated elements of the given scalar.
 #'                          Defaults to a vector of 0s.
 #' @param beta0.sd          a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the prior on the historical data regression coefficients. If a scalar is
-#'                          provided, same as for beta0.mean. Defaults to a vector of 10s.
+#'                          provided, same as for `beta0.mean`. Defaults to a vector of 10s.
 #' @param disp.mean         a scalar or a vector whose dimension is equal to the number of data sets (including the current
 #'                          data) giving the location parameters for the half-normal priors on the dispersion parameters.
-#'                          If a scalar is provided, same as for beta0.mean. Defaults to a vector of 0s.
+#'                          If a scalar is provided, same as for `beta0.mean`. Defaults to a vector of 0s.
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
 #'                          data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
-#'                          scalar is provided, same as for beta0.mean. Defaults to a vector of 10s.
+#'                          scalar is provided, same as for `beta0.mean`. Defaults to a vector of 10s.
 #' @param p.spike           a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
 #'                          on commensurability parameter \eqn{\tau}. Defaults to 0.1.
 #' @param spike.mean        a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
@@ -53,10 +53,11 @@
 #'                          in `sample()` method in cmdstanr package.
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
 #'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @references
 #'  Hobbs, B. P., Carlin, B. P., Mandrekar, S. J., and Sargent, D. J. (2011). Hierarchical commensurate and power prior models for adaptive incorporation of historical information in clinical trials. Biometrics, 67(3), 1047–1056.
@@ -138,5 +139,7 @@ glm.commensurate = function(
     newnames = c(newnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
   }
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }

@@ -24,25 +24,26 @@ glm.reference(
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{data.list}{a list consisting of one \code{data.frame} giving the current data. If data.list has more
+\item{data.list}{a list consisting of one \code{data.frame} giving the current data. If \code{data.list} has more
 than one \code{data.frame}, only the first element will be used as the current data.}
 
 \item{offset.list}{a list consisting of one vector giving the offset for the current data. The length of
 the vector is equal to the number of rows in the current data. The vector has all values
-set to 0 by default. If offset.list has more than one vector, only the first element will be
-used as the offset for the current data.}
+set to 0 by default. If \code{offset.list} has more than one vector, same as for \code{data.list}.}
 
 \item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the mean parameters for the normal prior on regression coefficients. If a scalar is provided,
-beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
+\code{beta.mean} will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
 \item{beta.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sd parameters for the normal prior on regression coefficients. If a scalar is provided,
-same as for beta.mean. Defaults to a vector of 10s.}
+same as for \code{beta.mean}. Defaults to a vector of 10s.}
 
-\item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
+\item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0. If
+\code{disp.mean} is a vector with length > 1, only the first element will be used as \code{disp.mean}.}
 
-\item{disp.sd}{scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
+\item{disp.sd}{scale parameter for the half-normal prior on dispersion parameter. Defaults to 10. If
+\code{disp.sd} is a vector with length > 1, same as for \code{disp.mean}.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
@@ -53,10 +54,11 @@ in \code{sample()} method in cmdstanr package.}
 \item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
 cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
+the list of variables specified in the data block of the Stan program.
 }
 \description{
 Sample from the posterior distribution of a GLM using a non-informative reference prior.

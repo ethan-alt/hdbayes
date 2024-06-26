@@ -29,34 +29,34 @@ glm.bhm(
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
 are the historical data sets.}
 
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
+\item{offset.list}{a list of vectors giving the offsets for each data. The length of \code{offset.list} is equal to
+the length of \code{data.list}. The length of each element of \code{offset.list} is equal to the number
+of rows in the corresponding element of \code{data.list}. Defaults to a list of vectors of 0s.}
 
 \item{meta.mean.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the means for the normal hyperpriors on the mean hyperparameters of regression coefficients. If
-a scalar is provided, meta.mean.mean will be a vector of repeated elements of the given scalar.
-Defaults to a vector of 0s.}
+the means for the normal hyperpriors on the mean hyperparameters of regression coefficients.
+If a scalar is provided, \code{meta.mean.mean} will be a vector of repeated elements of the given
+scalar. Defaults to a vector of 0s.}
 
 \item{meta.mean.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If a
-scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
+the sds for the normal hyperpriors on the mean hyperparameters of regression coefficients. If
+a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 10s.}
 
 \item{meta.sd.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
+If a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 0s.}
 
 \item{meta.sd.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sds for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
-If a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 1s.}
+If a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 1s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
-data) giving the location parameters for the half-normal priors on the dispersion parameters. If
-a scalar is provided, same as for meta.mean.mean. Defaults to a vector of 0s.}
+data) giving the location parameters for the half-normal priors on the dispersion parameters.
+If a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 0s.}
 
 \item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
 data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
-scalar is provided, same as for meta.mean.mean. Defaults to a vector of 10s.}
+scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 10s.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
@@ -67,19 +67,21 @@ in \code{sample()} method in cmdstanr package.}
 \item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
 cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
+the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using the BHM.
+Sample from the posterior distribution of a GLM using the Bayesian hierarchical model (BHM).
 }
 \details{
-The BHM assumes that the regression coefficients for the historical and current data are different, but
-are correlated through a common distribution, whose hyperparameters (i.e., mean and standard deviation (sd)
-(the covariance matrix is assumed to have a diagonal structure)) are treated as random. The number of
-of regression coefficients for the current data is assumed to be the same as that for the historical data.
+The Bayesian hierarchical model (BHM) assumes that the regression coefficients for the historical and
+current data are different, but are correlated through a common distribution, whose hyperparameters
+(i.e., mean and standard deviation (sd) (the covariance matrix is assumed to have a diagonal structure))
+are treated as random. The number of regression coefficients for the current data is assumed to be the
+same as that for the historical data.
 
 The hyperpriors on the mean and the sd hyperparameters are independent normal and independent half-normal
 distributions, respectively. The priors on the dispersion parameters (if applicable) for the current and
