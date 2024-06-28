@@ -60,7 +60,6 @@ glm.commensurate.lognc = function(
   ## get Stan data for CP
   stan.data = attr(post.samples, 'data')
 
-  ## rename parameters
   p        = stan.data$p
   K        = stan.data$K
   oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"), paste0("comm_prec[", 1:p,"]"))
