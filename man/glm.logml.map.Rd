@@ -45,19 +45,21 @@ to compute the logarithm of the normalizing constant of the Bayesian hierarchica
 
 \item{bs.hist}{an object of class \code{bridge} or \code{bridge_list} containing the output from using
 \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} to compute the logarithm of the normalizing constant of the BHM using historical
-data sets only}
+data sets}
+
+\item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+
+\item{max_Rhat}{the maximum Rhat}
 }
 }
 \description{
 Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-likelihood of a GLM under the meta-analytic predictive (MAP) prior. The MAP prior is the prior
+likelihood of a GLM under the meta-analytic predictive (MAP) prior. The MAP prior is equivalent to the prior
 induced by the Bayesian hierarchical model (BHM).
-}
-\details{
-The arguments related to MCMC sampling are utilized to draw samples from the prior induced by the
-Bayesian hierarchical model (BHM) (equivalently, the meta-analytic predictive (MAP) prior). These
-samples are then utilized to compute the normalizing constant of the BHM using historical data
-sets only.
+
+The arguments related to MCMC sampling are utilized to draw samples from the MAP prior. These
+samples are then used to compute the logarithm of the normalizing constant of the BHM using only historical
+data sets.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {

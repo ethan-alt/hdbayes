@@ -1,14 +1,14 @@
 #' Log marginal likelihood of a GLM under meta-analytic predictive (MAP) prior
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under the meta-analytic predictive (MAP) prior. The MAP prior is the prior
+#' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
+#' likelihood of a GLM under the meta-analytic predictive (MAP) prior. The MAP prior is equivalent to the prior
 #' induced by the Bayesian hierarchical model (BHM).
 #'
-#' The arguments related to MCMC sampling are utilized to draw samples from the prior induced by the
-#' Bayesian hierarchical model (BHM) (equivalently, the meta-analytic predictive (MAP) prior). These
-#' samples are then utilized to compute the normalizing constant of the BHM using historical data
-#' sets only.
+#' @description The arguments related to MCMC sampling are utilized to draw samples from the MAP prior. These
+#' samples are then used to compute the logarithm of the normalizing constant of the BHM using only historical
+#' data sets.
 #'
+#' @include data_checks.R
 #' @include glm_bhm_lognc.R
 #'
 #' @export
@@ -39,7 +39,11 @@
 #'
 #'    \item{bs.hist}{an object of class `bridge` or `bridge_list` containing the output from using
 #'    [bridgesampling::bridge_sampler()] to compute the logarithm of the normalizing constant of the BHM using historical
-#'    data sets only}
+#'    data sets}
+#'
+#'    \item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+#'
+#'    \item{max_Rhat}{the maximum Rhat}
 #'  }
 #'
 #' @references
@@ -80,13 +84,13 @@ glm.logml.map = function(
   if ( K == 1 ){
     stop("data.list should include at least one historical data set")
   }
-  ## computing normalizing constant for BHM using all data sets
+  ## computing log normalizing constant for BHM using all data sets
   res.all = glm.bhm.lognc(
     post.samples   = post.samples,
     bridge.args    = bridge.args
   )
 
-  ## get Stan data for BHM using historical data sets only
+  ## get Stan data for BHM using historical data sets
   hist.stan.data           = stan.data
   hist.stan.data$K         = K - 1
   n                        = stan.data$end_idx[1] ## current data sample size
@@ -99,7 +103,7 @@ glm.logml.map = function(
   hist.stan.data$disp_sd   = stan.data$disp_sd[-1]
   hist.stan.data$offs      = stan.data$offs[-(1:n)]
 
-  ## fit BHM using historical data sets only
+  ## fit BHM using historical data sets
   glm_bhm = instantiate::stan_package_model(
     name = "glm_bhm",
     package = "hdbayes"
@@ -107,6 +111,8 @@ glm.logml.map = function(
   fit = glm_bhm$sample(data = hist.stan.data,
                        iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                        ...)
+  summ = posterior::summarise_draws(fit)
+
   if ( hist.stan.data$dist > 2 ) {
     ## rename parameters
     K        = hist.stan.data$K
@@ -122,18 +128,38 @@ glm.logml.map = function(
   }
   attr(x = hist.post.samples, which = 'data') = hist.stan.data
 
-  ## computing normalizing constant for BHM using historical data sets only
+  ## compute log normalizing constant for BHM using historical data sets
   res.hist = glm.bhm.lognc(
     post.samples   = hist.post.samples,
     bridge.args    = bridge.args
   )
 
-  ## Return a list of model name, estimated log marginal likelihood, and outputs from bridgesampling::bridge_sampler
+  ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
+  ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'   = "MAP",
-    'logml'   = res.all$lognc - res.hist$lognc,
-    'bs'      = res.all$bs,
-    'bs.hist' = res.hist$bs
+    'model'        = "MAP",
+    'logml'        = res.all$lognc - res.hist$lognc,
+    'bs'           = res.all$bs,
+    'bs.hist'      = res.hist$bs,
+    'min_ess_bulk' = min(summ[, 'ess_bulk']),
+    'max_Rhat'     = max(summ[, 'rhat'])
   )
+
+  if ( res[['min_ess_bulk']] < 1000 )
+    warning(
+      paste0(
+        'The minimum bulk effective sample size of the MCMC sampling is ',
+        round(res[['min_ess_bulk']], 4),
+        '. It is recommended to have at least 1000. Try increasing the number of iterations.'
+      )
+    )
+  if ( res[['max_Rhat']] > 1.10 )
+    warning(
+      paste0(
+        'The maximum Rhat of the MCMC sampling is ',
+        round(res[['max_Rhat']], 4),
+        '. It is recommended to have a maximum Rhat of no more than 1.1. Try increasing the number of iterations.'
+      )
+    )
   return(res)
 }
