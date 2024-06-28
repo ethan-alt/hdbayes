@@ -4,83 +4,15 @@
 \alias{glm.commensurate.lognc}
 \title{Estimate the logarithm of the normalizing constant for commensurate prior (CP)}
 \usage{
-glm.commensurate.lognc(
-  formula,
-  family,
-  hist.data.list,
-  hist.offset.list = NULL,
-  beta0.mean = NULL,
-  beta0.sd = NULL,
-  hist.disp.mean = NULL,
-  hist.disp.sd = NULL,
-  p.spike = 0.1,
-  spike.mean = 200,
-  spike.sd = 0.1,
-  slab.mean = 0,
-  slab.sd = 5,
-  bridge.args = NULL,
-  iter_warmup = 1000,
-  iter_sampling = 1000,
-  chains = 4,
-  ...
-)
+glm.commensurate.lognc(post.samples, bridge.args = NULL)
 }
 \arguments{
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{post.samples}{output from \code{\link[=glm.commensurate]{glm.commensurate()}} giving posterior samples of a GLM under the commensurate
+prior (CP), with an attribute called 'data' which includes the list of variables specified
+in the data block of the Stan program.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
-
-\item{hist.data.list}{a list of \code{data.frame}s giving historical data sets.}
-
-\item{hist.offset.list}{a list of vectors giving the offsets for each historical data. The length of hist.offset.list
-is equal to the length of hist.data.list. The length of each element of offset.list is equal to
-the number of rows in the corresponding element of hist.data.list. Defaults to a list of vectors
-of 0s.}
-
-\item{beta0.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients
-giving the mean parameters for the prior on the historical data regression coefficients. If a
-scalar is provided, same as for tau. Defaults to a vector of 0s.}
-
-\item{beta0.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sd parameters for the prior on the historical data regression coefficients. If a scalar is
-provided, same as for tau. Defaults to a vector of 10s.}
-
-\item{hist.disp.mean}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-location parameters for the half-normal priors on the dispersion parameters. If a scalar is
-provided, same as for tau. Defaults to a vector of 0s.}
-
-\item{hist.disp.sd}{a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-scale parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
-same as for tau. Defaults to a vector of 10s.}
-
-\item{p.spike}{a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
-on commensurability parameter \eqn{\tau}. Defaults to 0.1.}
-
-\item{spike.mean}{a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
-Defaults to 200.}
-
-\item{spike.sd}{a scalar giving the scale parameter for the half-normal prior (spike component) on \eqn{\tau}.
-Defaults to 0.1.}
-
-\item{slab.mean}{a scalar giving the location parameter for the half-normal prior (slab component) on \eqn{\tau}.
-Defaults to 0.}
-
-\item{slab.sd}{a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
-Defaults to 5.}
-
-\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
-
-\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
-\code{sample()} method in cmdstanr package.}
-
-\item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
-in \code{sample()} method in cmdstanr package.}
-
-\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
-cmdstanr package.}
-
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub})
+to pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 }
 \value{
 The function returns a \code{list} with the following objects
@@ -88,28 +20,28 @@ The function returns a \code{list} with the following objects
 \describe{
 \item{lognc}{the estimated logarithm of the normalizing constant}
 
-\item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
-
-\item{max_Rhat}{the maximum Rhat}
-
 \item{bs}{an object of class \code{bridge} or \code{bridge_list} giving the output from \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}}
 }
 }
 \description{
-Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
-constant for the CP using historical data sets.
+Uses bridge sampling to estimate the logarithm of the normalizing constant for the commensurate prior (CP) using
+historical data sets.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
   data(actg036)
   ## take subset for speed purposes
   actg036 = actg036[1:50, ]
-  glm.commensurate.lognc(
+  hist.data.list = list(histdata = actg036)
+  d.cp = glm.commensurate(
     formula = cd4 ~ treatment + age + race,
-    family = poisson(),
-    hist.data.list = list(histdata = actg036),
+    family = poisson(), data.list = hist.data.list,
     p.spike = 0.1,
-    chains = 1, iter_warmup = 500, iter_sampling = 2000
+    chains = 1, iter_warmup = 500, iter_sampling = 1000
+  )
+  glm.commensurate.lognc(
+    post.samples = d.cp,
+    bridge.args = list(silent = TRUE)
   )
 }
 }
