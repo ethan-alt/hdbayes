@@ -33,15 +33,23 @@ if (instantiate::stan_cmdstan_exists()) {
   ## take subset for speed purposes
   actg036 = actg036[1:50, ]
   hist.data.list = list(histdata = actg036)
-  d.cp = glm.commensurate(
+  standat = hdbayes:::get.stan.data.cp(
     formula = cd4 ~ treatment + age + race,
-    family = poisson(), data.list = hist.data.list,
-    p.spike = 0.1,
-    chains = 1, iter_warmup = 500, iter_sampling = 1000
+    family = poisson(),
+    data.list = hist.data.list
   )
+  glm_commensurate_prior = instantiate::stan_package_model(
+    name = "glm_commensurate_prior",
+    package = "hdbayes"
+  )
+  fit = glm_commensurate_prior$sample(
+    data = standat,
+    iter_warmup = 500, iter_sampling = 1000, chains = 1
+  )
+  d.cp.hist  = fit$draws(format = 'draws_df')
+  attr(x = d.cp.hist, which = 'data') = standat
   glm.commensurate.lognc(
-    post.samples = d.cp,
-    bridge.args = list(silent = TRUE)
+    post.samples = d.cp.hist
   )
 }
 }
