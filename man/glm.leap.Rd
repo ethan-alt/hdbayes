@@ -33,29 +33,29 @@ stacked into one historical data set.}
 \item{K}{the desired number of classes to identify. Defaults to 2.}
 
 \item{prob.conc}{a scalar or a vector of length \code{K} giving the concentration parameters for Dirichlet prior.
-If length == 2, a \code{beta(prob.conc[1], prob.conc[2])} prior is used. If a scalar is provided,
-prob.conc will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.}
+If length == 2, a \code{Beta(prob.conc[1], prob.conc[2])} prior is used. If a scalar is provided,
+\code{prob.conc} will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.}
 
 \item{offset.list}{a list of matrices giving the offset for current data followed by historical data. For each
 matrix, the number of rows corresponds to observations and columns correspond to classes.
-Defaults to a list of matrices of 0s. Note that the first element of offset.list (corresponding
-to the offset for current data) should be a matrix of repeated columns if offset.list is not NULL.}
+Defaults to a list of matrices of 0s. Note that the first element of \code{offset.list} (corresponding
+to the offset for current data) should be a matrix of repeated columns if \code{offset.list} is not NULL.}
 
 \item{beta.mean}{a scalar or a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients,
 where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
-beta.mean will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.}
+\code{beta.mean} will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.}
 
 \item{beta.sd}{a scalar or a \verb{p x K} matrix of sd parameters for the initial prior on regression coefficients,
 where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
-same as for beta.mean. Defaults to a matrix of 10s.}
+same as for \code{beta.mean}. Defaults to a matrix of 10s.}
 
 \item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the location
 parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
-disp.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
+\code{disp.mean} will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
 \item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the scale
 parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
-as for disp.mean. Defaults to a vector of 10s.}
+as for \code{disp.mean}. Defaults to a vector of 10s.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
@@ -66,10 +66,11 @@ in \code{sample()} method in cmdstanr package.}
 \item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
 cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
+the list of variables specified in the data block of the Stan program.
 }
 \description{
 Sample from the posterior distribution of a GLM using the LEAP by Alt et al. (2023).

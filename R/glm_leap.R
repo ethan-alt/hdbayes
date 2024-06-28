@@ -17,34 +17,35 @@
 #'                          stacked into one historical data set.
 #' @param K                 the desired number of classes to identify. Defaults to 2.
 #' @param prob.conc         a scalar or a vector of length `K` giving the concentration parameters for Dirichlet prior.
-#'                          If length == 2, a `beta(prob.conc[1], prob.conc[2])` prior is used. If a scalar is provided,
-#'                          prob.conc will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.
+#'                          If length == 2, a `Beta(prob.conc[1], prob.conc[2])` prior is used. If a scalar is provided,
+#'                          `prob.conc` will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.
 #' @param offset.list       a list of matrices giving the offset for current data followed by historical data. For each
 #'                          matrix, the number of rows corresponds to observations and columns correspond to classes.
-#'                          Defaults to a list of matrices of 0s. Note that the first element of offset.list (corresponding
-#'                          to the offset for current data) should be a matrix of repeated columns if offset.list is not NULL.
+#'                          Defaults to a list of matrices of 0s. Note that the first element of `offset.list` (corresponding
+#'                          to the offset for current data) should be a matrix of repeated columns if `offset.list` is not NULL.
 #' @param beta.mean         a scalar or a `p x K` matrix of mean parameters for initial prior on regression coefficients,
 #'                          where `p` is the number of regression coefficients (including intercept). If a scalar is provided,
-#'                          beta.mean will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.
+#'                          `beta.mean` will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.
 #' @param beta.sd           a scalar or a `p x K` matrix of sd parameters for the initial prior on regression coefficients,
 #'                          where `p` is the number of regression coefficients (including intercept). If a scalar is provided,
-#'                          same as for beta.mean. Defaults to a matrix of 10s.
+#'                          same as for `beta.mean`. Defaults to a matrix of 10s.
 #' @param disp.mean         a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the location
 #'                          parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
-#'                          disp.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#'                          `disp.mean` will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the scale
 #'                          parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
-#'                          as for disp.mean. Defaults to a vector of 10s.
+#'                          as for `disp.mean`. Defaults to a vector of 10s.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
 #'                          in `sample()` method in cmdstanr package.
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
 #'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @references
 #'  Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
@@ -121,5 +122,7 @@ glm.leap = function(
   oldnames = c(oldnames, paste0( 'probs[', 1:K, ']' ))
   newnames = c(newnames, paste0( 'probs[', 1:K, ']' ))
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }
