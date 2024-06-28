@@ -6,19 +6,6 @@
 \usage{
 glm.logml.commensurate(
   post.samples,
-  formula,
-  family,
-  data.list,
-  offset.list = NULL,
-  beta0.mean = NULL,
-  beta0.sd = NULL,
-  disp.mean = NULL,
-  disp.sd = NULL,
-  p.spike = 0.1,
-  spike.mean = 200,
-  spike.sd = 0.1,
-  slab.mean = 0,
-  slab.sd = 5,
   bridge.args = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -27,68 +14,23 @@ glm.logml.commensurate(
 )
 }
 \arguments{
-\item{post.samples}{an object of class \code{draws_df}, \code{draws_matrix}, \code{matrix}, or \code{data.frame} giving posterior
-samples of a GLM under CP, such as the output from \code{\link[=glm.commensurate]{glm.commensurate()}}. Each row corresponds
-to the posterior samples obtained from one iteration of MCMC. The column names of \code{post.samples}
-should include the names of covariates for regression coefficients, such as "(Intercept)",
-and "dispersion" for the dispersion parameter, if applicable.}
+\item{post.samples}{output from \code{\link[=glm.commensurate]{glm.commensurate()}} giving posterior samples of a GLM under the commensurate
+prior (CP), with an attribute called 'data' which includes the list of variables specified
+in the data block of the Stan program.}
 
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}) to
+pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
-
-\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical data sets.}
-
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
-
-\item{beta0.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients
-giving the mean parameters for the prior on the historical data regression coefficients. If a
-scalar is provided, beta0.mean will be a vector of repeated elements of the given scalar.
-Defaults to a vector of 0s.}
-
-\item{beta0.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sd parameters for the prior on the historical data regression coefficients. If a scalar is
-provided, same as for beta0.mean. Defaults to a vector of 10s.}
-
-\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
-data) giving the location parameters for the half-normal priors on the dispersion parameters.
-If a scalar is provided, same as for beta0.mean. Defaults to a vector of 0s.}
-
-\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
-data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
-scalar is provided, same as for beta0.mean. Defaults to a vector of 10s.}
-
-\item{p.spike}{a scalar between 0 and 1 giving the probability of the spike component in spike-and-slab prior
-on commensurability parameter \eqn{\tau}. Defaults to 0.1.}
-
-\item{spike.mean}{a scalar giving the location parameter for the half-normal prior (spike component) on \eqn{\tau}.
-Defaults to 200.}
-
-\item{spike.sd}{a scalar giving the scale parameter for the half-normal prior (spike component) on \eqn{\tau}.
-Defaults to 0.1.}
-
-\item{slab.mean}{a scalar giving the location parameter for the half-normal prior (slab component) on \eqn{\tau}.
-Defaults to 0.}
-
-\item{slab.sd}{a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
-Defaults to 5.}
-
-\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
-
-\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
-\code{sample()} method in cmdstanr package.}
+\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup}
+in \code{sample()} method in cmdstanr package.}
 
 \item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
 in \code{sample()} method in cmdstanr package.}
 
-\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
-cmdstanr package.}
+\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method
+in cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
 The function returns a \code{list} with the following objects
@@ -98,29 +40,25 @@ The function returns a \code{list} with the following objects
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
-\item{bs}{an object of class \code{bridge} or \code{bridge_list} giving the output from
-\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} using all data sets (including current and historical data)}
+\item{bs}{an object of class \code{bridge} or \code{bridge_list} containing the output from using \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}
+to compute the logarithm of the normalizing constant of the commensurate prior (CP) using all data sets}
 
-\item{bs.hist}{an object of class \code{bridge} or \code{bridge_list} giving the output from
-\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} using historical data sets (for computing the log normalizing
-constant for CP)}
+\item{bs.hist}{an object of class \code{bridge} or \code{bridge_list} containing the output from using
+\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} to compute the logarithm of the normalizing constant of the CP using historical
+data sets}
 
+\item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+
+\item{max_Rhat}{the maximum Rhat}
 }
 }
 \description{
 Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-likelihood of a GLM under CP.
-}
-\details{
-This function shares the same arguments as \code{\link[=glm.commensurate]{glm.commensurate()}}, while introducing two additional
-parameters: \code{post.samples} and \code{bridge.args}. \code{post.samples} provides posterior samples under CP
-(e.g., the output from \code{\link[=glm.commensurate]{glm.commensurate()}}), whereas \code{bridge.args} specifies arguments to pass onto
-\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}).
+likelihood of a GLM under the commensurate prior (CP).
 
-It is important to ensure that the values assigned to the shared arguments (excluding those relevant
-for MCMC sampling) in this function and \code{\link[=glm.commensurate]{glm.commensurate()}} match with those used in generating
-\code{post.samples}. The arguments pertinent to MCMC sampling are utilized to compute the normalizing
-constants for CP.
+The arguments related to MCMC sampling are utilized to draw samples from the commensurate prior.
+These samples are then used to compute the logarithm of the normalizing constant of the commensurate prior using
+historical data sets.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -141,9 +79,6 @@ if (instantiate::stan_cmdstan_exists()) {
   )
   glm.logml.commensurate(
     post.samples = d.cp,
-    formula = formula, family = family,
-    data.list = data_list,
-    p.spike = 0.1,
     bridge.args = list(silent = TRUE),
     chains = 1, iter_warmup = 1000, iter_sampling = 2000
   )

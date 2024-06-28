@@ -1,34 +1,30 @@
 #' Log marginal likelihood of a GLM under commensurate prior (CP)
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under CP.
+#' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
+#' likelihood of a GLM under the commensurate prior (CP).
 #'
-#' This function shares the same arguments as [glm.commensurate()], while introducing two additional
-#' parameters: `post.samples` and `bridge.args`. `post.samples` provides posterior samples under CP
-#' (e.g., the output from [glm.commensurate()]), whereas `bridge.args` specifies arguments to pass onto
-#' [bridgesampling::bridge_sampler()] (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`).
+#' @description The arguments related to MCMC sampling are utilized to draw samples from the commensurate prior.
+#' These samples are then used to compute the logarithm of the normalizing constant of the commensurate prior using
+#' historical data sets.
 #'
-#' It is important to ensure that the values assigned to the shared arguments (excluding those relevant
-#' for MCMC sampling) in this function and [glm.commensurate()] match with those used in generating
-#' `post.samples`. The arguments pertinent to MCMC sampling are utilized to compute the normalizing
-#' constants for CP.
-#'
-#' @include get_stan_data.R
-#' @include data_checks.R
 #' @include expfam_loglik.R
 #' @include mixture_loglik.R
 #' @include glm_commensurate_lognc.R
 #'
 #' @export
 #'
-#' @inheritParams glm.commensurate
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under CP, such as the output from [glm.commensurate()]. Each row corresponds
-#'                          to the posterior samples obtained from one iteration of MCMC. The column names of `post.samples`
-#'                          should include the names of covariates for regression coefficients, such as "(Intercept)",
-#'                          and "dispersion" for the dispersion parameter, if applicable.
-#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-#'                          onto [bridgesampling::bridge_sampler()].
+#' @param post.samples      output from [glm.commensurate()] giving posterior samples of a GLM under the commensurate
+#'                          prior (CP), with an attribute called 'data' which includes the list of variables specified
+#'                          in the data block of the Stan program.
+#' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
+#'                          pass onto [bridgesampling::bridge_sampler()].
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`
+#'                          in `sample()` method in cmdstanr package.
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in `sample()` method in cmdstanr package.
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method
+#'                          in cmdstanr package.
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
 #'  The function returns a `list` with the following objects
@@ -38,13 +34,16 @@
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
-#'    \item{bs}{an object of class `bridge` or `bridge_list` giving the output from
-#'    [bridgesampling::bridge_sampler()] using all data sets (including current and historical data)}
+#'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
+#'    to compute the logarithm of the normalizing constant of the commensurate prior (CP) using all data sets}
 #'
-#'    \item{bs.hist}{an object of class `bridge` or `bridge_list` giving the output from
-#'    [bridgesampling::bridge_sampler()] using historical data sets (for computing the log normalizing
-#'    constant for CP)}
+#'    \item{bs.hist}{an object of class `bridge` or `bridge_list` containing the output from using
+#'    [bridgesampling::bridge_sampler()] to compute the logarithm of the normalizing constant of the CP using historical
+#'    data sets}
 #'
+#'    \item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+#'
+#'    \item{max_Rhat}{the maximum Rhat}
 #'  }
 #'
 #' @references
@@ -71,76 +70,41 @@
 #'   )
 #'   glm.logml.commensurate(
 #'     post.samples = d.cp,
-#'     formula = formula, family = family,
-#'     data.list = data_list,
-#'     p.spike = 0.1,
 #'     bridge.args = list(silent = TRUE),
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
 #' }
 glm.logml.commensurate = function(
     post.samples,
-    formula,
-    family,
-    data.list,
-    offset.list       = NULL,
-    beta0.mean        = NULL,
-    beta0.sd          = NULL,
-    disp.mean         = NULL,
-    disp.sd           = NULL,
-    p.spike           = 0.1,
-    spike.mean        = 200,
-    spike.sd          = 0.1,
-    slab.mean         = 0,
-    slab.sd           = 5,
     bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
     ...
 ) {
-  K = length(data.list)
+  stan.data = attr(post.samples, 'data')
+  K         = stan.data$K
   if ( K == 1 ){
     stop("data.list should include at least one historical data set")
   }
 
-  ## get Stan data for CP
-  standat = get.stan.data.cp(
-    formula        = formula,
-    family         = family,
-    data.list      = data.list,
-    offset.list    = offset.list,
-    beta0.mean     = beta0.mean,
-    beta0.sd       = beta0.sd,
-    disp.mean      = disp.mean,
-    disp.sd        = disp.sd,
-    p.spike        = p.spike,
-    spike.mean     = spike.mean,
-    spike.sd       = spike.sd,
-    slab.mean      = slab.mean,
-    slab.sd        = slab.sd
-  )
-
-  ## check the format of post.samples
-  post.samples.checks(post.samples, colnames(standat$X), family)
-
   d        = as.matrix(post.samples)
   ## rename parameters
-  p        = standat$p
-  X        = standat$X
+  p        = stan.data$p
+  X        = stan.data$X
   oldnames = c(paste0("beta[", 1:p, "]"), paste0("beta0[", 1:p, "]"))
   newnames = c(colnames(X), paste0( colnames(X), '_hist') )
   colnames(d)[colnames(d) %in% newnames] = oldnames
-  if ( !family$family %in% c('binomial', 'poisson') ) {
+  if ( stan.data$dist > 2 ) {
     oldnames = c(oldnames, 'dispersion', paste0( 'dispersion', '_hist_', 1:(K-1) ))
   }
   oldnames = c(oldnames, paste0("comm_prec[", 1:p,"]"))
   d = d[, oldnames, drop=F]
 
   ## compute log normalizing constants for half-normal priors
-  standat$lognc_spike = pnorm(0, mean = standat$mu_spike, sd = standat$sigma_spike, lower.tail = F, log.p = T)
-  standat$lognc_slab  = pnorm(0, mean = standat$mu_slab, sd = standat$sigma_slab, lower.tail = F, log.p = T)
-  standat$lognc_disp  = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
+  stan.data$lognc_spike = pnorm(0, mean = stan.data$mu_spike, sd = stan.data$sigma_spike, lower.tail = F, log.p = T)
+  stan.data$lognc_slab  = pnorm(0, mean = stan.data$mu_slab, sd = stan.data$sigma_slab, lower.tail = F, log.p = T)
+  stan.data$lognc_disp  = sum( pnorm(0, mean = stan.data$disp_mean, sd = stan.data$disp_sd, lower.tail = F, log.p = T) )
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
@@ -198,7 +162,7 @@ glm.logml.commensurate = function(
 
   lb = rep(-Inf, p*2)
   ub = rep(Inf, p*2)
-  if( standat$dist > 2 ) {
+  if( stan.data$dist > 2 ) {
     lb = c(lb, rep(0, K))
     ub = c(ub, rep(Inf, K))
   }
@@ -213,47 +177,71 @@ glm.logml.commensurate = function(
       list(
         "samples" = d,
         'log_posterior' = log_density,
-        'data' = standat,
+        'data' = stan.data,
         'lb' = lb,
         'ub' = ub),
       bridge.args
     )
   )
 
-  ## estimate log normalizing constant for CP using historical data sets
-  if ( !is.null(disp.mean) && (length(disp.mean) != 1) ){
-    disp.mean = disp.mean[-1]
-  }
-  if ( !is.null(disp.sd) && (length(disp.sd) != 1) ){
-    disp.sd = disp.sd[-1]
-  }
+  ## get Stan data for CP using historical data sets
+  hist.stan.data           = stan.data
+  hist.stan.data$K         = K - 1
+  n                        = stan.data$end_idx[1] ## current data sample size
+  hist.stan.data$N         = stan.data$N - n
+  hist.stan.data$start_idx = stan.data$start_idx[-1] - n
+  hist.stan.data$end_idx   = stan.data$end_idx[-1] - n
+  hist.stan.data$y         = stan.data$y[-(1:n)]
+  hist.stan.data$X         = stan.data$X[-(1:n), ]
+  hist.stan.data$disp_mean = stan.data$disp_mean[-1]
+  hist.stan.data$disp_sd   = stan.data$disp_sd[-1]
+  hist.stan.data$offs      = stan.data$offs[-(1:n)]
+
+  ## sample from CP using historical data sets
+  glm_commensurate_prior = instantiate::stan_package_model(
+    name = "glm_commensurate_prior",
+    package = "hdbayes"
+  )
+  fit = glm_commensurate_prior$sample(data = hist.stan.data,
+                                iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                                ...)
+  summ = posterior::summarise_draws(fit)
+
+  hist.post.samples = fit$draws(format = 'draws_df')
+  attr(x = hist.post.samples, which = 'data') = hist.stan.data
+
+  ## compute log normalizing constant for CP using historical data sets
   res.hist = glm.commensurate.lognc(
-    formula           = formula,
-    family            = family,
-    hist.data.list    = data.list[-1],
-    hist.offset.list  = offset.list[-1],
-    beta0.mean        = beta0.mean,
-    beta0.sd          = beta0.sd,
-    hist.disp.mean    = disp.mean,
-    hist.disp.sd      = disp.sd,
-    p.spike           = p.spike,
-    spike.mean        = spike.mean,
-    spike.sd          = spike.sd,
-    slab.mean         = slab.mean,
-    slab.sd           = slab.sd,
-    bridge.args       = bridge.args,
-    iter_warmup       = iter_warmup,
-    iter_sampling     = iter_sampling,
-    chains            = chains,
-    ...
+    post.samples   = hist.post.samples,
+    bridge.args    = bridge.args
   )
 
-  ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
+  ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
+  ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'   = "Commensurate",
-    'logml'   = bs$logml - res.hist$lognc,
-    'bs'      = bs,
-    'bs.hist' = res.hist$bs
+    'model'        = "Commensurate",
+    'logml'        = bs$logml - res.hist$lognc,
+    'bs'           = bs,
+    'bs.hist'      = res.hist$bs,
+    'min_ess_bulk' = min(summ[, 'ess_bulk']),
+    'max_Rhat'     = max(summ[, 'rhat'])
   )
+
+  if ( res[['min_ess_bulk']] < 1000 )
+    warning(
+      paste0(
+        'The minimum bulk effective sample size of the MCMC sampling is ',
+        round(res[['min_ess_bulk']], 4),
+        '. It is recommended to have at least 1000. Try increasing the number of iterations.'
+      )
+    )
+  if ( res[['max_Rhat']] > 1.10 )
+    warning(
+      paste0(
+        'The maximum Rhat of the MCMC sampling is ',
+        round(res[['max_Rhat']], 4),
+        '. It is recommended to have a maximum Rhat of no more than 1.1. Try increasing the number of iterations.'
+      )
+    )
   return(res)
 }
