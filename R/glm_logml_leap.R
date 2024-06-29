@@ -1,34 +1,30 @@
-#' Log marginal likelihood of a GLM under Latent Exchangeability Prior (LEAP)
+#' Log marginal likelihood of a GLM under latent exchangeability prior (LEAP)
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under LEAP.
+#' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
+#' likelihood of a GLM under the latent exchangeability prior (LEAP).
 #'
-#' This function shares the same arguments as [glm.leap()], while introducing two additional
-#' parameters: `post.samples` and `bridge.args`. `post.samples` provides posterior samples under LEAP
-#' (e.g., the output from [glm.leap()]), whereas `bridge.args` specifies arguments to pass onto
-#' [bridgesampling::bridge_sampler()] (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`).
+#' @description The arguments related to MCMC sampling are utilized to draw samples from the LEAP. These
+#' samples are then used to compute the logarithm of the normalizing constant of the LEAP using historical
+#' data sets.
 #'
-#' It is important to ensure that the values assigned to the shared arguments (excluding those relevant
-#' for MCMC sampling) in this function and [glm.leap()] match with those used in generating
-#' `post.samples`. The arguments pertinent to MCMC sampling are utilized to compute the normalizing
-#' constants for LEAP.
-#'
-#' @include get_stan_data.R
-#' @include data_checks.R
 #' @include expfam_loglik.R
 #' @include mixture_loglik.R
 #' @include glm_leap_lognc.R
 #'
 #' @export
 #'
-#' @inheritParams glm.leap
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under LEAP, such as the output from [glm.leap()]. Each row corresponds
-#'                          to the posterior samples obtained from one iteration of MCMC. The column names of `post.samples`
-#'                          should include the names of covariates for regression coefficients, such as "(Intercept)",
-#'                          and "dispersion" for the dispersion parameter, if applicable.
-#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-#'                          onto [bridgesampling::bridge_sampler()].
+#' @param post.samples      output from [glm.leap()] giving posterior samples of a GLM under the latent exchangeability
+#'                          prior (LEAP), with an attribute called 'data' which includes the list of variables specified
+#'                          in the data block of the Stan program.
+#' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
+#'                          pass onto [bridgesampling::bridge_sampler()].
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`
+#'                          in `sample()` method in cmdstanr package.
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in `sample()` method in cmdstanr package.
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method
+#'                          in cmdstanr package.
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
 #'  The function returns a `list` with the following objects
@@ -38,13 +34,17 @@
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
-#'    \item{bs}{an object of class `bridge` or `bridge_list` giving the output from
-#'    [bridgesampling::bridge_sampler()] using all data sets (including current and historical data)}
+#'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using
+#'    [bridgesampling::bridge_sampler()] to compute the logarithm of the normalizing constant of the
+#'    latent exchangeability prior (LEAP) using all data sets}
 #'
-#'    \item{bs.hist}{an object of class `bridge` or `bridge_list` giving the output from
-#'    [bridgesampling::bridge_sampler()] using historical data sets (for computing the log normalizing
-#'    constant for LEAP)}
+#'    \item{bs.hist}{an object of class `bridge` or `bridge_list` containing the output from using
+#'    [bridgesampling::bridge_sampler()] to compute the logarithm of the normalizing constant of the
+#'    LEAP using historical data sets}
 #'
+#'    \item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+#'
+#'    \item{max_Rhat}{the maximum Rhat}
 #'  }
 #'
 #' @references
@@ -71,58 +71,29 @@
 #'   )
 #'   glm.logml.leap(
 #'     post.samples = d.leap,
-#'     formula = formula, family = family,
-#'     data.list = data_list,
-#'     K = 2,
 #'     bridge.args = list(silent = TRUE),
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
 #' }
 glm.logml.leap = function(
     post.samples,
-    formula,
-    family,
-    data.list,
-    K                 = 2,
-    prob.conc         = NULL,
-    offset.list       = NULL,
-    beta.mean         = NULL,
-    beta.sd           = NULL,
-    disp.mean         = NULL,
-    disp.sd           = NULL,
     bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
     ...
 ) {
-  if ( length(data.list) == 1 ){
+  stan.data = attr(post.samples, 'data')
+  K         = stan.data$K
+  if ( K == 1 ){
     stop("data.list should include at least one historical data set")
   }
 
-  ## get Stan data for LEAP
-  standat = get.stan.data.leap(
-    formula        = formula,
-    family         = family,
-    data.list      = data.list,
-    K              = K,
-    prob.conc      = prob.conc,
-    offset.list    = offset.list,
-    beta.mean      = beta.mean,
-    beta.sd        = beta.sd,
-    disp.mean      = disp.mean,
-    disp.sd        = disp.sd
-  )
-
-  ## check the format of post.samples
-  post.samples.checks(post.samples, colnames(standat$X), family, is.LEAP = TRUE)
-
   d        = as.matrix(post.samples)
 
-  p        = standat$p
-  K        = standat$K
+  p        = stan.data$p
   oldnames = paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")
-  if ( !family$family %in% c('binomial', 'poisson') ) {
+  if ( stan.data$dist > 2 ) {
     oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
   }
   oldnames = c(oldnames, "gamma")
@@ -132,7 +103,7 @@ glm.logml.leap = function(
   d = d[, oldnames, drop=F]
 
   ## compute log normalizing constants (lognc) for half-normal prior on dispersion
-  standat$lognc_disp  = sum( pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T) )
+  stan.data$lognc_disp  = sum( pnorm(0, mean = stan.data$disp_mean, sd = stan.data$disp_sd, lower.tail = F, log.p = T) )
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
@@ -178,12 +149,12 @@ glm.logml.leap = function(
 
   lb = rep(-Inf, p*K)
   ub = rep(Inf, p*K)
-  if( standat$dist > 2 ) {
+  if( stan.data$dist > 2 ) {
     lb = c(lb, rep(0, K) )
     ub = c(ub, rep(Inf, K) )
   }
-  lb = c(lb, standat$gamma_lower)
-  ub = c(ub, standat$gamma_upper)
+  lb = c(lb, stan.data$gamma_lower)
+  ub = c(ub, stan.data$gamma_upper)
   if( K > 2 ){
     lb = c(lb, rep(0, K-2))
     ub = c(ub, rep(1, K-2))
@@ -197,38 +168,64 @@ glm.logml.leap = function(
       list(
         "samples" = d,
         'log_posterior' = log_density,
-        'data' = standat,
+        'data' = stan.data,
         'lb' = lb,
         'ub' = ub),
       bridge.args
     )
   )
 
-  ## estimate log normalizing constant for LEAP using historical data sets
+  ## get Stan data for LEAP using historical data sets
+  hist.stan.data = stan.data[c('n0', 'p', 'K', 'y0', 'X0', 'mean_beta',
+                                'sd_beta', 'disp_mean', 'disp_sd', 'conc',
+                                'gamma_lower', 'gamma_upper', 'dist',
+                                'link', 'offs0')]
+
+  ## sample from LEAP using historical data sets
+  glm_leap_prior = instantiate::stan_package_model(
+    name = "glm_leap_prior",
+    package = "hdbayes"
+  )
+  fit      = glm_leap_prior$sample(data = hist.stan.data,
+                                   iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                                   ...)
+  summ = posterior::summarise_draws(fit)
+
+  hist.post.samples = fit$draws(format = 'draws_df')
+  attr(x = hist.post.samples, which = 'data') = hist.stan.data
+
+  ## compute log normalizing constant for LEAP using historical data sets
   res.hist = glm.leap.lognc(
-    formula           = formula,
-    family            = family,
-    hist.data.list    = data.list[-1],
-    K                 = K,
-    prob.conc         = prob.conc,
-    hist.offset.list  = offset.list[-1],
-    beta.mean         = beta.mean,
-    beta.sd           = beta.sd,
-    disp.mean         = disp.mean,
-    disp.sd           = disp.sd,
-    bridge.args       = bridge.args,
-    iter_warmup       = iter_warmup,
-    iter_sampling     = iter_sampling,
-    chains            = chains,
-    ...
+    post.samples   = hist.post.samples,
+    bridge.args    = bridge.args
   )
 
-  ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
+  ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
+  ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'   = "LEAP",
-    'logml'   = bs$logml - res.hist$lognc,
-    'bs'      = bs,
-    'bs.hist' = res.hist$bs
+    'model'        = "LEAP",
+    'logml'        = bs$logml - res.hist$lognc,
+    'bs'           = bs,
+    'bs.hist'      = res.hist$bs,
+    'min_ess_bulk' = min(summ[, 'ess_bulk']),
+    'max_Rhat'     = max(summ[, 'rhat'])
   )
+
+  if ( res[['min_ess_bulk']] < 1000 )
+    warning(
+      paste0(
+        'The minimum bulk effective sample size of the MCMC sampling is ',
+        round(res[['min_ess_bulk']], 4),
+        '. It is recommended to have at least 1000. Try increasing the number of iterations.'
+      )
+    )
+  if ( res[['max_Rhat']] > 1.10 )
+    warning(
+      paste0(
+        'The maximum Rhat of the MCMC sampling is ',
+        round(res[['max_Rhat']], 4),
+        '. It is recommended to have a maximum Rhat of no more than 1.1. Try increasing the number of iterations.'
+      )
+    )
   return(res)
 }
