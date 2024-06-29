@@ -2,72 +2,17 @@
 % Please edit documentation in R/glm_leap_lognc.R
 \name{glm.leap.lognc}
 \alias{glm.leap.lognc}
-\title{Estimate the logarithm of the normalizing constant for Latent Exchangeability Prior (LEAP)}
+\title{Estimate the logarithm of the normalizing constant for latent exchangeability prior (LEAP)}
 \usage{
-glm.leap.lognc(
-  formula,
-  family,
-  hist.data.list,
-  K = 2,
-  prob.conc = NULL,
-  hist.offset.list = NULL,
-  beta.mean = NULL,
-  beta.sd = NULL,
-  disp.mean = NULL,
-  disp.sd = NULL,
-  bridge.args = NULL,
-  iter_warmup = 1000,
-  iter_sampling = 1000,
-  chains = 4,
-  ...
-)
+glm.leap.lognc(post.samples, bridge.args = NULL)
 }
 \arguments{
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates}
+\item{post.samples}{output from \code{\link[=glm.leap]{glm.leap()}} giving posterior samples of a GLM under the latent exchangeability
+prior (LEAP), with an attribute called 'data' which includes the list of variables specified
+in the data block of the Stan program.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}}
-
-\item{hist.data.list}{a list of \code{data.frame}s giving historical data sets.}
-
-\item{K}{the desired number of classes to identify. Defaults to 2.}
-
-\item{prob.conc}{a scalar or a vector of length \code{K} giving the concentration parameters for Dirichlet prior.
-If length == 2, a \code{beta(prob.conc[1], prob.conc[2])} prior is used. If a scalar is provided,
-prob.conc will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.}
-
-\item{hist.offset.list}{a list of matrices giving the offset for historical data. For each matrix, the number of
-rows corresponds to observations and columns correspond to classes. Defaults to a list of
-matrices of 0s.}
-
-\item{beta.mean}{a scalar or a \verb{p x K} matrix of mean parameters for initial prior on regression coefficients,
-where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
-beta.mean will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.}
-
-\item{beta.sd}{a scalar or a \verb{p x K} matrix of sd parameters for the initial prior on regression coefficients,
-where \code{p} is the number of regression coefficients (including intercept). If a scalar is provided,
-same as for beta.mean. Defaults to a matrix of 10s.}
-
-\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the location
-parameters for the half-normal priors on the dispersion parameters. If a scalar is provided,
-disp.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
-
-\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the scale
-parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
-as for disp.mean. Defaults to a vector of 10s.}
-
-\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
-
-\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
-\code{sample()} method in cmdstanr package.}
-
-\item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
-in \code{sample()} method in cmdstanr package.}
-
-\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
-cmdstanr package.}
-
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub})
+to pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 }
 \value{
 The function returns a \code{list} with the following objects
@@ -75,33 +20,45 @@ The function returns a \code{list} with the following objects
 \describe{
 \item{lognc}{the estimated logarithm of the normalizing constant}
 
-\item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
-
-\item{max_Rhat}{the maximum Rhat}
-
 \item{bs}{an object of class \code{bridge} or \code{bridge_list} giving the output from \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}}
 }
 }
 \description{
-Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
-constant for LEAP using historical data sets.
+Uses bridge sampling to estimate the logarithm of the normalizing constant for the latent exchangeability
+prior (LEAP) using historical data sets.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
   data(actg036)
   ## take subset for speed purposes
-  actg036 = actg036[1:50, ]
-  glm.leap.lognc(
-    formula = outcome ~ scale(age) + race + treatment + scale(cd4),
-    family = binomial('logit'),
-    hist.data.list = list(histdata = actg036),
+  actg036   = actg036[1:50, ]
+  formula   = outcome ~ scale(age) + race + treatment + scale(cd4)
+  family    = binomial('logit')
+  hist.data.list = list(histdata = actg036)
+  hist.standat = hdbayes:::get.stan.data.leap(
+    formula = formula,
+    family = family,
+    data.list = hist.data.list,
     K = 2,
-    chains = 1, iter_warmup = 500, iter_sampling = 2000
+    all.hist = T
+  )
+  glm_leap_prior = instantiate::stan_package_model(
+    name = "glm_leap_prior",
+    package = "hdbayes"
+  )
+  fit = glm_leap_prior$sample(
+    data = hist.standat,
+    iter_warmup = 500, iter_sampling = 1000, chains = 1
+  )
+  d.leap.hist  = fit$draws(format = 'draws_df')
+  attr(x = d.leap.hist, which = 'data') = hist.standat
+  glm.leap.lognc(
+    post.samples = d.leap.hist
   )
 }
 }
 \references{
-Hobbs, B. P., Carlin, B. P., Mandrekar, S. J., and Sargent, D. J. (2011). Hierarchical commensurate and power prior models for adaptive incorporation of historical information in clinical trials. Biometrics, 67(3), 1047–1056.
+Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
 
 Gronau, Q. F., Singmann, H., and Wagenmakers, E.-J. (2020). bridgesampling: An r package for estimating normalizing constants. Journal of Statistical Software, 92(10).
 }
