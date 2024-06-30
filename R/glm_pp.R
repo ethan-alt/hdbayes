@@ -1,6 +1,6 @@
 #' Posterior of power prior (PP) with fixed \eqn{a_0}
 #'
-#' Sample from the posterior distribution of a GLM using the PP by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>.
+#' Sample from the posterior distribution of a GLM using the power prior (PP) by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>.
 #'
 #' The power prior parameters (\eqn{a_0}'s) are treated as fixed. The initial priors on the regression coefficients
 #' are independent normal priors. The current and historical data sets are assumed to have a common dispersion parameter
@@ -15,18 +15,18 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                          are the historical data sets.
-#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
-#'                          the length of data.list. The length of each element of offset.list is equal to the number
-#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of `offset.list` is equal to
+#'                          the length of `data.list`. The length of each element of `offset.list` is equal to the number
+#'                          of rows in the corresponding element of `data.list`. Defaults to a list of vectors of 0s.
 #' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
-#'                          beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#'                          `beta.mean` will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
 #' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-#'                          same as for beta.mean. Defaults to a vector of 10s.
+#'                          same as for `beta.mean`. Defaults to a vector of 10s.
 #' @param a0.vals           a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
 #'                          data sets giving the (fixed) power prior parameter for each historical data set. Each element of
-#'                          vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.
+#'                          vector should be between 0 and 1. If a scalar is provided, same as for `beta.mean`.
 #' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -35,10 +35,11 @@
 #'                          in `sample()` method in cmdstanr package.
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
 #'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @references
 #'  Chen, M.-H. and Ibrahim, J. G. (2000). Power prior distributions for Regression Models. Statistical Science, 15(1).
@@ -108,5 +109,7 @@ glm.pp = function(
     newnames = c(newnames, 'dispersion')
   }
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }

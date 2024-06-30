@@ -30,19 +30,19 @@ are the historical data sets.}
 
 \item{a0.vals}{a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
 data sets giving the (fixed) power prior parameter for each historical data set. Each element of
-vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.}
+vector should be between 0 and 1. If a scalar is provided, same as for \code{beta.mean}.}
 
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
+\item{offset.list}{a list of vectors giving the offsets for each data. The length of \code{offset.list} is equal to
+the length of \code{data.list}. The length of each element of \code{offset.list} is equal to the number
+of rows in the corresponding element of \code{data.list}. Defaults to a list of vectors of 0s.}
 
 \item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
-beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
+\code{beta.mean} will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 
 \item{beta.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-same as for beta.mean. Defaults to a vector of 10s.}
+same as for \code{beta.mean}. Defaults to a vector of 10s.}
 
 \item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
 
@@ -57,13 +57,14 @@ in \code{sample()} method in cmdstanr package.}
 \item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
 cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
+the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using the PP by Ibrahim and Chen (2000) \url{doi:10.1214/ss/1009212673}.
+Sample from the posterior distribution of a GLM using the power prior (PP) by Ibrahim and Chen (2000) \url{doi:10.1214/ss/1009212673}.
 }
 \details{
 The power prior parameters (\eqn{a_0}'s) are treated as fixed. The initial priors on the regression coefficients
