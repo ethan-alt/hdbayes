@@ -22,7 +22,7 @@
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
 #'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
-#'    to compute the logarithm of the normalizing constant of the non-informative reference prior}
+#'    to compute the logarithm of the marginal likelihood of the non-informative reference prior}
 #'  }
 #'
 #' @references
