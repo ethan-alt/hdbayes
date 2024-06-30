@@ -74,6 +74,9 @@ data.checks.leap = function(
 ) {
   data.checks(formula, family, data.list, NULL)
 
+  if ( K < 2 )
+    stop("K should be at least 2")
+
   if ( K != 2 ){
     if( !is.numeric(K) )
       stop("K must be a numeric value")
