@@ -25,9 +25,9 @@ glm.napp(
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
 are the historical datasets.}
 
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
+\item{offset.list}{a list of vectors giving the offsets for each data. The length of \code{offset.list} is equal to
+the length of \code{data.list}. The length of each element of \code{offset.list} is equal to the number
+of rows in the corresponding element of \code{data.list}. Defaults to a list of vectors of 0s.}
 
 \item{a0.shape1}{first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 \code{a0.shape2 == 1}, a uniform prior is used.}
@@ -44,10 +44,11 @@ in \code{sample()} method in cmdstanr package.}
 \item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
 cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
+the list of variables specified in the data block of the Stan program.
 }
 \description{
 Sample from the posterior distribution of a GLM using the NAPP by Ibrahim et al. (2015) \url{doi:10.1002/sim.6728}.

@@ -16,9 +16,9 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                          are the historical datasets.
-#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
-#'                          the length of data.list. The length of each element of offset.list is equal to the number
-#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of `offset.list` is equal to
+#'                          the length of `data.list`. The length of each element of `offset.list` is equal to the number
+#'                          of rows in the corresponding element of `data.list`. Defaults to a list of vectors of 0s.
 #' @param a0.shape1         first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
@@ -29,10 +29,11 @@
 #'                          in `sample()` method in cmdstanr package.
 #' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
 #'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @references
 #'  Ibrahim, J. G., Chen, M., Gwon, Y., and Chen, F. (2015). The power prior: Theory and applications. Statistics in Medicine, 34(28), 3724–3749.
@@ -98,5 +99,7 @@ glm.napp = function(
   oldnames = c(oldnames, paste0('a0s[', 1:K, ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:K))
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }
