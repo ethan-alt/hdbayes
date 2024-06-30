@@ -1,41 +1,17 @@
 #' Log marginal likelihood of a GLM under normalized asymptotic power prior (NAPP)
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under NAPP.
+#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a GLM under the
+#' normalized asymptotic power prior (NAPP).
 #'
-#' This function mirrors the arguments of [glm.napp()] (except for those relevant for MCMC sampling),
-#' and introduces two additional arguments: `post.samples` and `bridge.args`. `post.samples` provides
-#' posterior samples from the GLM under NAPP (e.g., the output from [glm.napp()]), while `bridge.args`
-#' specifies arguments to pass onto [bridgesampling::bridge_sampler()] (other than `samples`,
-#' `log_posterior`, `data`, `lb`, `ub`).
-#'
-#' It is crucial to ensure that the values assigned to the shared arguments in this function and
-#' [glm.napp()] correspond to those used in generating `post.samples`.
-#'
-#' @include get_stan_data.R
-#' @include data_checks.R
 #' @include expfam_loglik.R
 #'
 #' @export
 #'
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under NAPP, such as the output from [glm.napp()]. Each row corresponds to
-#'                          the posterior samples obtained from one iteration of MCMC. The column names of `post.samples`
-#'                          should include the names of covariates for regression coefficients, such as "(Intercept)", and
-#'                          "dispersion" for the dispersion parameter, if applicable.
-#' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
-#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical datasets.
-#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
-#'                          the length of data.list. The length of each element of offset.list is equal to the number
-#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
-#' @param a0.shape1         first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
-#'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
-#'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass onto
-#'                          [bridgesampling::bridge_sampler()].
+#' @param post.samples      output from [glm.napp()] giving posterior samples of a GLM under the normalized asymptotic
+#'                          power prior (NAPP), with an attribute called 'data' which includes the list of variables
+#'                          specified in the data block of the Stan program.
+#' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
+#'                          pass onto [bridgesampling::bridge_sampler()].
 #'
 #' @return
 #'  The function returns a `list` with the following objects
@@ -45,7 +21,8 @@
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
-#'    \item{bs}{an object of class `bridge` or `bridge_list` giving the output from [bridgesampling::bridge_sampler()]}
+#'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
+#'    to compute the logarithm of the marginal likelihood of the normalized asymptotic power prior (NAPP)}
 #'  }
 #'
 #' @references
@@ -70,43 +47,25 @@
 #'   )
 #'   glm.logml.napp(
 #'     post.samples = d.napp,
-#'     formula = formula, family = family,
-#'     data.list = data_list,
 #'     bridge.args = list(silent = TRUE)
 #'   )
 #' }
 glm.logml.napp = function(
     post.samples,
-    formula,
-    family,
-    data.list,
-    offset.list       = NULL,
-    a0.shape1         = 1,
-    a0.shape2         = 1,
     bridge.args       = NULL
 ) {
   ## get Stan data for NAPP
-  standat = get.stan.data.napp(
-    formula     = formula,
-    family      = family,
-    data.list   = data.list,
-    offset.list = offset.list,
-    a0.shape1   = a0.shape1,
-    a0.shape2   = a0.shape2
-  )
+  stan.data = attr(post.samples, 'data')
+  d         = as.matrix(post.samples)
 
-  ## check the format of post.samples
-  post.samples.checks(post.samples, colnames(standat$X), family)
-
-  d        = as.matrix(post.samples)
   ## rename parameters
-  p        = standat$p
-  X        = standat$X
-  K        = standat$K
+  p        = stan.data$p
+  X        = stan.data$X
+  K        = stan.data$K
   oldnames = paste0("beta[", 1:p, "]")
   newnames = colnames(X)
   colnames(d)[colnames(d) %in% newnames] = oldnames
-  if ( !family$family %in% c('binomial', 'poisson') ) {
+  if ( stan.data$dist > 2 ) {
     oldnames = c(oldnames, 'dispersion')
   }
   oldnames = c(oldnames, paste0('logit_a0s[', 1:K, "]"))
@@ -149,12 +108,12 @@ glm.logml.napp = function(
 
   lb           = rep(-Inf, p)
   ub           = rep(Inf, p)
-  if( standat$dist > 2 ) {
+  if( stan.data$dist > 2 ) {
     lb = c(lb, 0)
     ub = c(ub, Inf)
   }
-  lb        = c(lb, rep(-Inf, standat$K))
-  ub        = c(ub, rep(Inf, standat$K))
+  lb        = c(lb, rep(-Inf, stan.data$K))
+  ub        = c(ub, rep(Inf, stan.data$K))
   names(ub) = colnames(d)
   names(lb) = names(ub)
 
@@ -164,7 +123,7 @@ glm.logml.napp = function(
       list(
         "samples" = d,
         'log_posterior' = log_density,
-        'data' = standat,
+        'data' = stan.data,
         'lb' = lb,
         'ub' = ub),
       bridge.args

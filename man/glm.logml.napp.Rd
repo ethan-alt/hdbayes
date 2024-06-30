@@ -4,43 +4,15 @@
 \alias{glm.logml.napp}
 \title{Log marginal likelihood of a GLM under normalized asymptotic power prior (NAPP)}
 \usage{
-glm.logml.napp(
-  post.samples,
-  formula,
-  family,
-  data.list,
-  offset.list = NULL,
-  a0.shape1 = 1,
-  a0.shape2 = 1,
-  bridge.args = NULL
-)
+glm.logml.napp(post.samples, bridge.args = NULL)
 }
 \arguments{
-\item{post.samples}{an object of class \code{draws_df}, \code{draws_matrix}, \code{matrix}, or \code{data.frame} giving posterior
-samples of a GLM under NAPP, such as the output from \code{\link[=glm.napp]{glm.napp()}}. Each row corresponds to
-the posterior samples obtained from one iteration of MCMC. The column names of \code{post.samples}
-should include the names of covariates for regression coefficients, such as "(Intercept)", and
-"dispersion" for the dispersion parameter, if applicable.}
+\item{post.samples}{output from \code{\link[=glm.napp]{glm.napp()}} giving posterior samples of a GLM under the normalized asymptotic
+power prior (NAPP), with an attribute called 'data' which includes the list of variables
+specified in the data block of the Stan program.}
 
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
-
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
-
-\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical datasets.}
-
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
-
-\item{a0.shape1}{first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
-\code{a0.shape2 == 1}, a uniform prior is used.}
-
-\item{a0.shape2}{second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
-\code{a0.shape2 == 1}, a uniform prior is used.}
-
-\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass onto
-\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
+\item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}) to
+pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 }
 \value{
 The function returns a \code{list} with the following objects
@@ -50,22 +22,13 @@ The function returns a \code{list} with the following objects
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
-\item{bs}{an object of class \code{bridge} or \code{bridge_list} giving the output from \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}}
+\item{bs}{an object of class \code{bridge} or \code{bridge_list} containing the output from using \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}
+to compute the logarithm of the marginal likelihood of the normalized asymptotic power prior (NAPP)}
 }
 }
 \description{
-Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-likelihood of a GLM under NAPP.
-}
-\details{
-This function mirrors the arguments of \code{\link[=glm.napp]{glm.napp()}} (except for those relevant for MCMC sampling),
-and introduces two additional arguments: \code{post.samples} and \code{bridge.args}. \code{post.samples} provides
-posterior samples from the GLM under NAPP (e.g., the output from \code{\link[=glm.napp]{glm.napp()}}), while \code{bridge.args}
-specifies arguments to pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} (other than \code{samples},
-\code{log_posterior}, \code{data}, \code{lb}, \code{ub}).
-
-It is crucial to ensure that the values assigned to the shared arguments in this function and
-\code{\link[=glm.napp]{glm.napp()}} correspond to those used in generating \code{post.samples}.
+Uses bridge sampling to estimate the logarithm of the marginal likelihood of a GLM under the
+normalized asymptotic power prior (NAPP).
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
@@ -84,8 +47,6 @@ if (instantiate::stan_cmdstan_exists()) {
   )
   glm.logml.napp(
     post.samples = d.napp,
-    formula = formula, family = family,
-    data.list = data_list,
     bridge.args = list(silent = TRUE)
   )
 }
