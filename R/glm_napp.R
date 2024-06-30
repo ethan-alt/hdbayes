@@ -1,11 +1,12 @@
 #' Posterior of normalized asymptotic power prior (NAPP)
 #'
-#' Sample from the posterior distribution of a GLM using the NAPP by Ibrahim et al. (2015) <doi:10.1002/sim.6728>.
+#' Sample from the posterior distribution of a GLM using the normalized asymptotic power prior (NAPP) by
+#' Ibrahim et al. (2015) <doi:10.1002/sim.6728>.
 #'
-#' The NAPP assumes that the regression coefficients and logarithm of the dispersion parameter are a multivariate
-#' normal distribution with mean equal to the maximum likelihood estimate of the historical data and covariance
-#' matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher information matrix of the historical data,
-#' where \eqn{a_0} is the power prior parameter (treated as random).
+#' The normalized asymptotic power prior (NAPP) assumes that the regression coefficients and logarithm of the
+#' dispersion parameter are a multivariate normal distribution with mean equal to the maximum likelihood
+#' estimate of the historical data and covariance matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher
+#' information matrix of the historical data, where \eqn{a_0} is the power prior parameter (treated as random).
 #'
 #' @include data_checks.R
 #' @include get_stan_data.R

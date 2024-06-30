@@ -51,13 +51,14 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using the NAPP by Ibrahim et al. (2015) \url{doi:10.1002/sim.6728}.
+Sample from the posterior distribution of a GLM using the normalized asymptotic power prior (NAPP) by
+Ibrahim et al. (2015) \url{doi:10.1002/sim.6728}.
 }
 \details{
-The NAPP assumes that the regression coefficients and logarithm of the dispersion parameter are a multivariate
-normal distribution with mean equal to the maximum likelihood estimate of the historical data and covariance
-matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher information matrix of the historical data,
-where \eqn{a_0} is the power prior parameter (treated as random).
+The normalized asymptotic power prior (NAPP) assumes that the regression coefficients and logarithm of the
+dispersion parameter are a multivariate normal distribution with mean equal to the maximum likelihood
+estimate of the historical data and covariance matrix equal to \eqn{a_0^{-1}} multiplied by the inverse Fisher
+information matrix of the historical data, where \eqn{a_0} is the power prior parameter (treated as random).
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {

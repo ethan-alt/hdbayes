@@ -1,9 +1,10 @@
-#' Posterior of Latent Exchangeability Prior (LEAP)
+#' Posterior of latent exchangeability prior (LEAP)
 #'
-#' Sample from the posterior distribution of a GLM using the LEAP by Alt et al. (2023).
+#' Sample from the posterior distribution of a GLM using the latent exchangeability prior (LEAP) by Alt et al. (2023).
 #'
-#' The LEAP discounts the historical data by identifying the most relevant individuals from the historical data.
-#' It is equivalent to a prior induced by the posterior of a finite mixture model for the historical data set.
+#' The latent exchangeability prior (LEAP) discounts the historical data by identifying the most relevant individuals
+#' from the historical data. It is equivalent to a prior induced by the posterior of a finite mixture model for the
+#' historical data set.
 #'
 #' @include data_checks.R
 #' @include get_stan_data.R

@@ -2,7 +2,7 @@
 % Please edit documentation in R/glm_leap.R
 \name{glm.leap}
 \alias{glm.leap}
-\title{Posterior of Latent Exchangeability Prior (LEAP)}
+\title{Posterior of latent exchangeability prior (LEAP)}
 \usage{
 glm.leap(
   formula,
@@ -73,11 +73,12 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using the LEAP by Alt et al. (2023).
+Sample from the posterior distribution of a GLM using the latent exchangeability prior (LEAP) by Alt et al. (2023).
 }
 \details{
-The LEAP discounts the historical data by identifying the most relevant individuals from the historical data.
-It is equivalent to a prior induced by the posterior of a finite mixture model for the historical data set.
+The latent exchangeability prior (LEAP) discounts the historical data by identifying the most relevant individuals
+from the historical data. It is equivalent to a prior induced by the posterior of a finite mixture model for the
+historical data set.
 }
 \examples{
 data(actg019)
