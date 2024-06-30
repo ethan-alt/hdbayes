@@ -186,9 +186,9 @@ glm.logml.leap = function(
     name = "glm_leap_prior",
     package = "hdbayes"
   )
-  fit      = glm_leap_prior$sample(data = hist.stan.data,
-                                   iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
-                                   ...)
+  fit = glm_leap_prior$sample(data = hist.stan.data,
+                              iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                              ...)
   summ = posterior::summarise_draws(fit)
 
   hist.post.samples = fit$draws(format = 'draws_df')
@@ -207,8 +207,8 @@ glm.logml.leap = function(
     'logml'        = bs$logml - res.hist$lognc,
     'bs'           = bs,
     'bs.hist'      = res.hist$bs,
-    'min_ess_bulk' = min(summ[, 'ess_bulk']),
-    'max_Rhat'     = max(summ[, 'rhat'])
+    'min_ess_bulk' = min(summ[, 'ess_bulk'], na.rm = T),
+    'max_Rhat'     = max(summ[, 'rhat'], na.rm = T)
   )
 
   if ( res[['min_ess_bulk']] < 1000 )
