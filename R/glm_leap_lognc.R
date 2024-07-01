@@ -6,11 +6,10 @@
 #' @include expfam_loglik.R
 #' @include mixture_loglik.R
 #'
-#' @export
+#' @noRd
 #'
-#' @param post.samples      output from [glm.leap()] giving posterior samples of a GLM under the latent exchangeability
-#'                          prior (LEAP), with an attribute called 'data' which includes the list of variables specified
-#'                          in the data block of the Stan program.
+#' @param post.samples      samples from the latent exchangeability prior (LEAP), with an attribute called 'data' which
+#'                          includes the list of variables specified in the data block of the Stan program.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`)
 #'                          to pass onto [bridgesampling::bridge_sampler()].
 #'
@@ -156,4 +155,3 @@ glm.leap.lognc = function(
   )
   return(res)
 }
-

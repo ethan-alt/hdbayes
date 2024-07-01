@@ -5,11 +5,11 @@
 #'
 #' @include expfam_loglik.R
 #'
-#' @export
+#' @noRd
 #'
-#' @param post.samples      output from [glm.bhm()] giving posterior samples of a GLM under the Bayesian hierarchical
-#'                          model (BHM) or samples from the prior induced by the BHM, with an attribute called 'data'
-#'                          which includes the list of variables specified in the data block of the Stan program.
+#' @param post.samples      posterior samples of a GLM under the Bayesian hierarchical model (BHM) or samples from the
+#'                          prior induced by the BHM, with an attribute called 'data' which includes the list of variables
+#'                          specified in the data block of the Stan program.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`)
 #'                          to pass onto [bridgesampling::bridge_sampler()].
 #'
