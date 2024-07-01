@@ -14,8 +14,8 @@
 #' @export
 #'
 #' @param post.samples      output from [glm.bhm()] giving posterior samples of a GLM under the Bayesian hierarchical
-#'                          model (BHM) or samples from the prior induced by the BHM, with an attribute called 'data'
-#'                          which includes the list of variables specified in the data block of the Stan program.
+#'                          model (BHM), with an attribute called 'data' which includes the list of variables specified
+#'                          in the data block of the Stan program.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
 #'                          pass onto [bridgesampling::bridge_sampler()].
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`

@@ -15,8 +15,8 @@ glm.logml.map(
 }
 \arguments{
 \item{post.samples}{output from \code{\link[=glm.bhm]{glm.bhm()}} giving posterior samples of a GLM under the Bayesian hierarchical
-model (BHM) or samples from the prior induced by the BHM, with an attribute called 'data'
-which includes the list of variables specified in the data block of the Stan program.}
+model (BHM), with an attribute called 'data' which includes the list of variables specified
+in the data block of the Stan program.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}) to
 pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
