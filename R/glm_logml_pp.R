@@ -1,16 +1,11 @@
 #' Log marginal likelihood of a GLM under power prior (PP)
 #'
-#' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-#' likelihood of a GLM under PP.
+#' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
+#' likelihood of a GLM under the power prior (PP).
 #'
-#' This function shares the same arguments as [glm.pp()], while introducing two additional parameters:
-#' `post.samples` and `bridge.args`. `post.samples` provides posterior samples generated from the GLM
-#' under PP (e.g., the output from [glm.pp()]), whereas `bridge.args` specifies arguments to pass onto
-#' [bridgesampling::bridge_sampler()] (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`).
-#'
-#' It is important to ensure that the values assigned to the shared arguments (excluding those relevant
-#' for MCMC sampling) in this function and [glm.pp()] align with those used in generating `post.samples`.
-#' The arguments pertinent to MCMC sampling are utilized to compute the normalizing constants for PP.
+#' @description The arguments related to MCMC sampling are utilized to draw samples from the power prior (PP).
+#' These samples are then used to compute the logarithm of the normalizing constant of the PP using only historical
+#' data sets.
 #'
 #' @include data_checks.R
 #' @include expfam_loglik.R
@@ -33,10 +28,10 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples were obtained from using only
-#'  one data set (the current data), then the function returns the same result as the output from [glm.logml.reference()].
+#'  If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples are obtained from using only
+#'  one data set (the current data), then the function will return the same result as the output from [glm.logml.reference()].
 #'
-#'  If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function returns a `list` with the following objects
+#'  If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a `list` with the following objects
 #'
 #'  \describe{
 #'    \item{model}{"PP"}

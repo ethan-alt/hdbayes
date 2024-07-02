@@ -33,10 +33,10 @@ in cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples were obtained from using only
-one data set (the current data), then the function returns the same result as the output from \code{\link[=glm.logml.reference]{glm.logml.reference()}}.
+If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples are obtained from using only
+one data set (the current data), then the function will return the same result as the output from \code{\link[=glm.logml.reference]{glm.logml.reference()}}.
 
-If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function returns a \code{list} with the following objects
+If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a \code{list} with the following objects
 
 \describe{
 \item{model}{"PP"}
@@ -57,17 +57,11 @@ data sets}
 }
 \description{
 Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
-likelihood of a GLM under PP.
-}
-\details{
-This function shares the same arguments as \code{\link[=glm.pp]{glm.pp()}}, while introducing two additional parameters:
-\code{post.samples} and \code{bridge.args}. \code{post.samples} provides posterior samples generated from the GLM
-under PP (e.g., the output from \code{\link[=glm.pp]{glm.pp()}}), whereas \code{bridge.args} specifies arguments to pass onto
-\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}).
+likelihood of a GLM under the power prior (PP).
 
-It is important to ensure that the values assigned to the shared arguments (excluding those relevant
-for MCMC sampling) in this function and \code{\link[=glm.pp]{glm.pp()}} align with those used in generating \code{post.samples}.
-The arguments pertinent to MCMC sampling are utilized to compute the normalizing constants for PP.
+The arguments related to MCMC sampling are utilized to draw samples from the power prior (PP).
+These samples are then used to compute the logarithm of the normalizing constant of the PP using only historical
+data sets.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {
