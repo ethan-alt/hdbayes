@@ -6,15 +6,6 @@
 \usage{
 glm.logml.pp(
   post.samples,
-  formula,
-  family,
-  data.list,
-  a0.vals,
-  offset.list = NULL,
-  beta.mean = NULL,
-  beta.sd = NULL,
-  disp.mean = NULL,
-  disp.sd = NULL,
   bridge.args = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
@@ -23,62 +14,45 @@ glm.logml.pp(
 )
 }
 \arguments{
-\item{post.samples}{an object of class \code{draws_df}, \code{draws_matrix}, \code{matrix}, or \code{data.frame} giving posterior
-samples of a GLM under PP, such as the output from \code{\link[=glm.pp]{glm.pp()}}. Each row corresponds to the
-posterior samples obtained from one iteration of MCMC. The column names of \code{post.samples}
-should include the names of covariates for regression coefficients, such as "(Intercept)",
-and "dispersion" for the dispersion parameter, if applicable.}
+\item{post.samples}{output from \code{\link[=glm.pp]{glm.pp()}} giving posterior samples of a GLM under the power prior (PP), with
+an attribute called 'data' which includes the list of variables specified in the data block
+of the Stan program.}
 
-\item{formula}{a two-sided formula giving the relationship between the response variable and covariates.}
+\item{bridge.args}{a \code{list} giving arguments (other than \code{samples}, \code{log_posterior}, \code{data}, \code{lb}, and \code{ub}) to
+pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
-\item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
-
-\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical data sets.}
-
-\item{a0.vals}{a scalar between 0 and 1 or a vector whose dimension is equal to the number of historical
-data sets giving the (fixed) power prior parameter for each historical data set. Each element of
-vector should be between 0 and 1. If a scalar is provided, same as for beta.mean.}
-
-\item{offset.list}{a list of vectors giving the offsets for each data. The length of offset.list is equal to
-the length of data.list. The length of each element of offset.list is equal to the number
-of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.}
-
-\item{beta.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
-beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
-
-\item{beta.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-same as for beta.mean. Defaults to a vector of 10s.}
-
-\item{disp.mean}{location parameter for the half-normal prior on dispersion parameter. Defaults to 0.}
-
-\item{disp.sd}{scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.}
-
-\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
-
-\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
-\code{sample()} method in cmdstanr package.}
+\item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup}
+in \code{sample()} method in cmdstanr package.}
 
 \item{iter_sampling}{number of post-warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_sampling}
 in \code{sample()} method in cmdstanr package.}
 
-\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method in
-cmdstanr package.}
+\item{chains}{number of Markov chains to run. Defaults to 4. See the argument \code{chains} in \code{sample()} method
+in cmdstanr package.}
 
-\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
+\item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns a \code{list} with the following objects
+If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples were obtained from using only
+one data set (the current data), then the function returns the same result as the output from \code{\link[=glm.logml.reference]{glm.logml.reference()}}.
+
+If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"PP" if at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, and "PP (No Borrow)" otherwise.}
+\item{model}{"PP"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
-\item{bs}{an object of class \code{bridge} or \code{bridge_list} giving the output from \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}}
+\item{bs}{an object of class \code{bridge} or \code{bridge_list} containing the output from using \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}
+to compute the logarithm of the normalizing constant of the power prior (PP) using all data sets}
+
+\item{bs.hist}{an object of class \code{bridge} or \code{bridge_list} containing the output from using
+\code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}} to compute the logarithm of the normalizing constant of the PP using historical
+data sets}
+
+\item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+
+\item{max_Rhat}{the maximum Rhat}
 }
 }
 \description{
@@ -114,9 +88,7 @@ if (instantiate::stan_cmdstan_exists()) {
   )
   glm.logml.pp(
     post.samples = d.pp,
-    formula = formula, family = family,
-    data.list = data_list,
-    a0.vals = a0, bridge.args = list(silent = TRUE),
+    bridge.args = list(silent = TRUE),
     chains = 1, iter_warmup = 1000, iter_sampling = 2000
   )
 }

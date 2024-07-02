@@ -12,31 +12,47 @@
 #' for MCMC sampling) in this function and [glm.pp()] align with those used in generating `post.samples`.
 #' The arguments pertinent to MCMC sampling are utilized to compute the normalizing constants for PP.
 #'
-#' @include get_stan_data.R
 #' @include data_checks.R
 #' @include expfam_loglik.R
-#' @include glm_npp_lognc.R
+#' @include glm_logml_reference.R
+#' @include glm_pp_lognc.R
 #'
 #' @export
 #'
-#' @inheritParams glm.pp
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under PP, such as the output from [glm.pp()]. Each row corresponds to the
-#'                          posterior samples obtained from one iteration of MCMC. The column names of `post.samples`
-#'                          should include the names of covariates for regression coefficients, such as "(Intercept)",
-#'                          and "dispersion" for the dispersion parameter, if applicable.
-#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
-#'                          onto [bridgesampling::bridge_sampler()].
+#' @param post.samples      output from [glm.pp()] giving posterior samples of a GLM under the power prior (PP), with
+#'                          an attribute called 'data' which includes the list of variables specified in the data block
+#'                          of the Stan program.
+#' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
+#'                          pass onto [bridgesampling::bridge_sampler()].
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`
+#'                          in `sample()` method in cmdstanr package.
+#' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
+#'                          in `sample()` method in cmdstanr package.
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method
+#'                          in cmdstanr package.
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns a `list` with the following objects
+#'  If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples were obtained from using only
+#'  one data set (the current data), then the function returns the same result as the output from [glm.logml.reference()].
+#'
+#'  If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"PP" if at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, and "PP (No Borrow)" otherwise.}
+#'    \item{model}{"PP"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
-#'    \item{bs}{an object of class `bridge` or `bridge_list` giving the output from [bridgesampling::bridge_sampler()]}
+#'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
+#'    to compute the logarithm of the normalizing constant of the power prior (PP) using all data sets}
+#'
+#'    \item{bs.hist}{an object of class `bridge` or `bridge_list` containing the output from using
+#'    [bridgesampling::bridge_sampler()] to compute the logarithm of the normalizing constant of the PP using historical
+#'    data sets}
+#'
+#'    \item{min_ess_bulk}{the minimum estimated bulk effective sample size of the MCMC sampling}
+#'
+#'    \item{max_Rhat}{the maximum Rhat}
 #'  }
 #'
 #' @references
@@ -63,142 +79,110 @@
 #'   )
 #'   glm.logml.pp(
 #'     post.samples = d.pp,
-#'     formula = formula, family = family,
-#'     data.list = data_list,
-#'     a0.vals = a0, bridge.args = list(silent = TRUE),
+#'     bridge.args = list(silent = TRUE),
 #'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'   )
 #' }
 glm.logml.pp = function(
     post.samples,
-    formula,
-    family,
-    data.list,
-    a0.vals,
-    offset.list       = NULL,
-    beta.mean         = NULL,
-    beta.sd           = NULL,
-    disp.mean         = NULL,
-    disp.sd           = NULL,
     bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
     ...
 ) {
-  ## get Stan data for PP
-  standat = get.stan.data.pp(
-    formula     = formula,
-    family      = family,
-    data.list   = data.list,
-    a0.vals     = a0.vals,
-    offset.list = offset.list,
-    beta.mean   = beta.mean,
-    beta.sd     = beta.sd,
-    disp.mean   = disp.mean,
-    disp.sd     = disp.sd
-  )
+  stan.data = attr(post.samples, 'data')
+  K         = stan.data$K
+  a0_vals   = stan.data$a0_vals
 
-  ## check the format of post.samples
-  post.samples.checks(post.samples, colnames(standat$X), family)
+  if ( K == 1 || sum(a0_vals) == 1 ){
+    ## PP is equivalent to reference prior in this case
+    stan.data.ref = stan.data[c('p', 'mean_beta', 'sd_beta', 'disp_mean', 'disp_sd',
+                                'dist', 'link')]
+    n             = stan.data$end_idx[1] ## current data sample size
+    stan.data.ref$n = n
+    stan.data.ref$y = stan.data$y[1:n]
+    stan.data.ref$X = stan.data$X[1:n, ]
+    stan.data.ref$offs = stan.data$offs[1:n]
 
-  d        = as.matrix(post.samples)
-  ## rename parameters
-  p        = standat$p
-  X        = standat$X
-  oldnames = paste0("beta[", 1:p, "]")
-  newnames = colnames(X)
-  colnames(d)[colnames(d) %in% newnames] = oldnames
-  if ( !family$family %in% c('binomial', 'poisson') ) {
-    oldnames = c(oldnames, 'dispersion')
-  }
-  d = d[, oldnames, drop=F]
-
-  ## estimate log normalizing constant for PP
-  lognc   = 0
-  K       = standat$K
-  a0_vals = standat$a0_vals
-  if ( K >= 2 & sum(a0_vals) > 1 ){
-    lognc = sapply(2:K, function(k){
-      start.index = standat$start_idx[k]
-      end.index   = standat$end_idx[k]
-      offs0       = standat$offs[start.index:end.index]
-
-      glm.npp.lognc(
-        formula = formula,
-        family = family,
-        histdata = data.list[[k]],
-        a0 = a0_vals[k],
-        offset0 = offs0,
-        beta.mean = standat$mean_beta,
-        beta.sd = standat$sd_beta,
-        disp.mean = standat$disp_mean,
-        disp.sd = standat$disp_sd,
-        iter_warmup = iter_warmup,
-        iter_sampling = iter_sampling,
-        chains = chains,
-        ...
-      )["lognc"]
-    })
-    lognc = sum(lognc)
-  }
-  standat$lognc = lognc
-
-  ## compute log normalizing constants (lognc) for half-normal prior on dispersion
-  standat$lognc_disp  = pnorm(0, mean = standat$disp_mean, sd = standat$disp_sd, lower.tail = F, log.p = T)
-
-  ## log of the unnormalized posterior density function
-  log_density = function(pars, data){
-    beta       = pars[paste0("beta[", 1:data$p,"]")]
-    prior_lp   = sum( dnorm(beta, mean = data$mean_beta, sd = data$sd_beta, log = T) )
-    dist       = data$dist
-    link       = data$link
-    dispersion = 1.0
-    if ( dist > 2 ){
-      dispersion = pars[["dispersion"]]
-      prior_lp   = prior_lp +
-        dnorm(dispersion, mean = data$disp_mean, sd = data$disp_sd, log = T) - data$lognc_disp
-    }
-    data_lp = as.numeric( data$a0_vals %*% sapply(1:data$K, function(k){
-        start.idx = data$start_idx[k]
-        end.idx   = data$end_idx[k]
-        y         = data$y[ start.idx:end.idx ]
-        X         = data$X[ start.idx:end.idx, ]
-        offs      = data$offs[ start.idx:end.idx ]
-        glm_lp(y, beta, X, dist, link, offs, dispersion)
-      }) )
-    return(data_lp + prior_lp - data$lognc)
-  }
-
-  lb           = rep(-Inf, p)
-  ub           = rep(Inf, p)
-  if( standat$dist > 2 ) {
-    lb = c(lb, 0)
-    ub = c(ub, Inf)
-  }
-  names(ub) = colnames(d)
-  names(lb) = names(ub)
-
-  bs = do.call(
-    what = bridgesampling::bridge_sampler,
-    args = append(
-      list(
-        "samples" = d,
-        'log_posterior' = log_density,
-        'data' = standat,
-        'lb' = lb,
-        'ub' = ub),
-      bridge.args
+    attr(post.samples, 'data') = stan.data.ref
+    res = glm.logml.reference(
+      post.samples = post.samples,
+      bridge.args = bridge.args
     )
+    return(res)
+  }
+
+  ## computing log normalizing constant for power prior using all data sets
+  res.all = glm.pp.lognc(
+    post.samples   = post.samples,
+    bridge.args    = bridge.args
   )
 
-  ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
-  res = list(
-    'model' = "PP",
-    'logml' = bs$logml,
-    'bs'    = bs
+  ## get Stan data for PP using historical data sets
+  hist.stan.data           = stan.data
+  hist.stan.data$K         = K - 1
+  n                        = stan.data$end_idx[1] ## current data sample size
+  hist.stan.data$N         = stan.data$N - n
+  hist.stan.data$start_idx = stan.data$start_idx[-1] - n
+  hist.stan.data$end_idx   = stan.data$end_idx[-1] - n
+  hist.stan.data$y         = stan.data$y[-(1:n)]
+  hist.stan.data$X         = stan.data$X[-(1:n), ]
+  hist.stan.data$offs      = stan.data$offs[-(1:n)]
+  hist.stan.data$a0_vals   = a0_vals[-1]
+
+  ## fit PP using historical data sets
+  glm_pp     = instantiate::stan_package_model(
+    name = "glm_pp",
+    package = "hdbayes"
   )
-  if( sum(a0_vals) == 1 )
-    res[["model"]] = "PP (No borrow)"
+  fit = glm_pp$sample(data = hist.stan.data,
+                      iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
+                      ...)
+  summ = posterior::summarise_draws(fit)
+
+  if ( hist.stan.data$dist > 2 ) {
+    ## rename parameters
+    oldnames = 'dispersion[1]'
+    newnames = 'dispersion'
+    hist.post.samples = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  }else {
+    hist.post.samples = fit$draws(format = 'draws_df')
+  }
+  attr(x = hist.post.samples, which = 'data') = hist.stan.data
+
+  ## compute log normalizing constant for PP using historical data sets
+  res.hist = glm.pp.lognc(
+    post.samples   = hist.post.samples,
+    bridge.args    = bridge.args
+  )
+
+  ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
+  ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
+  res = list(
+    'model'        = "PP",
+    'logml'        = res.all$lognc - res.hist$lognc,
+    'bs'           = res.all$bs,
+    'bs.hist'      = res.hist$bs,
+    'min_ess_bulk' = min(summ[, 'ess_bulk']),
+    'max_Rhat'     = max(summ[, 'rhat'])
+  )
+
+  if ( res[['min_ess_bulk']] < 1000 )
+    warning(
+      paste0(
+        'The minimum bulk effective sample size of the MCMC sampling is ',
+        round(res[['min_ess_bulk']], 4),
+        '. It is recommended to have at least 1000. Try increasing the number of iterations.'
+      )
+    )
+  if ( res[['max_Rhat']] > 1.10 )
+    warning(
+      paste0(
+        'The maximum Rhat of the MCMC sampling is ',
+        round(res[['max_Rhat']], 4),
+        '. It is recommended to have a maximum Rhat of no more than 1.1. Try increasing the number of iterations.'
+      )
+    )
   return(res)
 }
