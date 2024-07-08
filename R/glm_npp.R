@@ -1,6 +1,7 @@
 #' Posterior of normalized power prior (NPP)
 #'
-#' Sample from the posterior distribution of a GLM using the NPP by Duan et al. (2006) <doi:10.1002/env.752>.
+#' Sample from the posterior distribution of a GLM using the normalized power prior (NPP) by Duan et al.
+#' (2006) <doi:10.1002/env.752>.
 #'
 #' Before using this function, users must estimate the logarithm of the normalizing constant across a
 #' range of different values for the power prior parameter (\eqn{a_0}), possibly smoothing techniques
@@ -21,42 +22,43 @@
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                          are the historical data sets.
-#' @param offset.list       a list of vectors giving the offsets for each data. The length of offset.list is equal to
-#'                          the length of data.list. The length of each element of offset.list is equal to the number
-#'                          of rows in the corresponding element of data.list. Defaults to a list of vectors of 0s.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of `offset.list` is equal to
+#'                          the length of `data.list`. The length of each element of `offset.list` is equal to the number
+#'                          of rows in the corresponding element of `data.list`. Defaults to a list of vectors of 0s.
 #' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
-#'                          beta.mean will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#'                          `beta.mean` will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
 #' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
-#'                          same as for beta.mean. Defaults to a vector of 10s.
+#'                          same as for `beta.mean`. Defaults to a vector of 10s.
 #' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
 #' @param a0.lognc          a vector giving values of the power prior parameter for which the logarithm of the normalizing
 #'                          constant has been evaluated.
-#' @param lognc             an S by T matrix where S is the length of a0.lognc, T is the number of historical data sets, and
+#' @param lognc             an S by T matrix where S is the length of `a0.lognc`, T is the number of historical data sets, and
 #'                          the j-th column, j = 1, ..., T, is a vector giving the logarithm of the normalizing constant (as
-#'                          estimated by [glm.npp.lognc()] for a0.lognc using the j-th historical data set.
-#' @param a0.shape1         first shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
+#'                          estimated by [glm.npp.lognc()] for `a0.lognc` using the j-th historical data set.
+#' @param a0.shape1         first shape parameter for the i.i.d. beta prior on \eqn{a_0} vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
-#' @param a0.shape2         second shape parameter for the i.i.d. beta prior on a0 vector. When \code{a0.shape1 == 1} and
+#' @param a0.shape2         second shape parameter for the i.i.d. beta prior on \eqn{a_0} vector. When \code{a0.shape1 == 1} and
 #'                          \code{a0.shape2 == 1}, a uniform prior is used.
 #' @param a0.lower          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          lower bounds for each element of the a0 vector. If a scalar is provided, a0.lower will be a
+#'                          lower bounds for each element of the \eqn{a_0} vector. If a scalar is provided, `a0.lower` will be a
 #'                          vector of repeated elements of the given scalar. Defaults to a vector of 0s.
 #' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
-#'                          upper bounds for each element of the a0 vector. If a scalar is provided, same as for a0.lower.
+#'                          upper bounds for each element of the \eqn{a_0} vector. If a scalar is provided, same as for `a0.lower`.
 #'                          Defaults to a vector of 1s.
-#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
-#'                          `sample()` method in cmdstanr package.
+#' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`
+#'                          in `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
 #'                          in `sample()` method in cmdstanr package.
-#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method in
-#'                          cmdstanr package.
-#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
+#' @param chains            number of Markov chains to run. Defaults to 4. See the argument `chains` in `sample()` method
+#'                          in cmdstanr package.
+#' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
+#'  the list of variables specified in the data block of the Stan program.
 #'
 #' @seealso [glm.npp.lognc()]
 #'
@@ -173,5 +175,7 @@ glm.npp = function(
   oldnames = c(oldnames, paste0('a0s[', 1:(K-1), ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:(K-1)))
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
   return(d)
 }
