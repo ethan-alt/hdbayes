@@ -5,7 +5,7 @@
 #'
 #' The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
 #' predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
-#' noninformative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
+#' non-informative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
 #' to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
 #'
 #' Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
@@ -75,9 +75,16 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{post.samples}{an object of class `draws_df` giving posterior samples}
+#'    \item{post.samples}{an object of class `draws_df` giving posterior samples under the robust meta-analytic predictive prior (RMAP)}
 #'
-#'    \item{bs.map}{output from computing log marginal likelihood of the MAP prior via [glm.logml.map()] function}
+#'    \item{post.samples.bhm}{an object of class `draws_df` giving posterior samples under the Bayesian hierarchical model (BHM),
+#'    obtained from using [glm.bhm()]}
+#'
+#'    \item{post.samples.vague}{an object of class `draws_df` giving posterior samples under the vague/non-informative prior, obtained
+#'    from using [glm.reference()]}
+#'
+#'    \item{bs.map}{output from computing log marginal likelihood of the prior induced by the BHM (referred to as the meta-analytic predictive
+#'    (MAP) prior) via [glm.logml.map()] function}
 #'
 #'    \item{bs.vague}{output from computing log marginal likelihood of the vague prior via [glm.logml.reference()] function}
 #'  }
@@ -183,21 +190,29 @@ glm.rmap = function(
 
   m        = nrow(d.vague) ## number of posterior samples under RMAP
   varnames = colnames(d.vague)
-  d.bhm    = d.bhm[, varnames]
+  d.bhm2   = d.bhm[, varnames]
+  ## merge chains of d.bhm into a single chain
+  d.bhm2   = posterior::merge_chains(d.bhm2)
+  ## merge chains of d.vague into a single chain
+  d.vague2 = posterior::merge_chains(d.vague)
+
   ## obtain posterior samples under RMAP
   d        = lapply(1:m, function(i){
     x = rbinom(1, 1, prob = post.wt)
     if( x == 1 ){
-      d.bhm[sample(1:m, 1), ]
+      d.bhm2[sample(1:m, 1), ]
     }else{
-      d.vague[sample(1:m, 1), ]
+      d.vague2[sample(1:m, 1), ]
     }
   })
   d        = do.call(rbind, d)
+
   res      = list(
-    'post.samples' = d,
-    'bs.map'       = bs.map,
-    'bs.vague'     = bs.vague
+    'post.samples'       = d,
+    'post.samples.bhm'   = d.bhm,
+    'post.samples.vague' = d.vague,
+    'bs.map'             = bs.map,
+    'bs.vague'           = bs.vague
   )
   return(res)
 }

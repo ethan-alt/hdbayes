@@ -95,9 +95,16 @@ cmdstanr package.}
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{post.samples}{an object of class \code{draws_df} giving posterior samples}
+\item{post.samples}{an object of class \code{draws_df} giving posterior samples under the robust meta-analytic predictive prior (RMAP)}
 
-\item{bs.map}{output from computing log marginal likelihood of the MAP prior via \code{\link[=glm.logml.map]{glm.logml.map()}} function}
+\item{post.samples.bhm}{an object of class \code{draws_df} giving posterior samples under the Bayesian hierarchical model (BHM),
+obtained from using \code{\link[=glm.bhm]{glm.bhm()}}}
+
+\item{post.samples.vague}{an object of class \code{draws_df} giving posterior samples under the vague/non-informative prior, obtained
+from using \code{\link[=glm.reference]{glm.reference()}}}
+
+\item{bs.map}{output from computing log marginal likelihood of the prior induced by the BHM (referred to as the meta-analytic predictive
+(MAP) prior) via \code{\link[=glm.logml.map]{glm.logml.map()}} function}
 
 \item{bs.vague}{output from computing log marginal likelihood of the vague prior via \code{\link[=glm.logml.reference]{glm.logml.reference()}} function}
 }
@@ -109,7 +116,7 @@ by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
 \details{
 The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
 predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
-noninformative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
+non-informative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
 to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
 
 Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
