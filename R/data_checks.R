@@ -152,35 +152,6 @@ to.vector = function(
 }
 
 
-#' check if the input `post.samples` are in appropriate forms for computing log marginal likelihood under different priors.
-#' @param post.samples      an object of class `draws_df`, `draws_matrix`, `matrix`, or `data.frame` giving posterior
-#'                          samples of a GLM under different priors. Each row corresponds to the posterior samples obtained
-#'                          from one iteration of MCMC. The column names of `post.samples` should include the names of
-#'                          covariates for regression coefficients, such as "(Intercept)", and "dispersion" for the
-#'                          dispersion parameter, if applicable.
-#' @param covariate.names   a vector of `character` giving the names of the covariates.
-#' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param is.LEAP           an indicator of whether the posterior samples are from LEAP. Defaults to false.
-#' @noRd
-post.samples.checks = function(
-    post.samples, covariate.names, family, is.LEAP = FALSE
-) {
-  if ( !any( class(post.samples) %in% c("draws_df", "draws_matrix", "matrix", "data.frame") ) )
-    stop("post.samples must be in one of the following formats: draws_df, draws_matrix, matrix, or data.frame")
-  if ( !all( covariate.names %in% colnames(post.samples) ) )
-    stop("Column names of post.samples must include the names of covariates for regression coefficients, such as \"(Intercept)\"")
-  if ( !family$family %in% c('binomial', 'poisson') ) {
-    if( is.LEAP ){
-      if ( !("dispersion[1]" %in% colnames(post.samples)) )
-        stop("Column names of post.samples must include names of dispersion parameters (e.g., \"dispersion[1]\")")
-    }else {
-      if ( !("dispersion" %in% colnames(post.samples)) )
-        stop("Column names of post.samples must include names of dispersion parameters (e.g., \"dispersion\", \"dispersion_hist_1\")")
-    }
-  }
-}
-
-
 #' change the variable names of the `draws_df` object obtained from the input `CmdStanMCMC` object and
 #' reorder the variables so that the updated variable names appear at the top of the `draws_df` object.
 #' @param fit      an object of class `CmdStanMCMC`.
