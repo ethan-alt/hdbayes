@@ -61,7 +61,8 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using a non-informative reference prior.
+Sample from the posterior distribution of a GLM using a non-informative reference prior (also referred to as
+the vague prior).
 }
 \details{
 The priors on the regression coefficients are independent normal priors. The dispersion parameter is assumed to
