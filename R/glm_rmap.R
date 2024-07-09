@@ -1,42 +1,68 @@
 #' Posterior of robust meta-analytic predictive prior (RMAP)
 #'
-#' Final step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) <doi:10.1111/biom.12242>.
+#' Sample from the posterior distribution of a GLM using the robust meta-analytic predictive prior (RMAP)
+#' by Schmidli et al. (2014) <doi:10.1111/biom.12242>.
 #'
-#' This function samples from the posterior distribution of a GLM using the RMAP. The first component of
-#' the RMAP is a prior induced by the Bayesian hierarchical model (BHM). We approximate this component by
-#' a mixture of multivariate normal distributions where the parameters are obtained from the outputs of the
-#' [glm.rmap.bhm.approx()] function. The second component is a vague (noninformative) multivariate normal
-#' prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
+#' The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
+#' predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
+#' noninformative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
+#' to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
 #'
-#' @include data_checks.R
+#' Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
+#' Specifically, note that the posterior distribution of a GLM under RMAP is also a two-part mixture distribution.
+#' The updated mixture weight for posterior density under the MAP prior is
+#' \deqn{\widetilde{w} = \frac{w Z_I(D, D_0)}{w Z_I(D, D_0) + (1-w) Z_V(D)},}
+#' where \eqn{w} is the prior mixture weight for the MAP prior in RMAP, \eqn{Z_I(D, D_0)} is the marginal likelihood
+#' of the MAP prior, and \eqn{Z_V(D)} is the marginal likelihood of the vague prior.
+#'
+#' @include glm_bhm.R
+#' @include glm_logml_map.R
+#' @include glm_reference.R
+#' @include glm_logml_reference.R
+#' @include mixture_loglik.R
 #'
 #' @export
 #'
 #' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
 #' @param family            an object of class `family`. See \code{\link[stats:family]{?stats::family}}.
-#' @param curr.data         a `data.frame` giving the current data.
-#' @param curr.offset       a vector whose dimension is equal to the rows of the current data set giving an offset for
-#'                          the current data. Defaults to a vector of 0s.
-#' @param probs             a vector of mixing proportions in the mixture approximation to the prior induced by the BHM.
-#'                          Obtained from the outputs of the [glm.rmap.bhm.approx()] function.
-#' @param means             a matrix with the jth column being the mean vector for the jth component in the mixture
-#'                          approximation to the prior induced by the BHM. Obtained from the outputs of the
-#'                          [glm.rmap.bhm.approx()] function.
-#' @param covs              a 3-dimensional array giving the covariance matrices for the mixture approximation to the prior
-#'                          induced by the BHM. Obtained from the outputs of the [glm.rmap.bhm.approx()] function.
-#'                          the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.
+#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
+#'                          are the historical data sets.
+#' @param offset.list       a list of vectors giving the offsets for each data. The length of `offset.list` is equal to
+#'                          the length of `data.list`. The length of each element of `offset.list` is equal to the number
+#'                          of rows in the corresponding element of `data.list`. Defaults to a list of vectors of 0s.
 #' @param w                 a scalar between 0 and 1 giving how much weight to put on the historical data. Defaults to 0.1.
+#' @param meta.mean.mean    same as `meta.mean.mean` in [glm.bhm()]. It is a scalar or a vector whose dimension is equal
+#'                          to the number of regression coefficients giving the means for the normal hyperpriors on the
+#'                          mean hyperparameters of regression coefficients in Bayesian hierarchical model (BHM). If a
+#'                          scalar is provided, `meta.mean.mean` will be a vector of repeated elements of the given scalar.
+#'                          Defaults to a vector of 0s.
+#' @param meta.mean.sd      same as `meta.mean.sd` in [glm.bhm()]. It is a scalar or a vector whose dimension is equal
+#'                          to the number of regression coefficients giving the sds for the normal hyperpriors on the
+#'                          mean hyperparameters of regression coefficients in BHM. If a scalar is provided, same as for
+#'                          `meta.mean.mean`. Defaults to a vector of 10s.
+#' @param meta.sd.mean      same as `meta.sd.mean` in [glm.bhm()]. It is a scalar or a vector whose dimension is equal
+#'                          to the number of regression coefficients giving the means for the half-normal hyperpriors
+#'                          on the sd hyperparameters of regression coefficients in BHM. If a scalar is provided, same
+#'                          as for `meta.mean.mean`. Defaults to a vector of 0s.
+#' @param meta.sd.sd        same as `meta.sd.sd` in [glm.bhm()]. It is a scalar or a vector whose dimension is equal to
+#'                          the number of regression coefficients giving the sds for the half-normal hyperpriors on the
+#'                          sd hyperparameters of regression coefficients in BHM. If a scalar is provided, same as for
+#'                          `meta.mean.mean`. Defaults to a vector of 1s.
+#' @param disp.mean         a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the location parameters for the half-normal priors on the dispersion parameters. If
+#'                          a scalar is provided, same as for `meta.mean.mean`. Defaults to a vector of 0s.
+#' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
+#'                          data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
+#'                          scalar is provided, same as for `meta.mean.mean`. Defaults to a vector of 10s.
 #' @param norm.vague.mean   a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the means for the vague normal prior on regression coefficients. If a scalar is provided,
-#'                          norm.vague.mean will be a vector of repeated elements of the given scalar. Defaults to a
+#'                          `norm.vague.mean` will be a vector of repeated elements of the given scalar. Defaults to a
 #'                          vector of 0s.
 #' @param norm.vague.sd     a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 #'                          the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
-#'                          for norm.vague.mean. Defaults to a vector of 10s.
-#' @param curr.disp.mean    a scalar giving the location parameter for the half-normal prior on the dispersion parameter for
-#'                          the current data. Defaults to a vector of 0s.
-#' @param curr.disp.sd      a scalar giving the scale parameter for the half-normal prior on the dispersion parameter for the
-#'                          current data. Defaults to a vector of 10s.
+#'                          for `norm.vague.mean`. Defaults to a vector of 10s.
+#' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
+#'                          onto [bridgesampling::bridge_sampler()].
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -46,12 +72,20 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns a `list` with the following objects
+#'
+#'  \describe{
+#'    \item{post.samples}{an object of class `draws_df` giving posterior samples}
+#'
+#'    \item{bs.map}{output from computing log marginal likelihood of the MAP prior via [glm.logml.map()] function}
+#'
+#'    \item{bs.vague}{output from computing log marginal likelihood of the vague prior via [glm.logml.reference()] function}
+#'  }
 #'
 #' @references
 #'  Schmidli, H., Gsteiger, S., Roychoudhury, S., O’Hagan, A., Spiegelhalter, D., and Neuenschwander, B. (2014). Robust meta‐analytic‐predictive priors in clinical trials with historical control information. Biometrics, 70(4), 1023–1032.
 #'
-#' @seealso [glm.rmap.bhm()] for the first step and [glm.rmap.bhm.approx()] for the second step of implementing RMAP.
+#'  Gronau, Q. F., Singmann, H., and Wagenmakers, E.-J. (2020). bridgesampling: An r package for estimating normalizing constants. Journal of Statistical Software, 92(10).
 #'
 #' @examples
 #' \donttest{
@@ -61,24 +95,12 @@
 #'     ## take subset for speed purposes
 #'     actg019 = actg019[1:150, ]
 #'     actg036 = actg036[1:100, ]
-#'     hist_data_list = list(actg036)
-#'     samples_bhm = glm.rmap.bhm(
-#'       formula = outcome ~ scale(age) + race + treatment + scale(cd4),
-#'       family = binomial('logit'),
-#'       hist.data.list = hist_data_list,
-#'       chains = 1, iter_warmup = 1000, iter_sampling = 2000
-#'     )$beta_pred
-#'     res_approx = glm.rmap.bhm.approx(
-#'       samples.bhm = samples_bhm,
-#'       G = 1:5, verbose = FALSE
-#'     )
+#'     data.list = list(actg019, actg036)
 #'     glm.rmap(
 #'       formula = outcome ~ scale(age) + race + treatment + scale(cd4),
 #'       family = binomial('logit'),
-#'       curr.data = actg019,
-#'       probs = res_approx$probs,
-#'       means = res_approx$means,
-#'       covs = res_approx$covs,
+#'       data.list = data.list,
+#'       w = 0.1,
 #'       chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'     )
 #'   }
@@ -86,96 +108,96 @@
 glm.rmap = function(
     formula,
     family,
-    curr.data,
-    probs,
-    means,
-    covs,
-    curr.offset       = NULL,
+    data.list,
+    offset.list       = NULL,
     w                 = 0.1,
+    meta.mean.mean    = NULL,
+    meta.mean.sd      = NULL,
+    meta.sd.mean      = NULL,
+    meta.sd.sd        = NULL,
+    disp.mean         = NULL,
+    disp.sd           = NULL,
     norm.vague.mean   = NULL,
     norm.vague.sd     = NULL,
-    curr.disp.mean    = NULL,
-    curr.disp.sd      = NULL,
+    bridge.args       = NULL,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
     ...
 ) {
-  ## perform data checks
-  if ( !is.null(curr.offset) ){
-    data.checks(formula, family, list(curr.data), list(curr.offset))
-  }else {
-    data.checks(formula, family, list(curr.data), curr.offset)
-  }
-
-  y        = curr.data[, all.vars(formula)[1]]
-  n        = length(y)
-  X        = model.matrix(formula, curr.data)
-  p        = ncol(X)
-  fam.indx = get.dist.link(family)
-  dist     = fam.indx[1]
-  link     = fam.indx[2]
-  G        = length(probs)
-
-  if ( is.null(curr.offset) )
-    curr.offset = rep(0, n)
-
-  ## Default half-normal hyperprior on dispersion parameter (if exist) is N^{+}(0, 10^2)
-  if ( is.null(curr.disp.mean) )
-    curr.disp.mean = 0
-  if ( is.null(curr.disp.sd) )
-    curr.disp.sd = 10
-
-  ## Default vague prior is indepndent N(0, 10^2)
-  if ( !is.null(norm.vague.mean) ){
-    if ( !( is.vector(norm.vague.mean) & (length(norm.vague.mean) %in% c(1, p)) ) )
-      stop("norm.vague.mean must be a scalar or a vector of length ", p, " if norm.vague.mean is not NULL")
-  }
-  norm.vague.mean = to.vector(param = norm.vague.mean, default.value = 0, len = p)
-  if ( !is.null(norm.vague.sd) ){
-    if ( !( is.vector(norm.vague.sd) & (length(norm.vague.sd) %in% c(1, p)) ) )
-      stop("norm.vague.sd must be a scalar or a vector of length ", p, " if norm.vague.sd is not NULL")
-  }
-  norm.vague.sd = to.vector(param = norm.vague.sd, default.value = 10, len = p)
-
-  standat = list(
-    'n1'              = n,
-    'p'               = p,
-    'y1'              = y,
-    'X1'              = X,
-    'G'               = G,
-    'probs'           = probs,
-    'means'           = means,
-    'covars'          = covs,
-    'norm_vague_mean' = norm.vague.mean,
-    'norm_vague_sd'   = norm.vague.sd,
-    'disp_mean1'      = curr.disp.mean,
-    'disp_sd1'        = curr.disp.sd,
-    'w'               = w,
-    'dist'            = dist,
-    'link'            = link,
-    'offs1'           = curr.offset
+  ## get posterior samples under BHM (equivalently, under the MAP prior)
+  d.bhm = glm.bhm(
+    formula        = formula,
+    family         = family,
+    data.list      = data.list,
+    offset.list    = offset.list,
+    meta.mean.mean = meta.mean.mean,
+    meta.mean.sd   = meta.mean.sd,
+    meta.sd.mean   = meta.sd.mean,
+    meta.sd.sd     = meta.sd.sd,
+    disp.mean      = disp.mean,
+    disp.sd        = disp.sd,
+    iter_warmup    = iter_warmup,
+    iter_sampling  = iter_sampling,
+    chains         = chains,
+    ...
   )
-
-  glm_robustmap = instantiate::stan_package_model(
-    name = "glm_robustmap",
-    package = "hdbayes"
+  ## compute log marginal likelihood of the MAP prior
+  bs.map = glm.logml.map(
+    post.samples   = d.bhm,
+    bridge.args    = bridge.args,
+    iter_warmup    = iter_warmup,
+    iter_sampling  = iter_sampling,
+    chains         = chains,
+    ...
   )
+  logml.map = bs.map$logml
 
-  ## fit model in cmdstanr
-  fit = glm_robustmap$sample(data = standat,
-                             iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
-                             ...)
-  d   = fit$draws(format = 'draws_df')
+  ## get posterior samples under the vague prior
+  d.vague = glm.reference(
+    formula        = formula,
+    family         = family,
+    data.list      = data.list,
+    offset.list    = offset.list,
+    beta.mean      = norm.vague.mean,
+    beta.sd        = norm.vague.sd,
+    disp.mean      = disp.mean,
+    disp.sd        = disp.sd,
+    iter_warmup    = iter_warmup,
+    iter_sampling  = iter_sampling,
+    chains         = chains,
+    ...
+  )
+  ## compute log marginal likelihood under reference prior
+  bs.vague = glm.logml.reference(
+    post.samples   = d.vague,
+    bridge.args    = bridge.args
+  )
+  logml.vague = bs.vague$logml
 
-  ## rename parameters
-  oldnames = paste0("beta[", 1:p, "]")
-  newnames = colnames(X)
+  ## compute updated mixture weight for posterior density under the MAP prior using marginal likelihoods and w
+  ## updated mixture weight = w * Z_I / (w * Z_I + (1-w) * Z_V ), where
+  ## Z_I and Z_V are marginal likelihoods of the MAP and vague priors, respectively
+  post.wt.log = c( log(w) + logml.map, log(1-w) + logml.vague )
+  post.wt     = exp( post.wt.log[1] - log_sum_exp( post.wt.log ) )
 
-  if ( !family$family %in% c('binomial', 'poisson') ) {
-    oldnames = c(oldnames, 'dispersion[1]')
-    newnames = c(newnames, 'dispersion')
-  }
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
-  return(d)
+  m        = nrow(d.vague) ## number of posterior samples under RMAP
+  varnames = colnames(d.vague)
+  d.bhm    = d.bhm[, varnames]
+  ## obtain posterior samples under RMAP
+  d        = lapply(1:m, function(i){
+    x = rbinom(1, 1, prob = post.wt)
+    if( x == 1 ){
+      d.bhm[sample(1:m, 1), ]
+    }else{
+      d.vague[sample(1:m, 1), ]
+    }
+  })
+  d        = do.call(rbind, d)
+  res      = list(
+    'post.samples' = d,
+    'bs.map'       = bs.map,
+    'bs.vague'     = bs.vague
+  )
+  return(res)
 }

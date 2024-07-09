@@ -7,16 +7,18 @@
 glm.rmap(
   formula,
   family,
-  curr.data,
-  probs,
-  means,
-  covs,
-  curr.offset = NULL,
+  data.list,
+  offset.list = NULL,
   w = 0.1,
+  meta.mean.mean = NULL,
+  meta.mean.sd = NULL,
+  meta.sd.mean = NULL,
+  meta.sd.sd = NULL,
+  disp.mean = NULL,
+  disp.sd = NULL,
   norm.vague.mean = NULL,
   norm.vague.sd = NULL,
-  curr.disp.mean = NULL,
-  curr.disp.sd = NULL,
+  bridge.args = NULL,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -28,38 +30,55 @@ glm.rmap(
 
 \item{family}{an object of class \code{family}. See \code{\link[stats:family]{?stats::family}}.}
 
-\item{curr.data}{a \code{data.frame} giving the current data.}
+\item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
+are the historical data sets.}
 
-\item{probs}{a vector of mixing proportions in the mixture approximation to the prior induced by the BHM.
-Obtained from the outputs of the \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.}
-
-\item{means}{a matrix with the jth column being the mean vector for the jth component in the mixture
-approximation to the prior induced by the BHM. Obtained from the outputs of the
-\code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.}
-
-\item{covs}{a 3-dimensional array giving the covariance matrices for the mixture approximation to the prior
-induced by the BHM. Obtained from the outputs of the \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function.
-the means for the half-normal hyperpriors on the sd hyperparameters of regression coefficients.}
-
-\item{curr.offset}{a vector whose dimension is equal to the rows of the current data set giving an offset for
-the current data. Defaults to a vector of 0s.}
+\item{offset.list}{a list of vectors giving the offsets for each data. The length of \code{offset.list} is equal to
+the length of \code{data.list}. The length of each element of \code{offset.list} is equal to the number
+of rows in the corresponding element of \code{data.list}. Defaults to a list of vectors of 0s.}
 
 \item{w}{a scalar between 0 and 1 giving how much weight to put on the historical data. Defaults to 0.1.}
 
+\item{meta.mean.mean}{same as \code{meta.mean.mean} in \code{\link[=glm.bhm]{glm.bhm()}}. It is a scalar or a vector whose dimension is equal
+to the number of regression coefficients giving the means for the normal hyperpriors on the
+mean hyperparameters of regression coefficients in Bayesian hierarchical model (BHM). If a
+scalar is provided, \code{meta.mean.mean} will be a vector of repeated elements of the given scalar.
+Defaults to a vector of 0s.}
+
+\item{meta.mean.sd}{same as \code{meta.mean.sd} in \code{\link[=glm.bhm]{glm.bhm()}}. It is a scalar or a vector whose dimension is equal
+to the number of regression coefficients giving the sds for the normal hyperpriors on the
+mean hyperparameters of regression coefficients in BHM. If a scalar is provided, same as for
+\code{meta.mean.mean}. Defaults to a vector of 10s.}
+
+\item{meta.sd.mean}{same as \code{meta.sd.mean} in \code{\link[=glm.bhm]{glm.bhm()}}. It is a scalar or a vector whose dimension is equal
+to the number of regression coefficients giving the means for the half-normal hyperpriors
+on the sd hyperparameters of regression coefficients in BHM. If a scalar is provided, same
+as for \code{meta.mean.mean}. Defaults to a vector of 0s.}
+
+\item{meta.sd.sd}{same as \code{meta.sd.sd} in \code{\link[=glm.bhm]{glm.bhm()}}. It is a scalar or a vector whose dimension is equal to
+the number of regression coefficients giving the sds for the half-normal hyperpriors on the
+sd hyperparameters of regression coefficients in BHM. If a scalar is provided, same as for
+\code{meta.mean.mean}. Defaults to a vector of 1s.}
+
+\item{disp.mean}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the location parameters for the half-normal priors on the dispersion parameters. If
+a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 0s.}
+
+\item{disp.sd}{a scalar or a vector whose dimension is equal to the number of data sets (including the current
+data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
+scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 10s.}
+
 \item{norm.vague.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the means for the vague normal prior on regression coefficients. If a scalar is provided,
-norm.vague.mean will be a vector of repeated elements of the given scalar. Defaults to a
+\code{norm.vague.mean} will be a vector of repeated elements of the given scalar. Defaults to a
 vector of 0s.}
 
 \item{norm.vague.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
 the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
-for norm.vague.mean. Defaults to a vector of 10s.}
+for \code{norm.vague.mean}. Defaults to a vector of 10s.}
 
-\item{curr.disp.mean}{a scalar giving the location parameter for the half-normal prior on the dispersion parameter for
-the current data. Defaults to a vector of 0s.}
-
-\item{curr.disp.sd}{a scalar giving the scale parameter for the half-normal prior on the dispersion parameter for the
-current data. Defaults to a vector of 10s.}
+\item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
+onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
@@ -73,17 +92,32 @@ cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g. seed, refresh, init).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples.
+The function returns a \code{list} with the following objects
+
+\describe{
+\item{post.samples}{an object of class \code{draws_df} giving posterior samples}
+
+\item{bs.map}{output from computing log marginal likelihood of the MAP prior via \code{\link[=glm.logml.map]{glm.logml.map()}} function}
+
+\item{bs.vague}{output from computing log marginal likelihood of the vague prior via \code{\link[=glm.logml.reference]{glm.logml.reference()}} function}
+}
 }
 \description{
-Final step for sampling from the posterior distribution of a GLM using the RMAP by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
+Sample from the posterior distribution of a GLM using the robust meta-analytic predictive prior (RMAP)
+by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
 }
 \details{
-This function samples from the posterior distribution of a GLM using the RMAP. The first component of
-the RMAP is a prior induced by the Bayesian hierarchical model (BHM). We approximate this component by
-a mixture of multivariate normal distributions where the parameters are obtained from the outputs of the
-\code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} function. The second component is a vague (noninformative) multivariate normal
-prior. We assume that the covariance matrix of the vague prior is a diagonal matrix.
+The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
+predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
+noninformative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
+to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
+
+Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
+Specifically, note that the posterior distribution of a GLM under RMAP is also a two-part mixture distribution.
+The updated mixture weight for posterior density under the MAP prior is
+\deqn{\widetilde{w} = \frac{w Z_I(D, D_0)}{w Z_I(D, D_0) + (1-w) Z_V(D)},}
+where \eqn{w} is the prior mixture weight for the MAP prior in RMAP, \eqn{Z_I(D, D_0)} is the marginal likelihood
+of the MAP prior, and \eqn{Z_V(D)} is the marginal likelihood of the vague prior.
 }
 \examples{
 \donttest{
@@ -93,24 +127,12 @@ prior. We assume that the covariance matrix of the vague prior is a diagonal mat
     ## take subset for speed purposes
     actg019 = actg019[1:150, ]
     actg036 = actg036[1:100, ]
-    hist_data_list = list(actg036)
-    samples_bhm = glm.rmap.bhm(
-      formula = outcome ~ scale(age) + race + treatment + scale(cd4),
-      family = binomial('logit'),
-      hist.data.list = hist_data_list,
-      chains = 1, iter_warmup = 1000, iter_sampling = 2000
-    )$beta_pred
-    res_approx = glm.rmap.bhm.approx(
-      samples.bhm = samples_bhm,
-      G = 1:5, verbose = FALSE
-    )
+    data.list = list(actg019, actg036)
     glm.rmap(
       formula = outcome ~ scale(age) + race + treatment + scale(cd4),
       family = binomial('logit'),
-      curr.data = actg019,
-      probs = res_approx$probs,
-      means = res_approx$means,
-      covs = res_approx$covs,
+      data.list = data.list,
+      w = 0.1,
       chains = 1, iter_warmup = 1000, iter_sampling = 2000
     )
   }
@@ -118,7 +140,6 @@ prior. We assume that the covariance matrix of the vague prior is a diagonal mat
 }
 \references{
 Schmidli, H., Gsteiger, S., Roychoudhury, S., O’Hagan, A., Spiegelhalter, D., and Neuenschwander, B. (2014). Robust meta‐analytic‐predictive priors in clinical trials with historical control information. Biometrics, 70(4), 1023–1032.
-}
-\seealso{
-\code{\link[=glm.rmap.bhm]{glm.rmap.bhm()}} for the first step and \code{\link[=glm.rmap.bhm.approx]{glm.rmap.bhm.approx()}} for the second step of implementing RMAP.
+
+Gronau, Q. F., Singmann, H., and Wagenmakers, E.-J. (2020). bridgesampling: An r package for estimating normalizing constants. Journal of Statistical Software, 92(10).
 }
