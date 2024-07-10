@@ -203,14 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 5.8 seconds.
+#> Chain 3 finished in 5.9 seconds.
 #> Chain 1 finished in 6.4 seconds.
 #> Chain 2 finished in 7.5 seconds.
-#> Chain 4 finished in 8.6 seconds.
+#> Chain 4 finished in 8.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.1 seconds.
-#> Total execution time: 8.8 seconds.
+#> Mean chain execution time: 7.0 seconds.
+#> Total execution time: 8.4 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 
@@ -277,12 +277,12 @@ fit.commensurate = glm.commensurate(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.9 seconds.
+#> Chain 2 finished in 0.9 seconds.
 #> Chain 3 finished in 0.9 seconds.
-#> Chain 2 finished in 1.0 seconds.
-#> Chain 4 finished in 1.0 seconds.
+#> Chain 4 finished in 0.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 1.0 seconds.
+#> Mean chain execution time: 0.9 seconds.
 #> Total execution time: 1.1 seconds.
 
 suppressWarnings(
@@ -331,84 +331,95 @@ controls for the level of borrowing of the historical data. Note that
 when ![w = 1](https://latex.codecogs.com/png.latex?w%20%3D%201 "w = 1"),
 the robust MAP prior effectively becomes the BHM. The defaults are the
 same as in the BHM except the default value for w is 0.1, and the
-default vague prior
+default vague/non-informative prior
 ![N_p(\mu_v, \Sigma_v)](https://latex.codecogs.com/png.latex?N_p%28%5Cmu_v%2C%20%5CSigma_v%29 "N_p(\mu_v, \Sigma_v)")
 is specified as:
 
 - ![\mu_v = \textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Cmu_v%20%3D%20%5Ctextbf%7B0%7D_p "\mu_v = \textbf{0}_p")
 - ![\Sigma_v = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_v%20%3D%20100%20%5Ctimes%20I_p "\Sigma_v = 100 \times I_p")
 
-The Robust MAP prior is implemented via a three-step procedure in
-hdbayes as follows:
+The posterior samples under the Robust MAP prior is obtained by using
+the marginal likelihoods of the vague and meta-analytic predictive (MAP)
+priors. Specifically, note that the posterior density under the Robust
+MAP prior can be written as
 
-1.  sampling from the prior induced by the BHM (equivalent to sampling
-    from the MAP prior) using the `glm.rmap.bhm()` function;
-2.  approximating the distribution of the samples from step 1. by a
-    mixture of multivariate normal distributions using the
-    `glm.rmap.bhm.approx()` function;
-3.  sampling from the posterior distribution of Robust MAP prior using
-    the output from step 2. via the `glm.rmap()` function.
+![\begin{align\*}
+    p\_{\text{RMAP}}(\beta \| D, D_0, w) &= \frac{L(\beta \| D) \left\[ w \\\pi_I(\beta \| D_0) + (1 - w) \\\pi_V(\beta) \right\]}{\int L(\beta^\*, \| D) \left\[ w \\\pi_I( \beta^\* \| D_0) + (1 - w) \\\pi_V( \beta^\* ) \right\] d\beta^\*}, \\
+    &= \tilde{w} \\p_I(\beta \| D, D_0) + (1 - \tilde{w}) \\p_V(\beta \| D),
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%20%20p_%7B%5Ctext%7BRMAP%7D%7D%28%5Cbeta%20%7C%20D%2C%20D_0%2C%20w%29%20%26%3D%20%5Cfrac%7BL%28%5Cbeta%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%5Cbeta%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%5Cbeta%29%20%5Cright%5D%7D%7B%5Cint%20L%28%5Cbeta%5E%2A%2C%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%20%5Cbeta%5E%2A%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%20%5Cbeta%5E%2A%20%29%20%5Cright%5D%20d%5Cbeta%5E%2A%7D%2C%20%5C%5C%0A%20%20%20%20%26%3D%20%5Ctilde%7Bw%7D%20%5C%3Ap_I%28%5Cbeta%20%7C%20D%2C%20D_0%29%20%2B%20%281%20-%20%5Ctilde%7Bw%7D%29%20%5C%3Ap_V%28%5Cbeta%20%7C%20D%29%2C%0A%5Cend%7Balign%2A%7D "\begin{align*}
+    p_{\text{RMAP}}(\beta | D, D_0, w) &= \frac{L(\beta | D) \left[ w \:\pi_I(\beta | D_0) + (1 - w) \:\pi_V(\beta) \right]}{\int L(\beta^*, | D) \left[ w \:\pi_I( \beta^* | D_0) + (1 - w) \:\pi_V( \beta^* ) \right] d\beta^*}, \\
+    &= \tilde{w} \:p_I(\beta | D, D_0) + (1 - \tilde{w}) \:p_V(\beta | D),
+\end{align*}")
+
+where
+![p_I(\beta \| D, D_0) = L(\beta \| D) \pi_I(\beta \| D_0) / Z_I(D, D_0)](https://latex.codecogs.com/png.latex?p_I%28%5Cbeta%20%7C%20D%2C%20D_0%29%20%3D%20L%28%5Cbeta%20%7C%20D%29%20%5Cpi_I%28%5Cbeta%20%7C%20D_0%29%20%2F%20Z_I%28D%2C%20D_0%29 "p_I(\beta | D, D_0) = L(\beta | D) \pi_I(\beta | D_0) / Z_I(D, D_0)")
+is the posterior density under the informative prior, which is the prior
+induced by the BHM (referred to as the meta-analytic predictive (MAP)
+prior),
+![p_V(\beta \| D) = L(\beta \| D) \pi_V(\beta) / Z_V(D)](https://latex.codecogs.com/png.latex?p_V%28%5Cbeta%20%7C%20D%29%20%3D%20L%28%5Cbeta%20%7C%20D%29%20%5Cpi_V%28%5Cbeta%29%20%2F%20Z_V%28D%29 "p_V(\beta | D) = L(\beta | D) \pi_V(\beta) / Z_V(D)")
+is the posterior density under the vague prior, and
+
+![\tilde{w} = \frac{w \\Z_I(D, D_0)}{w \\Z_I(D, D_0) + (1 - w) \\Z_V(D)}](https://latex.codecogs.com/png.latex?%5Ctilde%7Bw%7D%20%3D%20%5Cfrac%7Bw%20%5C%3AZ_I%28D%2C%20D_0%29%7D%7Bw%20%5C%3AZ_I%28D%2C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3AZ_V%28D%29%7D "\tilde{w} = \frac{w \:Z_I(D, D_0)}{w \:Z_I(D, D_0) + (1 - w) \:Z_V(D)}")
+
+is the updated mixture weight. The normalizing constants
+![Z_I(D, D_0)](https://latex.codecogs.com/png.latex?Z_I%28D%2C%20D_0%29 "Z_I(D, D_0)")
+and ![Z_V(D)](https://latex.codecogs.com/png.latex?Z_V%28D%29 "Z_V(D)")
+are estimated via the R package
+[`bridgesampling`](https://cran.r-project.org/web/packages/bridgesampling/)
+in `hdbayes`.
 
 ``` r
-## step 1.
-fit.hist.bhm = glm.rmap.bhm(
-   formula, family,
-   hist.data.list = list(histdata),
-   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
-   chains = chains, adapt_delta = 0.98,
-   parallel_chains = ncores,
-   refresh = 0
-)
-#> Running MCMC with 4 chains, at most 15 in parallel...
-#> 
-#> Chain 3 finished in 2.7 seconds.
-#> Chain 4 finished in 2.7 seconds.
-#> Chain 2 finished in 4.0 seconds.
-#> Chain 1 finished in 4.2 seconds.
-#> 
-#> All 4 chains finished successfully.
-#> Mean chain execution time: 3.4 seconds.
-#> Total execution time: 4.3 seconds.
-## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
-samples_bhm = fit.hist.bhm$beta_pred
-
-## step 2.
-res_approx = glm.rmap.bhm.approx(
-  samples.bhm = samples_bhm,
-  G = 1:9, verbose = FALSE
-)
-
-## step 3.
-fit.rmap = glm.rmap(
-  formula, family,
-  curr.data = data,
-  probs = res_approx$probs,
-  means = res_approx$means,
-  covs = res_approx$covs,
+res.rmap = glm.rmap(
+  formula = formula, family = family, data.list = data.list,
   w = 0.1,
+  bridge.args = list(silent = T),
   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
-  chains = chains, parallel_chains = ncores,
+  chains = chains, parallel_chains = ncores, adapt_delta = 0.98,
   refresh = 0
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
+#> Chain 3 finished in 4.8 seconds.
+#> Chain 2 finished in 5.2 seconds.
+#> Chain 1 finished in 5.6 seconds.
+#> Chain 4 finished in 6.4 seconds.
+#> 
+#> All 4 chains finished successfully.
+#> Mean chain execution time: 5.5 seconds.
+#> Total execution time: 6.6 seconds.
+#> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
+#> See https://mc-stan.org/misc/warnings for details.
+#> Running MCMC with 4 chains, at most 15 in parallel...
+#> 
+#> Chain 1 finished in 2.6 seconds.
+#> Chain 4 finished in 2.6 seconds.
+#> Chain 2 finished in 2.9 seconds.
+#> Chain 3 finished in 2.8 seconds.
+#> 
+#> All 4 chains finished successfully.
+#> Mean chain execution time: 2.7 seconds.
+#> Total execution time: 2.9 seconds.
+#> 
+#> Running MCMC with 4 chains, at most 15 in parallel...
+#> 
+#> Chain 1 finished in 0.7 seconds.
 #> Chain 2 finished in 0.6 seconds.
 #> Chain 3 finished in 0.6 seconds.
 #> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.7 seconds.
+#> Total execution time: 0.8 seconds.
+fit.rmap = res.rmap$post.samples
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 #> # A tibble: 3 × 10
-#>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
-#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.828  0.829 0.253 0.25   0.407  1.24   1.00    3864.    4242.
-#> 2 z            0.618  0.614 0.288 0.286  0.148  1.10   1       4579.    4239.
-#> 3 x           -0.777 -0.773 0.17  0.169 -1.06  -0.502  1.00    4390.    4440.
+#>   variable      mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
+#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
+#> 1 (Intercept)  0.842  0.846 0.25  0.244  0.426  1.26     1    4782.    3678.
+#> 2 z            0.617  0.609 0.285 0.286  0.166  1.10     1    4658.    3857.
+#> 3 x           -0.787 -0.785 0.168 0.167 -1.07  -0.52     1    4453.    3848.
 ```
 
 ### Power prior
@@ -441,7 +452,7 @@ and
 is an “initial prior” for
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta").
 
-The default in `hdbayes` is a (noninformative) normal initial prior on
+The default in `hdbayes` is a (non-informative) normal initial prior on
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta"):
 
 ![\beta \sim N_p(\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cbeta%20%5Csim%20N_p%28%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\beta \sim N_p(\textbf{0}_p, 100 \times I_p)")
@@ -468,7 +479,7 @@ fit.pp = glm.pp(
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.7 seconds.
+#> Total execution time: 0.8 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -476,9 +487,9 @@ fit.pp[, -1] %>%
 #> # A tibble: 3 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.829  0.825 0.243 0.249  0.438  1.23   1       3647.    4499.
-#> 2 z            0.616  0.616 0.282 0.285  0.155  1.08   1.00    4416.    4031.
-#> 3 x           -0.786 -0.783 0.163 0.165 -1.06  -0.522  1       4073.    4347
+#> 1 (Intercept)  0.823  0.819 0.24  0.243  0.438  1.22   1       4251.    4080.
+#> 2 z            0.617  0.616 0.273 0.27   0.166  1.07   1       4750.    4376.
+#> 3 x           -0.783 -0.779 0.165 0.163 -1.06  -0.521  1.00    4441.    4310.
 ```
 
 ### Normalized power prior (NPP)
@@ -620,8 +631,8 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
+#> Chain 1 finished in 0.7 seconds.
 #> Chain 2 finished in 0.8 seconds.
-#> Chain 1 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
@@ -634,10 +645,10 @@ fit.npp[, -c(1, 6)] %>%
 #> # A tibble: 4 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.846  0.845 0.24  0.238  0.457  1.24   1.00    4910.    4219.
-#> 2 z            0.596  0.59  0.272 0.275  0.162  1.05   1.00    5541.    4996.
-#> 3 x           -0.794 -0.791 0.159 0.159 -1.06  -0.538  1       4967.    4873.
-#> 4 a0_hist_1    0.677  0.715 0.226 0.253  0.255  0.975  1.00    5406.    3718.
+#> 1 (Intercept)  0.848  0.849 0.239 0.238  0.454  1.25   1       4513.    4243.
+#> 2 z            0.596  0.591 0.27  0.268  0.163  1.04   1.00    5178.    4553.
+#> 3 x           -0.794 -0.79  0.16  0.157 -1.06  -0.539  1.00    4496.    4483.
+#> 4 a0_hist_1    0.678  0.714 0.225 0.254  0.257  0.973  1.00    5523.    3608.
 ```
 
 ### Normalized asymptotic power prior (NAPP)
@@ -671,23 +682,23 @@ fit.napp = glm.napp(
 #> 
 #> Chain 1 finished in 0.5 seconds.
 #> Chain 2 finished in 0.5 seconds.
-#> Chain 3 finished in 0.6 seconds.
+#> Chain 3 finished in 0.5 seconds.
 #> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.7 seconds.
+#> Total execution time: 0.6 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 #> # A tibble: 5 × 10
 #>   variable       mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>         <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)   0.844  0.841 0.244 0.248  0.451  1.25   1.00    3685.    4208.
-#> 2 z             0.593  0.589 0.271 0.275  0.148  1.03   1.00    5602.    4555.
-#> 3 x            -0.788 -0.783 0.161 0.161 -1.06  -0.532  1.00    4078.    4873.
-#> 4 a0_hist_1     0.668  0.703 0.227 0.257  0.253  0.972  1.00    5636.    3594.
-#> 5 logit_a0s[1]  0.99   0.861 1.46  1.32  -1.08   3.53   1.00    5636.    3594.
+#> 1 (Intercept)   0.842  0.84  0.237 0.239  0.462  1.23   1       4394.    4256.
+#> 2 z             0.6    0.603 0.272 0.272  0.152  1.05   1       5292.    4475.
+#> 3 x            -0.79  -0.783 0.159 0.156 -1.06  -0.534  1.00    4786.    4121.
+#> 4 a0_hist_1     0.674  0.715 0.229 0.252  0.243  0.974  1       5164.    2855.
+#> 5 logit_a0s[1]  1.03   0.92  1.47  1.32  -1.14   3.64   1.00    5164.    2855.
 ```
 
 ### Latent exchangeability prior (LEAP)
@@ -751,16 +762,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 3.9 seconds.
-#> Chain 4 finished in 4.0 seconds.
-#> Chain 1 finished in 4.1 seconds.
-#> Chain 3 finished in 4.3 seconds.
+#> Chain 4 finished in 3.6 seconds.
+#> Chain 1 finished in 3.9 seconds.
+#> Chain 2 finished in 4.0 seconds.
+#> Chain 3 finished in 4.4 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.1 seconds.
+#> Mean chain execution time: 4.0 seconds.
 #> Total execution time: 4.5 seconds.
-#> Warning: 1 of 8000 (0.0%) transitions ended with a divergence.
-#> See https://mc-stan.org/misc/warnings for details.
 
 suppressWarnings(
  fit.leap[, 2:6] %>% 
@@ -770,11 +779,11 @@ suppressWarnings(
 #> # A tibble: 5 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.851  0.848 0.242 0.242  0.458  1.25   1       3161.    3491.
-#> 2 z            0.595  0.589 0.262 0.26   0.166  1.03   1       4127.    4338.
-#> 3 x           -0.786 -0.782 0.175 0.175 -1.07  -0.505  1       2879.    2813.
-#> 4 probs[1]     0.86   0.888 0.111 0.102  0.635  0.989  1.00    1618.    3204.
-#> 5 probs[2]     0.14   0.112 0.111 0.102  0.011  0.365  1.00    1618.    3204.
+#> 1 (Intercept)  0.857  0.856 0.241 0.239  0.461  1.25   1       3216.    3232.
+#> 2 z            0.593  0.589 0.267 0.259  0.154  1.04   1.00    3905.    3929.
+#> 3 x           -0.79  -0.79  0.171 0.172 -1.07  -0.515  1       2760.    3668.
+#> 4 probs[1]     0.864  0.89  0.109 0.103  0.643  0.991  1       1763.    2204.
+#> 5 probs[2]     0.136  0.11  0.109 0.103  0.009  0.357  1       1763.    2204.
 ```
 
 ## Comparison of methods
@@ -827,22 +836,22 @@ post.sd = cbind(
 ## posterior means
 round( post.mean, 3 )
 #>             truth mle.cur mle.hist    bhm commensurate robustmap   napp    npp
-#> (Intercept)   1.0   0.760    1.036  0.841        0.840     0.828  0.844  0.846
-#> z             0.5   0.677    0.313  0.625        0.618     0.618  0.593  0.596
-#> x            -1.0  -0.750   -0.856 -0.789       -0.784    -0.777 -0.788 -0.794
+#> (Intercept)   1.0   0.760    1.036  0.841        0.840     0.842  0.842  0.848
+#> z             0.5   0.677    0.313  0.625        0.618     0.617  0.600  0.596
+#> x            -1.0  -0.750   -0.856 -0.789       -0.784    -0.787 -0.790 -0.794
 #>                 pp   leap
-#> (Intercept)  0.829  0.851
-#> z            0.616  0.595
-#> x           -0.786 -0.786
+#> (Intercept)  0.823  0.857
+#> z            0.617  0.593
+#> x           -0.783 -0.790
 
 ## posterior std dev.
 round( post.sd, 3 )
 #>             mle.cur mle.hist   bhm commensurate robustmap  napp   npp    pp
-#> (Intercept)   0.274    0.377 0.246        0.250     0.253 0.244 0.240 0.243
-#> z             0.308    0.442 0.284        0.285     0.288 0.271 0.272 0.282
-#> x             0.181    0.266 0.165        0.174     0.170 0.161 0.159 0.163
+#> (Intercept)   0.274    0.377 0.246        0.250     0.250 0.237 0.239 0.240
+#> z             0.308    0.442 0.284        0.285     0.285 0.272 0.270 0.273
+#> x             0.181    0.266 0.165        0.174     0.168 0.159 0.160 0.165
 #>              leap
-#> (Intercept) 0.242
-#> z           0.262
-#> x           0.175
+#> (Intercept) 0.241
+#> z           0.267
+#> x           0.171
 ```

@@ -212,50 +212,37 @@ $$
 where $w \in (0,1)$ controls for the level of borrowing of the historical data.
 Note that when $w = 1$, the robust MAP prior effectively becomes the BHM. The
 defaults are the same as in the BHM except the default value for w is 0.1, and 
-the default vague prior $N_p(\mu_v, \Sigma_v)$ is specified as:
+the default vague/non-informative prior $N_p(\mu_v, \Sigma_v)$ is specified as:
 
 * $\mu_v = \textbf{0}_p$
 * $\Sigma_v = 100 \times I_p$
 
-The Robust MAP prior is implemented via a three-step procedure in hdbayes as follows: 
+The posterior samples under the Robust MAP prior is obtained by using the marginal
+likelihoods of the vague and meta-analytic predictive (MAP) priors. Specifically,
+note that the posterior density under the Robust MAP prior can be written as
+$$
+\begin{align*}
+    p_{\text{RMAP}}(\beta | D, D_0, w) &= \frac{L(\beta | D) \left[ w \:\pi_I(\beta | D_0) + (1 - w) \:\pi_V(\beta) \right]}{\int L(\beta^*, | D) \left[ w \:\pi_I( \beta^* | D_0) + (1 - w) \:\pi_V( \beta^* ) \right] d\beta^*}, \\
+    &= \tilde{w} \:p_I(\beta | D, D_0) + (1 - \tilde{w}) \:p_V(\beta | D),
+\end{align*}
+$$
+where $p_I(\beta | D, D_0) = L(\beta | D) \pi_I(\beta | D_0) / Z_I(D, D_0)$ is the posterior density under the informative prior, which is the prior induced by the BHM (referred to as the meta-analytic predictive (MAP) prior), $p_V(\beta | D) = L(\beta | D) \pi_V(\beta) / Z_V(D)$ is the posterior density under the vague prior, and
+$$
+\tilde{w} = \frac{w \:Z_I(D, D_0)}{w \:Z_I(D, D_0) + (1 - w) \:Z_V(D)}
+$$
 
-1. sampling from the prior induced by the BHM (equivalent to sampling from the 
-MAP prior) using the `glm.rmap.bhm()` function;
-2. approximating the distribution of the samples from step 1. by a mixture of 
-multivariate normal distributions using the `glm.rmap.bhm.approx()` function;
-3. sampling from the posterior distribution of Robust MAP prior using the output
-from step 2. via the `glm.rmap()` function.
+is the updated mixture weight. The normalizing constants $Z_I(D, D_0)$ and $Z_V(D)$ are estimated via the R package [`bridgesampling`](https://cran.r-project.org/web/packages/bridgesampling/) in `hdbayes`.
+
 ```{r robustmap}
-## step 1.
-fit.hist.bhm = glm.rmap.bhm(
-   formula, family,
-   hist.data.list = list(histdata),
-   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
-   chains = chains, adapt_delta = 0.98,
-   parallel_chains = ncores,
-   refresh = 0
-)
-## fit.hist.bhm$hist_bhm can be used for assessing MCMC convergence
-samples_bhm = fit.hist.bhm$beta_pred
-
-## step 2.
-res_approx = glm.rmap.bhm.approx(
-  samples.bhm = samples_bhm,
-  G = 1:9, verbose = FALSE
-)
-
-## step 3.
-fit.rmap = glm.rmap(
-  formula, family,
-  curr.data = data,
-  probs = res_approx$probs,
-  means = res_approx$means,
-  covs = res_approx$covs,
+res.rmap = glm.rmap(
+  formula = formula, family = family, data.list = data.list,
   w = 0.1,
+  bridge.args = list(silent = T),
   iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
-  chains = chains, parallel_chains = ncores,
+  chains = chains, parallel_chains = ncores, adapt_delta = 0.98,
   refresh = 0
 )
+fit.rmap = res.rmap$post.samples
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -277,7 +264,7 @@ $a_{0h} \in (0,1)$ is a fixed hyperparameter controlling the effective
 sample size contributed by historical data set $D_{0h}$
 , and $\pi_0(\beta)$ is an "initial prior" for $\beta$.
 
-The default in `hdbayes` is a (noninformative) normal initial prior on $\beta$:
+The default in `hdbayes` is a (non-informative) normal initial prior on $\beta$:
 $$
 \beta \sim N_p(\textbf{0}_p, 100 \times I_p)
 $$
