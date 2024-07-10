@@ -203,14 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 5.9 seconds.
-#> Chain 1 finished in 6.4 seconds.
-#> Chain 2 finished in 7.5 seconds.
-#> Chain 4 finished in 8.2 seconds.
+#> Chain 3 finished in 6.1 seconds.
+#> Chain 1 finished in 6.7 seconds.
+#> Chain 2 finished in 7.9 seconds.
+#> Chain 4 finished in 8.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.0 seconds.
-#> Total execution time: 8.4 seconds.
+#> Mean chain execution time: 7.4 seconds.
+#> Total execution time: 9.0 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 
@@ -277,7 +277,7 @@ fit.commensurate = glm.commensurate(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.9 seconds.
-#> Chain 2 finished in 0.9 seconds.
+#> Chain 2 finished in 1.0 seconds.
 #> Chain 3 finished in 0.9 seconds.
 #> Chain 4 finished in 0.9 seconds.
 #> 
@@ -344,18 +344,17 @@ priors. Specifically, note that the posterior density under the Robust
 MAP prior can be written as
 
 ![\begin{align\*}
-    p\_{\text{RMAP}}(\beta \| D, D_0, w) &= \frac{L(\beta \| D) \left\[ w \\\pi_I(\beta \| D_0) + (1 - w) \\\pi_V(\beta) \right\]}{\int L(\beta^\*, \| D) \left\[ w \\\pi_I( \beta^\* \| D_0) + (1 - w) \\\pi_V( \beta^\* ) \right\] d\beta^\*}, \\
+    p\_{\text{RMAP}}(\beta \| D, D_0, w) &= \frac{L(\beta \| D) \left\[ w \\\pi_I(\beta \| D_0) + (1 - w) \\\pi_V(\beta) \right\]}{\int L(\beta^\* \| D) \left\[ w \\\pi_I( \beta^\* \| D_0) + (1 - w) \\\pi_V( \beta^\* ) \right\] d\beta^\*}, \\
     &= \tilde{w} \\p_I(\beta \| D, D_0) + (1 - \tilde{w}) \\p_V(\beta \| D),
-\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%20%20p_%7B%5Ctext%7BRMAP%7D%7D%28%5Cbeta%20%7C%20D%2C%20D_0%2C%20w%29%20%26%3D%20%5Cfrac%7BL%28%5Cbeta%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%5Cbeta%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%5Cbeta%29%20%5Cright%5D%7D%7B%5Cint%20L%28%5Cbeta%5E%2A%2C%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%20%5Cbeta%5E%2A%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%20%5Cbeta%5E%2A%20%29%20%5Cright%5D%20d%5Cbeta%5E%2A%7D%2C%20%5C%5C%0A%20%20%20%20%26%3D%20%5Ctilde%7Bw%7D%20%5C%3Ap_I%28%5Cbeta%20%7C%20D%2C%20D_0%29%20%2B%20%281%20-%20%5Ctilde%7Bw%7D%29%20%5C%3Ap_V%28%5Cbeta%20%7C%20D%29%2C%0A%5Cend%7Balign%2A%7D "\begin{align*}
-    p_{\text{RMAP}}(\beta | D, D_0, w) &= \frac{L(\beta | D) \left[ w \:\pi_I(\beta | D_0) + (1 - w) \:\pi_V(\beta) \right]}{\int L(\beta^*, | D) \left[ w \:\pi_I( \beta^* | D_0) + (1 - w) \:\pi_V( \beta^* ) \right] d\beta^*}, \\
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%20%20p_%7B%5Ctext%7BRMAP%7D%7D%28%5Cbeta%20%7C%20D%2C%20D_0%2C%20w%29%20%26%3D%20%5Cfrac%7BL%28%5Cbeta%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%5Cbeta%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%5Cbeta%29%20%5Cright%5D%7D%7B%5Cint%20L%28%5Cbeta%5E%2A%20%7C%20D%29%20%5Cleft%5B%20w%20%5C%3A%5Cpi_I%28%20%5Cbeta%5E%2A%20%7C%20D_0%29%20%2B%20%281%20-%20w%29%20%5C%3A%5Cpi_V%28%20%5Cbeta%5E%2A%20%29%20%5Cright%5D%20d%5Cbeta%5E%2A%7D%2C%20%5C%5C%0A%20%20%20%20%26%3D%20%5Ctilde%7Bw%7D%20%5C%3Ap_I%28%5Cbeta%20%7C%20D%2C%20D_0%29%20%2B%20%281%20-%20%5Ctilde%7Bw%7D%29%20%5C%3Ap_V%28%5Cbeta%20%7C%20D%29%2C%0A%5Cend%7Balign%2A%7D "\begin{align*}
+    p_{\text{RMAP}}(\beta | D, D_0, w) &= \frac{L(\beta | D) \left[ w \:\pi_I(\beta | D_0) + (1 - w) \:\pi_V(\beta) \right]}{\int L(\beta^* | D) \left[ w \:\pi_I( \beta^* | D_0) + (1 - w) \:\pi_V( \beta^* ) \right] d\beta^*}, \\
     &= \tilde{w} \:p_I(\beta | D, D_0) + (1 - \tilde{w}) \:p_V(\beta | D),
 \end{align*}")
 
 where
 ![p_I(\beta \| D, D_0) = L(\beta \| D) \pi_I(\beta \| D_0) / Z_I(D, D_0)](https://latex.codecogs.com/png.latex?p_I%28%5Cbeta%20%7C%20D%2C%20D_0%29%20%3D%20L%28%5Cbeta%20%7C%20D%29%20%5Cpi_I%28%5Cbeta%20%7C%20D_0%29%20%2F%20Z_I%28D%2C%20D_0%29 "p_I(\beta | D, D_0) = L(\beta | D) \pi_I(\beta | D_0) / Z_I(D, D_0)")
-is the posterior density under the informative prior, which is the prior
-induced by the BHM (referred to as the meta-analytic predictive (MAP)
-prior),
+is the posterior density under the prior induced by the BHM (referred to
+as the meta-analytic predictive (MAP) prior),
 ![p_V(\beta \| D) = L(\beta \| D) \pi_V(\beta) / Z_V(D)](https://latex.codecogs.com/png.latex?p_V%28%5Cbeta%20%7C%20D%29%20%3D%20L%28%5Cbeta%20%7C%20D%29%20%5Cpi_V%28%5Cbeta%29%20%2F%20Z_V%28D%29 "p_V(\beta | D) = L(\beta | D) \pi_V(\beta) / Z_V(D)")
 is the posterior density under the vague prior, and
 
@@ -379,37 +378,37 @@ res.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 4.8 seconds.
-#> Chain 2 finished in 5.2 seconds.
-#> Chain 1 finished in 5.6 seconds.
-#> Chain 4 finished in 6.4 seconds.
+#> Chain 3 finished in 5.5 seconds.
+#> Chain 2 finished in 5.9 seconds.
+#> Chain 1 finished in 6.2 seconds.
+#> Chain 4 finished in 7.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 5.5 seconds.
-#> Total execution time: 6.6 seconds.
+#> Mean chain execution time: 6.2 seconds.
+#> Total execution time: 7.4 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 2.6 seconds.
-#> Chain 4 finished in 2.6 seconds.
-#> Chain 2 finished in 2.9 seconds.
-#> Chain 3 finished in 2.8 seconds.
+#> Chain 1 finished in 3.0 seconds.
+#> Chain 4 finished in 2.9 seconds.
+#> Chain 2 finished in 3.1 seconds.
+#> Chain 3 finished in 3.1 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 2.7 seconds.
-#> Total execution time: 2.9 seconds.
+#> Mean chain execution time: 3.0 seconds.
+#> Total execution time: 3.2 seconds.
 #> 
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.8 seconds.
+#> Chain 2 finished in 0.7 seconds.
+#> Chain 3 finished in 0.7 seconds.
+#> Chain 4 finished in 0.7 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Mean chain execution time: 0.7 seconds.
+#> Total execution time: 0.9 seconds.
 fit.rmap = res.rmap$post.samples
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
@@ -472,14 +471,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.8 seconds.
+#> Chain 2 finished in 0.7 seconds.
+#> Chain 3 finished in 0.7 seconds.
+#> Chain 4 finished in 0.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Mean chain execution time: 0.8 seconds.
+#> Total execution time: 1.1 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -638,7 +637,7 @@ fit.npp = glm.npp(
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 0.9 seconds.
+#> Total execution time: 1.0 seconds.
 fit.npp[, -c(1, 6)] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -680,14 +679,14 @@ fit.napp = glm.napp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.5 seconds.
+#> Chain 1 finished in 0.6 seconds.
 #> Chain 2 finished in 0.5 seconds.
 #> Chain 3 finished in 0.5 seconds.
 #> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.6 seconds.
+#> Total execution time: 0.7 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -762,14 +761,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 4 finished in 3.6 seconds.
-#> Chain 1 finished in 3.9 seconds.
-#> Chain 2 finished in 4.0 seconds.
-#> Chain 3 finished in 4.4 seconds.
+#> Chain 4 finished in 3.9 seconds.
+#> Chain 1 finished in 4.1 seconds.
+#> Chain 2 finished in 4.2 seconds.
+#> Chain 3 finished in 4.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.0 seconds.
-#> Total execution time: 4.5 seconds.
+#> Mean chain execution time: 4.2 seconds.
+#> Total execution time: 4.7 seconds.
 
 suppressWarnings(
  fit.leap[, 2:6] %>% 
