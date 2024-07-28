@@ -203,14 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 6.1 seconds.
-#> Chain 1 finished in 6.7 seconds.
-#> Chain 2 finished in 7.9 seconds.
-#> Chain 4 finished in 8.8 seconds.
+#> Chain 3 finished in 5.9 seconds.
+#> Chain 1 finished in 6.5 seconds.
+#> Chain 2 finished in 7.7 seconds.
+#> Chain 4 finished in 8.7 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.4 seconds.
-#> Total execution time: 9.0 seconds.
+#> Mean chain execution time: 7.2 seconds.
+#> Total execution time: 8.9 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 
@@ -276,14 +276,14 @@ fit.commensurate = glm.commensurate(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.9 seconds.
-#> Chain 2 finished in 1.0 seconds.
-#> Chain 3 finished in 0.9 seconds.
-#> Chain 4 finished in 0.9 seconds.
+#> Chain 1 finished in 1.0 seconds.
+#> Chain 2 finished in 1.1 seconds.
+#> Chain 3 finished in 1.0 seconds.
+#> Chain 4 finished in 1.0 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.9 seconds.
-#> Total execution time: 1.1 seconds.
+#> Mean chain execution time: 1.1 seconds.
+#> Total execution time: 1.2 seconds.
 
 suppressWarnings(
   fit.commensurate[, 2:10] %>% 
@@ -378,33 +378,33 @@ res.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 5.5 seconds.
-#> Chain 2 finished in 5.9 seconds.
-#> Chain 1 finished in 6.2 seconds.
+#> Chain 3 finished in 5.6 seconds.
+#> Chain 2 finished in 6.0 seconds.
+#> Chain 1 finished in 6.4 seconds.
 #> Chain 4 finished in 7.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 6.2 seconds.
+#> Mean chain execution time: 6.3 seconds.
 #> Total execution time: 7.4 seconds.
 #> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 3.0 seconds.
-#> Chain 4 finished in 2.9 seconds.
-#> Chain 2 finished in 3.1 seconds.
+#> Chain 4 finished in 3.0 seconds.
+#> Chain 2 finished in 3.2 seconds.
 #> Chain 3 finished in 3.1 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 3.0 seconds.
-#> Total execution time: 3.2 seconds.
+#> Mean chain execution time: 3.1 seconds.
+#> Total execution time: 3.3 seconds.
 #> 
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
 #> Chain 2 finished in 0.7 seconds.
+#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.8 seconds.
 #> Chain 3 finished in 0.7 seconds.
-#> Chain 4 finished in 0.7 seconds.
 #> 
 #> All 4 chains finished successfully.
 #> Mean chain execution time: 0.7 seconds.
@@ -471,14 +471,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
-#> Chain 2 finished in 0.7 seconds.
-#> Chain 3 finished in 0.7 seconds.
-#> Chain 4 finished in 0.9 seconds.
+#> Chain 1 finished in 0.6 seconds.
+#> Chain 2 finished in 0.6 seconds.
+#> Chain 3 finished in 0.6 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.8 seconds.
-#> Total execution time: 1.1 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -630,7 +630,7 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.7 seconds.
+#> Chain 1 finished in 0.8 seconds.
 #> Chain 2 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
@@ -762,13 +762,13 @@ fit.leap = glm.leap(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 4 finished in 3.9 seconds.
-#> Chain 1 finished in 4.1 seconds.
-#> Chain 2 finished in 4.2 seconds.
-#> Chain 3 finished in 4.6 seconds.
+#> Chain 1 finished in 4.3 seconds.
+#> Chain 2 finished in 4.4 seconds.
+#> Chain 3 finished in 4.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.2 seconds.
-#> Total execution time: 4.7 seconds.
+#> Mean chain execution time: 4.4 seconds.
+#> Total execution time: 5.0 seconds.
 
 suppressWarnings(
  fit.leap[, 2:6] %>% 
@@ -785,6 +785,59 @@ suppressWarnings(
 #> 5 probs[2]     0.136  0.11  0.109 0.103  0.009  0.357  1       1763.    2204.
 ```
 
+### Normal/half-normal prior
+
+We also include a normal/half-normal prior, where the regression
+coefficients are assigned independent normal priors, and, if applicable,
+the dispersion parameter is assigned a half-normal prior. For this
+example, the normal/half-normal prior takes the form
+
+![\begin{align\*}
+  &y_i \| x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \\\\i = 1, \ldots, n\\
+  &\beta \sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 = \text{diag}(\sigma\_{01}^2, \ldots, \sigma\_{0p}^2).
+\end{align\*}](https://latex.codecogs.com/png.latex?%5Cbegin%7Balign%2A%7D%0A%20%20%26y_i%20%7C%20x_i%2C%20%5Cbeta%20%5Csim%20%5Ctext%7BBernoulli%7D%5Cleft%28%20%5Ctext%7Blogit%7D%5E%7B-1%7D%28x_i%27%5Cbeta%29%20%5Cright%29%0A%20%20%2C%20%5C%20%5C%20i%20%3D%201%2C%20%5Cldots%2C%20n%5C%5C%0A%20%20%26%5Cbeta%20%5Csim%20N_p%28%5Cmu_0%2C%20%5CSigma_0%29%2C%20%5Ctext%7B%20where%20%7D%5CSigma_0%20%3D%20%5Ctext%7Bdiag%7D%28%5Csigma_%7B01%7D%5E2%2C%20%5Cldots%2C%20%5Csigma_%7B0p%7D%5E2%29.%0A%5Cend%7Balign%2A%7D "\begin{align*}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\beta \sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2).
+\end{align*}")
+
+The defaults in `hdbayes` are
+
+- ![\mu_0 = \textbf{0}\_p](https://latex.codecogs.com/png.latex?%5Cmu_0%20%3D%20%5Ctextbf%7B0%7D_p "\mu_0 = \textbf{0}_p")
+- ![\Sigma\_{0} = 100 \times I_p](https://latex.codecogs.com/png.latex?%5CSigma_%7B0%7D%20%3D%20100%20%5Ctimes%20I_p "\Sigma_{0} = 100 \times I_p")
+
+The normal/half-normal prior can be fit as follows:
+
+``` r
+fit.post = glm.post(
+  formula = formula, family = family, data.list = data.list,
+  iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
+  chains = chains, parallel_chains = ncores,
+  refresh = 0
+)
+#> Running MCMC with 4 chains, at most 15 in parallel...
+#> 
+#> Chain 1 finished in 0.5 seconds.
+#> Chain 2 finished in 0.4 seconds.
+#> Chain 3 finished in 0.4 seconds.
+#> Chain 4 finished in 0.4 seconds.
+#> 
+#> All 4 chains finished successfully.
+#> Mean chain execution time: 0.4 seconds.
+#> Total execution time: 0.7 seconds.
+
+fit.post[, -1] %>% 
+    summarise_draws() %>% 
+    mutate(across(where(is.numeric), round, 3))
+#> # A tibble: 3 × 10
+#>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
+#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
+#> 1 (Intercept)  0.778  0.774 0.28  0.282  0.332  1.24   1.00    3586.    4047.
+#> 2 z            0.692  0.691 0.313 0.315  0.182  1.21   1.00    4209.    4234.
+#> 3 x           -0.77  -0.763 0.182 0.185 -1.08  -0.476  1.00    4291.    4489.
+```
+
 ## Comparison of methods
 
 We now can compare the point estimate (MLE / posterior mean) and
@@ -796,7 +849,8 @@ uncertainty (SE / posterior standard deviation) of the methods.
 ##
 fit.list = list('bhm' = fit.bhm, 'commensurate' = fit.commensurate,
                 'robustmap' = fit.rmap, 'napp' = fit.napp,
-                'npp' = fit.npp, 'pp' = fit.pp, 'leap' = fit.leap)
+                'npp' = fit.npp, 'pp' = fit.pp, 'leap' = fit.leap,
+                'normal/half-normal' = fit.post)
 
 post.mean = suppressWarnings(
   sapply(
@@ -838,10 +892,10 @@ round( post.mean, 3 )
 #> (Intercept)   1.0   0.760    1.036  0.841        0.840     0.842  0.842  0.848
 #> z             0.5   0.677    0.313  0.625        0.618     0.617  0.600  0.596
 #> x            -1.0  -0.750   -0.856 -0.789       -0.784    -0.787 -0.790 -0.794
-#>                 pp   leap
-#> (Intercept)  0.823  0.857
-#> z            0.617  0.593
-#> x           -0.783 -0.790
+#>                 pp   leap normal/half-normal
+#> (Intercept)  0.823  0.857              0.778
+#> z            0.617  0.593              0.692
+#> x           -0.783 -0.790             -0.770
 
 ## posterior std dev.
 round( post.sd, 3 )
@@ -849,8 +903,8 @@ round( post.sd, 3 )
 #> (Intercept)   0.274    0.377 0.246        0.250     0.250 0.237 0.239 0.240
 #> z             0.308    0.442 0.284        0.285     0.285 0.272 0.270 0.273
 #> x             0.181    0.266 0.165        0.174     0.168 0.159 0.160 0.165
-#>              leap
-#> (Intercept) 0.241
-#> z           0.267
-#> x           0.171
+#>              leap normal/half-normal
+#> (Intercept) 0.241              0.280
+#> z           0.267              0.313
+#> x           0.171              0.182
 ```

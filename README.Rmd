@@ -461,6 +461,34 @@ suppressWarnings(
 ```
 
 
+### Normal/half-normal prior
+We also include a normal/half-normal prior, where the regression coefficients are assigned independent normal priors, and, if applicable, the dispersion parameter is assigned a half-normal prior. For this example, the normal/half-normal prior takes the form
+$$
+\begin{align*}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\beta \sim N_p(\mu_0, \Sigma_0), \text{ where }\Sigma_0 = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2).
+\end{align*}
+$$
+The defaults in `hdbayes` are
+
+* $\mu_0 = \textbf{0}_p$
+* $\Sigma_{0} = 100 \times I_p$
+
+The normal/half-normal prior can be fit as follows:
+```{r post}
+fit.post = glm.post(
+  formula = formula, family = family, data.list = data.list,
+  iter_warmup = iter_warmup, iter_sampling = iter_sampling, 
+  chains = chains, parallel_chains = ncores,
+  refresh = 0
+)
+
+fit.post[, -1] %>% 
+    summarise_draws() %>% 
+    mutate(across(where(is.numeric), round, 3))
+```
+
 ## Comparison of methods
 We now can compare the point estimate (MLE / posterior mean) and uncertainty
 (SE / posterior standard deviation) of the methods.
@@ -471,7 +499,8 @@ We now can compare the point estimate (MLE / posterior mean) and uncertainty
 ##
 fit.list = list('bhm' = fit.bhm, 'commensurate' = fit.commensurate,
                 'robustmap' = fit.rmap, 'napp' = fit.napp,
-                'npp' = fit.npp, 'pp' = fit.pp, 'leap' = fit.leap)
+                'npp' = fit.npp, 'pp' = fit.pp, 'leap' = fit.leap,
+                'normal/half-normal' = fit.post)
 
 post.mean = suppressWarnings(
   sapply(
