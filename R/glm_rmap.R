@@ -5,8 +5,9 @@
 #'
 #' The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
 #' predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
-#' non-informative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
-#' to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
+#' non-informative) prior (specifically, the normal/half-normal prior with large variances). Although Schmidli et al.
+#' (2014) recommends to use a finite mixture of conjugate priors to approximate the BHM, it can be difficult and
+#' time-consuming to come up with an appropriate approximation.
 #'
 #' Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
 #' Specifically, note that the posterior distribution of a GLM under RMAP is also a two-part mixture distribution.
@@ -17,8 +18,8 @@
 #'
 #' @include glm_bhm.R
 #' @include glm_logml_map.R
-#' @include glm_reference.R
-#' @include glm_logml_reference.R
+#' @include glm_post.R
+#' @include glm_logml_post.R
 #' @include mixture_loglik.R
 #'
 #' @export
@@ -54,13 +55,13 @@
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of data sets (including the current
 #'                          data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
 #'                          scalar is provided, same as for `meta.mean.mean`. Defaults to a vector of 10s.
-#' @param norm.vague.mean   a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the means for the vague normal prior on regression coefficients. If a scalar is provided,
-#'                          `norm.vague.mean` will be a vector of repeated elements of the given scalar. Defaults to a
-#'                          vector of 0s.
-#' @param norm.vague.sd     a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-#'                          the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
-#'                          for `norm.vague.mean`. Defaults to a vector of 10s.
+#' @param norm.vague.mean   same as `beta.mean` in [glm.post()]. It is a scalar or a vector whose dimension is equal to the
+#'                          number of regression coefficients giving the means for the vague normal prior on regression
+#'                          coefficients. If a scalar is provided, `norm.vague.mean` will be a vector of repeated elements
+#'                          of the given scalar. Defaults to a vector of 0s.
+#' @param norm.vague.sd     same as `beta.sd` in [glm.post()]. It is a scalar or a vector whose dimension is equal to the
+#'                          number of regression coefficients giving the sds for the vague normal prior on regression
+#'                          coefficients. If a scalar is provided, same as for `norm.vague.mean`. Defaults to a vector of 10s.
 #' @param bridge.args       a `list` giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 #'                          onto [bridgesampling::bridge_sampler()].
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
@@ -81,12 +82,12 @@
 #'    obtained from using [glm.bhm()]}
 #'
 #'    \item{post.samples.vague}{an object of class `draws_df` giving posterior samples under the vague/non-informative prior, obtained
-#'    from using [glm.reference()]}
+#'    from using [glm.post()]}
 #'
 #'    \item{bs.map}{output from computing log marginal likelihood of the prior induced by the BHM (referred to as the meta-analytic predictive
 #'    (MAP) prior) via [glm.logml.map()] function}
 #'
-#'    \item{bs.vague}{output from computing log marginal likelihood of the vague prior via [glm.logml.reference()] function}
+#'    \item{bs.vague}{output from computing log marginal likelihood of the vague prior via [glm.logml.post()] function}
 #'  }
 #'
 #' @references
@@ -161,7 +162,7 @@ glm.rmap = function(
   logml.map = bs.map$logml
 
   ## get posterior samples under the vague prior
-  d.vague = glm.reference(
+  d.vague = glm.post(
     formula        = formula,
     family         = family,
     data.list      = data.list,
@@ -175,8 +176,8 @@ glm.rmap = function(
     chains         = chains,
     ...
   )
-  ## compute log marginal likelihood under reference prior
-  bs.vague = glm.logml.reference(
+  ## compute log marginal likelihood under the vague prior
+  bs.vague = glm.logml.post(
     post.samples   = d.vague,
     bridge.args    = bridge.args
   )

@@ -1,13 +1,10 @@
-#' Posterior of a non-informative reference prior
+#' Posterior of a normal/half-normal prior
 #'
-#' Sample from the posterior distribution of a GLM using a non-informative reference prior (also referred to as
-#' the vague prior).
+#' Sample from the posterior distribution of a GLM using a normal/half-normal prior.
 #'
-#' The priors on the regression coefficients are independent normal priors. The dispersion parameter is assumed to
-
-#' The priors on the regression coefficients are independent normal distributions (typically with large variances).
-#' The dispersion parameter is assumed to be independent of the regression coefficients with a half-normal prior
-#' (if applicable).
+#' The priors on the regression coefficients are independent normal distributions. When the normal priors are elicited
+#' with large variances, the prior is also referred to as the reference or vague prior. The dispersion parameter is
+#' assumed to be independent of the regression coefficients with a half-normal prior (if applicable).
 #'
 #' @include data_checks.R
 #' @include get_stan_data.R
@@ -49,7 +46,7 @@
 #'   ## take subset for speed purposes
 #'   actg019 = actg019[1:100, ]
 #'   data.list = list(currdata = actg019)
-#'   glm.reference(
+#'   glm.post(
 #'     formula = cd4 ~ treatment + age + race,
 #'     family = poisson('log'),
 #'     data.list = data.list,
@@ -57,7 +54,7 @@
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #' }
-glm.reference = function(
+glm.post = function(
     formula,
     family,
     data.list,
@@ -71,8 +68,8 @@ glm.reference = function(
     chains            = 4,
     ...
 ) {
-  ## get Stan data for reference prior
-  standat = get.stan.data.ref(
+  ## get Stan data for normal/half-normal prior
+  standat = get.stan.data.post(
     formula     = formula,
     family      = family,
     data.list   = data.list,
@@ -83,13 +80,13 @@ glm.reference = function(
     disp.sd     = disp.sd
   )
 
-  glm_ref       = instantiate::stan_package_model(
-    name = "glm_reference",
+  glm_post      = instantiate::stan_package_model(
+    name = "glm_post",
     package = "hdbayes"
   )
 
   ## fit model in cmdstanr
-  fit = glm_ref$sample(data = standat,
+  fit = glm_post$sample(data = standat,
                       iter_warmup = iter_warmup, iter_sampling = iter_sampling, chains = chains,
                       ...)
 

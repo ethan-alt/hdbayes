@@ -68,14 +68,14 @@ a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of
 data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
 scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 10s.}
 
-\item{norm.vague.mean}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the means for the vague normal prior on regression coefficients. If a scalar is provided,
-\code{norm.vague.mean} will be a vector of repeated elements of the given scalar. Defaults to a
-vector of 0s.}
+\item{norm.vague.mean}{same as \code{beta.mean} in \code{\link[=glm.post]{glm.post()}}. It is a scalar or a vector whose dimension is equal to the
+number of regression coefficients giving the means for the vague normal prior on regression
+coefficients. If a scalar is provided, \code{norm.vague.mean} will be a vector of repeated elements
+of the given scalar. Defaults to a vector of 0s.}
 
-\item{norm.vague.sd}{a scalar or a vector whose dimension is equal to the number of regression coefficients giving
-the sds for the vague normal prior on regression coefficients. If a scalar is provided, same as
-for \code{norm.vague.mean}. Defaults to a vector of 10s.}
+\item{norm.vague.sd}{same as \code{beta.sd} in \code{\link[=glm.post]{glm.post()}}. It is a scalar or a vector whose dimension is equal to the
+number of regression coefficients giving the sds for the vague normal prior on regression
+coefficients. If a scalar is provided, same as for \code{norm.vague.mean}. Defaults to a vector of 10s.}
 
 \item{bridge.args}{a \code{list} giving arguments (other than samples, log_posterior, data, lb, ub) to pass
 onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}.}
@@ -101,12 +101,12 @@ The function returns a \code{list} with the following objects
 obtained from using \code{\link[=glm.bhm]{glm.bhm()}}}
 
 \item{post.samples.vague}{an object of class \code{draws_df} giving posterior samples under the vague/non-informative prior, obtained
-from using \code{\link[=glm.reference]{glm.reference()}}}
+from using \code{\link[=glm.post]{glm.post()}}}
 
 \item{bs.map}{output from computing log marginal likelihood of the prior induced by the BHM (referred to as the meta-analytic predictive
 (MAP) prior) via \code{\link[=glm.logml.map]{glm.logml.map()}} function}
 
-\item{bs.vague}{output from computing log marginal likelihood of the vague prior via \code{\link[=glm.logml.reference]{glm.logml.reference()}} function}
+\item{bs.vague}{output from computing log marginal likelihood of the vague prior via \code{\link[=glm.logml.post]{glm.logml.post()}} function}
 }
 }
 \description{
@@ -116,8 +116,9 @@ by Schmidli et al. (2014) \url{doi:10.1111/biom.12242}.
 \details{
 The robust meta-analytic predictive prior (RMAP) is a two-part mixture prior consisting of a meta-analytic
 predictive (MAP) prior (the prior induced by Bayesian hierarchical model (BHM)) and a vague (i.e.,
-non-informative) prior. Although Schmidli et al. (2014) recommends to use a finite mixture of conjugate priors
-to approximate the BHM, it can be difficult and time consuming to come up with an appropriate approximation.
+non-informative) prior (specifically, the normal/half-normal prior with large variances). Although Schmidli et al.
+(2014) recommends to use a finite mixture of conjugate priors to approximate the BHM, it can be difficult and
+time-consuming to come up with an appropriate approximation.
 
 Instead, the approach taken by hdbayes is to use the marginal likelihood of the MAP and vague priors.
 Specifically, note that the posterior distribution of a GLM under RMAP is also a two-part mixture distribution.

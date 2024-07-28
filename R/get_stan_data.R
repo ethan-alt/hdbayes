@@ -652,12 +652,12 @@ get.stan.data.npp = function(
 }
 
 
-#' get Stan data for reference prior
+#' get Stan data for normal/half-normal prior
 #'
 #' @include data_checks.R
 #'
 #' @noRd
-get.stan.data.ref = function(
+get.stan.data.post = function(
     formula,
     family,
     data.list,
@@ -707,4 +707,3 @@ get.stan.data.ref = function(
   )
   return(standat)
 }
-

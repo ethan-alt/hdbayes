@@ -9,7 +9,7 @@
 #'
 #' @include data_checks.R
 #' @include expfam_loglik.R
-#' @include glm_logml_reference.R
+#' @include glm_logml_post.R
 #' @include glm_pp_lognc.R
 #'
 #' @export
@@ -29,7 +29,7 @@
 #'
 #' @return
 #'  If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples are obtained from using only
-#'  one data set (the current data), then the function will return the same result as the output from [glm.logml.reference()].
+#'  one data set (the current data), then the function will return the same result as the output from [glm.logml.post()].
 #'
 #'  If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a `list` with the following objects
 #'
@@ -91,17 +91,17 @@ glm.logml.pp = function(
   a0_vals   = stan.data$a0_vals
 
   if ( K == 1 || sum(a0_vals) == 1 ){
-    ## PP is equivalent to reference prior in this case
-    stan.data.ref = stan.data[c('p', 'mean_beta', 'sd_beta', 'disp_mean', 'disp_sd',
+    ## PP is equivalent to normal/half-normal prior in this case
+    stan.data.post   = stan.data[c('p', 'mean_beta', 'sd_beta', 'disp_mean', 'disp_sd',
                                 'dist', 'link')]
-    n             = stan.data$end_idx[1] ## current data sample size
-    stan.data.ref$n = n
-    stan.data.ref$y = stan.data$y[1:n]
-    stan.data.ref$X = stan.data$X[1:n, ]
-    stan.data.ref$offs = stan.data$offs[1:n]
+    n                = stan.data$end_idx[1] ## current data sample size
+    stan.data.post$n = n
+    stan.data.post$y = stan.data$y[1:n]
+    stan.data.post$X = stan.data$X[1:n, ]
+    stan.data.post$offs = stan.data$offs[1:n]
 
-    attr(post.samples, 'data') = stan.data.ref
-    res = glm.logml.reference(
+    attr(post.samples, 'data') = stan.data.post
+    res = glm.logml.post(
       post.samples = post.samples,
       bridge.args = bridge.args
     )

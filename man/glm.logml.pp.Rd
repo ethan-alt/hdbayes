@@ -34,7 +34,7 @@ in cmdstanr package.}
 }
 \value{
 If all of the power prior parameters (\eqn{a_0}'s) are equal to zero, or if the posterior samples are obtained from using only
-one data set (the current data), then the function will return the same result as the output from \code{\link[=glm.logml.reference]{glm.logml.reference()}}.
+one data set (the current data), then the function will return the same result as the output from \code{\link[=glm.logml.post]{glm.logml.post()}}.
 
 If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a \code{list} with the following objects
 

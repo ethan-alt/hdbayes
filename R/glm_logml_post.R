@@ -1,15 +1,14 @@
-#' Log marginal likelihood of a GLM under non-informative reference prior
+#' Log marginal likelihood of a GLM under a normal/half-normal prior
 #'
-#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a GLM under the non-informative reference
-#' prior (also referred to as the vague prior).
+#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a GLM under the normal/half-normal prior.
 #'
 #' @include expfam_loglik.R
 #'
 #' @export
 #'
-#' @param post.samples      output from [glm.reference()] giving posterior samples of a GLM under the non-informative
-#'                          reference prior, with an attribute called 'data' which includes the list of variables
-#'                          specified in the data block of the Stan program.
+#' @param post.samples      output from [glm.post()] giving posterior samples of a GLM under the normal/half-normal
+#'                          prior, with an attribute called 'data' which includes the list of variables specified
+#'                          in the data block of the Stan program.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`) to
 #'                          pass onto [bridgesampling::bridge_sampler()].
 #'
@@ -17,12 +16,12 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"Reference"}
+#'    \item{model}{"Normal/Half-Normal"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
 #'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
-#'    to compute the logarithm of the marginal likelihood of the non-informative reference prior}
+#'    to compute the logarithm of the marginal likelihood of the normal/half-normal prior}
 #'  }
 #'
 #' @references
@@ -35,17 +34,17 @@
 #'   data.list = list(currdata = actg019)
 #'   formula = cd4 ~ treatment + age + race
 #'   family = poisson('log')
-#'   d.ref = glm.reference(
+#'   d.post = glm.post(
 #'     formula = formula, family = family,
 #'     data.list = data.list,
 #'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
-#'   glm.logml.reference(
-#'     post.samples = d.ref,
+#'   glm.logml.post(
+#'     post.samples = d.post,
 #'     bridge.args = list(silent = TRUE)
 #'   )
 #' }
-glm.logml.reference = function(
+glm.logml.post = function(
     post.samples,
     bridge.args       = NULL
 ) {
@@ -105,7 +104,7 @@ glm.logml.reference = function(
 
   ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
   res = list(
-    'model' = "Reference",
+    'model' = "Normal/Half-Normal",
     'logml' = bs$logml,
     'bs'    = bs
   )
