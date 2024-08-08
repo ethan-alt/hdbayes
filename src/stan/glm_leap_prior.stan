@@ -391,7 +391,7 @@ data {
   vector[n0]            y0;                     // response vector for historical data
   matrix[n0,p]          X0;                     // design mtx for historical data
   matrix[p,K]           mean_beta;              // mean for normal initial prior on coefficients
-  matrix[p,K]           sd_beta;                // sd for normal initial prior on coefficients
+  matrix<lower=0>[p,K]  sd_beta;                // sd for normal initial prior on coefficients
   vector[K]             disp_mean;              // mean for the half-normal prior for dispersion of each dataset
   vector<lower=0>[K]    disp_sd;                // sd for the half-normal prior for dispersion of each dataset
   vector<lower=0>[K]    conc;                   // Concentration parameter for exchangeability
