@@ -1,0 +1,726 @@
+---
+title: "AIDS_Progression"
+output: rmarkdown::html_vignette
+bibliography: hdbayes.bib 
+vignette: >
+  %\VignetteIndexEntry{AIDS_Progression}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+Here we will analyse the data in Section 4.2 of @Chen1999 using a logistic regression 
+model. 
+The analysis consists of two AIDS clinical trials called ACTG036 and ACTG019,
+the data for which can be accessed by calling `data(actg036)` and
+`data(actg019)`, respectively (see below).
+
+The historical data will come from the ACTG019 (@Volberding1990) study, which
+was a double-blind placebo-controlled clinical trial comparing zidovudine (AZT)
+with a placebo in people with CD4 cell counts less than 500.
+The sample size of complete observations for this study was $n_0 = 822$.
+The response variable ($y_0$) for these data is binary, with 1 indicating death,
+development of AIDS or ARC and 0 otherwise.
+We will use the following covariates:  `cd4` (CD4 cell count), `age`, `treatment` and
+`race`.
+To facilitate computation, we will center and scale the continuous covariates (`age` and `cd4`) based on the current data.
+In general, we recommend this centering procedure in order to keep coefficients on roughly the same scale and thus avoid difficult posterior geometries for the Stan dynamic Hamiltonian Monte Carlo (dHMC) procedure to explore.
+
+We will use the methods in **hdbayes** to construct informative priors using the
+ACTG019 data as historical data in order to analyze the data from ACTG036 study
+(@Merigan1991), for which we will use the same four covariates.
+For the ACTG036 study the sample size was $n = 183$.
+
+Let's take a look at the data and take the opportunity to center and scale the continuous
+covariates (`cd4` and `age`):
+
+```{r setup}
+library(hdbayes)
+library(posterior)
+library(dplyr)
+library(parallel)
+library(ggplot2)
+library(tibble)
+```
+
+```{r setup_data}
+age_stats <- with(actg036,
+                  c('mean' = mean(age), 'sd' = sd(age)))
+cd4_stats <- with(actg036,
+                  c('mean' = mean(cd4), 'sd' = sd(cd4)))
+actg036$age <- ( actg036$age - age_stats['mean'] ) / age_stats['sd']
+actg019$age <- ( actg019$age - age_stats['mean'] ) / age_stats['sd']
+actg036$cd4 <- ( actg036$cd4 - cd4_stats['mean'] ) / cd4_stats['sd']
+actg019$cd4 <- ( actg019$cd4 - cd4_stats['mean'] ) / cd4_stats['sd']
+```
+
+To establish a baseline, we will estimate the parameters via maximum likelihood,
+using `glm()` from **stats**:
+
+```{r mle}
+formula <- outcome ~  age + race + treatment + cd4
+p       <- length(attr(terms(formula), "term.labels")) # number of predictors
+family  <- binomial('logit')
+# frequentist analysis of current and historical data separately using GLM
+fit.mle.cur  <- glm(formula, family, actg036)
+fit.mle.hist <- glm(formula, family, actg019)
+
+summary(fit.mle.hist)
+summary(fit.mle.cur)
+
+suppressMessages(confint(fit.mle.hist))
+suppressMessages(confint(fit.mle.cur))
+
+the.data <-  list(actg036, actg019)
+```
+from which we can see quite some discrepancy in the coefficient estimates.
+In particular, there is substantial uncertainty in the estimates of the treatment
+effect, as evidenced by a wide 95% confidence interval.
+We would thus like to incorporate information from the ACTG019 trial into a prior
+distribution for the regression coefficients.
+We will use the plethora of methods available in **hdbayes** to construct informative priors using the available historical data.
+
+
+## Bayesian Hierarchical model (BHM)
+
+Our first approach will be to fit a Bayesian hierarchical model (BHM), where we model
+the coefficients for historical and current data jointly through a hierarchical (multilevel) structure: the coefficients for each study are drawn from the same multivariate normal distribution. The hyperparameters of this distribution are also assigned hyperpriors.
+
+In summary, we employ the model:
+$$
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right), \ \ i = 1, \ldots, n \\
+  y_{0i} | x_{0i}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0}) \right), \ \ i = 1, \ldots, n_{0} \\
+  \beta, \beta_{0} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where } \Sigma_{0} \text{ is a diagonal matrix} \\
+  \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
+\end{align*}
+$$
+
+where $\beta$ is the vector of regression coefficients of the current data
+set, $\beta_{0}$ is the vector of regression coefficients for the historical data
+set, $\mu$ is the common prior mean of $\beta$ and $\beta_{0}$, which is
+treated as random with a normal hyperprior having mean $\mu_0$, and a diagonal
+covariance matrix $\Sigma_{0}$. $\Sigma$ is also treated as random and assumed 
+to be a diagonal matrix. Half-normal hyperpriors are elicited on the diagonal 
+entries of $\Sigma$.
+
+We set
+
+* $\mu_0 = \textbf{0}_p$, where $\textbf{0}_p$ denotes a $p$-dimensional vector of 0s
+* $\Sigma_{0} = 100 \times I_p$
+* $\nu_{0,j} = 0$ for $j = 1, \ldots, p$
+* $\psi_{0,j} = 0.5$ for $j = 1, \ldots, p$
+where $p$ is the number of predictors (including the intercept if applicable).
+
+To fit this model, let us first set up the computational specs, which will also be
+used in the subsequent analyses.
+
+```{r compsetup}
+ncores        <- 2 # maximum number of MCMC chains to run in parallel
+nchains       <- 4 # number of Markov chains
+iter_warmup   <- 1000 # warmup per chain for MCMC sampling
+iter_sampling <- 2500 # number of samples post warmup per chain
+
+base.pars     <- c("(Intercept)", "age", "race", "treatment", "cd4")
+
+# function to pull out the posterior summaries in a convenient form
+get_summaries <- function(fit, pars.interest, digits = 2) {
+  out <- suppressWarnings(subset(posterior::summarise_draws(fit,
+                                           .num_args = list(
+                                             sigfig = digits,
+                                             notation = "dec"
+                                           )),
+                variable %in% pars.interest))
+  return(out)
+}
+```
+
+Now, a simple call to `glm.bhm()` will fit the model:
+```{r bhm, message=FALSE}
+time.bhm <- system.time(
+  fit.bhm <- glm.bhm(
+    formula, family, the.data,
+    meta.mean.mean = 0, meta.mean.sd = 10,
+    meta.sd.mean = 0, meta.sd.sd = 0.5,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+get_summaries(fit.bhm, pars.interest = base.pars)
+```
+As we can see, all MCMC (Stan) diagnostics (Rhat, divergences, etc) look good so we can continue.
+
+
+## Commensurate prior
+
+Next, we consider the commensurate prior of @Hobbs2012.
+This model has the following structure:
+$$
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0}) \right) \\
+  \beta_{0} &\sim N_p(\mu_0, \Sigma_{0}) , \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
+  \beta_j &\sim N_1\left( \beta_{0j}, \tau_j^{-1} \right), j = 1, \ldots, p \\
+  \tau_j &\overset{\text{i.i.d.}}{\sim} p_{\text{spike}} \cdot N^{+}(\mu_{\text{spike}}, \sigma_{\text{spike}}^2) + (1 - p_{\text{spike}}) \cdot N^{+}(\mu_{\text{slab}}, \sigma_{\text{slab}}^2),\: j = 1, \ldots, p 
+\end{align*}
+$$
+where $\beta = (\beta_1, \ldots, \beta_p)'$, $\beta_{0} = (\beta_{01}, \ldots, \beta_{0p})'$. The commensurability parameters (i.e., $\tau_j$'s) are treated as random with a spike-and-slab prior, which is specified as a mixture of two half-normal priors. We use the following default values in **hdbayes**:
+
+* $\mu_0 = \textbf{0}_p$
+* $\Sigma_{0} = 100 \times I_p$
+* $p_{\text{spike}}  = 0.1$
+* $\mu_{\text{spike}} = 200$
+* $\sigma_{\text{spike}} = 0.1$
+* $\mu_{\text{slab}} = 0$
+* $\sigma_{\text{slab}} = 5$
+
+Again, a simple call to the appropriate function will fit the model.
+```{r commensurate, message=FALSE}
+time.commensurate <- system.time(
+  fit.commensurate <- glm.commensurate(
+    formula = formula, family = family, data.list = the.data,
+    p.spike = 0.1, spike.mean = 200, spike.sd = 0.1,
+    slab.mean = 0, slab.sd = 5,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+get_summaries(fit.commensurate, pars.interest = base.pars)
+```
+And again the diagnostics are fine, so we may proceed with our exploration of
+informative priors.
+
+## Robust Meta-Analytic Predictive (RMAP) Prior
+The RMAP prior is a generalization of the Bayesian Hierarchical Model (BHM), and takes the form
+$$
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right) \\
+  y_{0i} | x_{0i}, \beta_{0} &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0}) \right) \\
+  \beta_{0} &\sim N_p(\mu, \Sigma), \text{ where }\Sigma = \text{diag}(\sigma_1^2, \ldots, \sigma_p^2) \\
+  \beta   &\sim w \times N_p(\mu, \Sigma) + (1 - w) N_p(\mu_v, \Sigma_v) \\
+  \mu &\sim N_p(\mu_0, \Sigma_{0}), \text{ where }\Sigma_{0} \text{ is a diagonal matrix} \\
+  \sigma_j &\sim N^{+}(\nu_{0,j}, \psi_{0,j}^2),\: j = 1, \ldots, p
+\end{align*}
+$$
+where $w \in (0,1)$ controls for the level of borrowing of the historical data.
+Note that when $w = 1$, the robust MAP prior effectively becomes the BHM. The
+defaults are the same as in the BHM except the default value for $w$ is 0.1, and 
+the default vague/non-informative prior $N_p(\mu_v, \Sigma_v)$ is specified as:
+
+* $\mu_v = \textbf{0}_p$
+* $\Sigma_v = 100 \times I_p$
+
+We will explore how different values of $w$ affect the posterior results. The RMAP can be called with `glm.rmap()`:
+```{r robustmap, message=FALSE}
+rmap.t1 <- system.time(
+  res.rmap.a <- glm.rmap(
+    formula = formula, family = family, data.list = the.data,
+    w = 0.1,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+fit.rmap.a <- res.rmap.a[["post.samples"]]
+
+rmap.t2 <- system.time(
+  res.rmap.b <- glm.rmap(
+    formula = formula, family = family, data.list = the.data,
+    w = 0.5,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+fit.rmap.b <- res.rmap.b[["post.samples"]]
+
+rmap.t3 <- system.time(
+  res.rmap.c <- glm.rmap(
+    formula = formula, family = family, data.list = the.data,
+    w = 0.9,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+fit.rmap.c <- res.rmap.c[["post.samples"]]
+
+time.rmap <- rmap.t2
+
+get_summaries(fit.rmap.a, pars.interest = base.pars)
+get_summaries(fit.rmap.b, pars.interest = base.pars)
+get_summaries(fit.rmap.c, pars.interest = base.pars)
+```
+The diagnostics look good, so we will proceed.
+
+
+## Power priors
+
+In this section we will explore the power prior (PP, @Ibrahim2000) and its variations: the normalized  power prior (NPP, @Duan2006, @Neuenschwander2009) and the normalized asymptotic power prior (NAPP, @Ibrahim2015).
+The Power Prior takes the form
+$$
+\begin{align*}
+  &y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{PP}}(\beta | D_0, a_{0}) \propto 
+    L(\beta | D_{0})^{a_{0}} \pi_0(\beta)
+\end{align*}
+$$
+
+where $L(\beta | D)$ is the likelihood of the GLM based on data set $D$, $a_{0} \in (0,1)$ is a fixed hyperparameter controlling the effective sample size contributed by the historical data set $D_{0}$, and $\pi_0(\beta)$ is an "initial prior" for $\beta$.
+
+The default in **hdbayes** is a (non-informative) normal initial prior on $\beta$:
+$$
+\beta \sim N_p(\textbf{0}_p, 100 \times I_p)
+$$
+
+The question that then arises is how to choose $a_0$.
+While no definitive answer can be given without context of the specific data and model
+under analysis, we find it reasonable to set $a_0 = a^\star = \frac{1}{2}\frac{n}{n_0}$.
+This way, when the historical and current data sets are of the same size, we set the borrowing factor to $a_0 = 1/2$, reflecting no particular desire to either borrow or not borrow information.
+Let us do just that
+```{r astar}
+n0 <- nrow(actg019)
+n <- nrow(actg036)
+a0.star <- (n/n0) * 1/2
+```
+and then proceed to call `glm.pp()` twice (once for $a_0 = 1/2$ and once for $a_0 = a^\star$):
+
+```{r pp}
+time.pp <- system.time(
+  fit.pp  <- glm.pp(
+    formula = formula, family = family, data.list = the.data,
+    a0 = 0.5,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+time.pp.star <- system.time(
+  fit.pp.star  <- glm.pp(
+    formula = formula, family = family, data.list = the.data,
+    a0 = a0.star,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+get_summaries(fit.pp, pars.interest = base.pars)
+get_summaries(fit.pp.star, pars.interest = base.pars)
+```
+from which we can see that (i) all of the diagnostics are fine and (ii) the choice 
+of $a_0$ does seem to matter (look at the estimates for the `treatment` coefficient).
+
+
+## Normalized power prior (NPP)
+
+Now we are prepared to start our normalized power prior analysis.
+The NPP treats the hyperparameter $a_0$ as random, allowing the data to decide
+what is the best value.
+For most models, this requires estimating the normalizing constant
+$Z(a_0) = \int L(\beta | D_0)^{a_0} \pi_0(\beta) d\beta$.
+
+The NPP may be summarized as
+$$
+\begin{align*}
+&y_i | x_i, \beta \sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  &\pi_{\text{NPP}}(\beta| D_0, a_0) = \frac{ L(\beta | D_{0})^{a_{0}} }{Z(a_{0})} \pi_0(\beta)\\
+&\pi(a_{0}) \propto a_0^{\alpha_0 - 1} (1 - a_0)^{\gamma_0 - 1}
+\end{align*}
+$$
+
+The defaults in **hdbayes** are
+
+* $\pi_0(\beta) \propto N(\beta | 0, 100 \times I_p)$;
+* $\alpha_0 = 1$;
+* $\gamma_0 = 1$,
+
+when $\alpha_0 = 1$ and $\gamma_0 = 1$, the prior on $a_0$ is a $U(0,1)$
+prior.
+
+We thus might decide to let $a_0$ vary and be estimated from data.
+This naturally necessitates placing a prior on $a_0$.
+We will now construct a Beta prior for $a_0$ centred on $a^\star = \frac{1}{2}\frac{n}{n_0}$ with coefficient of variation (cv) equal to $1$:
+
+```{r, echo=FALSE}
+load("AIDS_Progression_lognc.RData")
+```
+
+```{r, eval=FALSE}
+# construct Beta prior with cv = 1
+devtools::source_url("https://raw.githubusercontent.com/maxbiostat/logPoolR/main/R/beta_elicitator.r")
+beta.pars <- elicit_beta_mean_cv(m0 = a0.star, cv = 1)
+```
+
+```{r a0prior, fig.align='center', fig.height=4, fig.width=7, fig.fullwidth=TRUE}
+curve(dbeta(x, shape1 = beta.pars$a, shape2 = beta.pars$b), 
+      lwd = 3,
+      main = "Prior on a0",
+      ylab = "Density",
+      xlab = expression(a[0]))
+abline(v = a0.star, lwd = 2, lty = 3)
+legend(x = "topright",
+       legend = c(expression(pi(a[0])),
+                  expression(a^'*')),
+       lwd = 2, lty = c(1, 3),
+       bty = 'n')
+```
+
+To conduct an NPP analysis we first need to estimate the normalising constant
+$c(a_0)$ for a grid of values of $a_0$.
+In **hdbayes**, there is one function to estimate the normalizing constant across
+a grid of values for $a_0$ and another to obtain posterior samples of the
+normalized power prior.
+
+```{r normconst, eval=FALSE}
+a0       <- seq(0, 1, length.out = 21)
+histdata <- the.data[[2]]
+
+# wrapper to obtain log normalizing constant in parallel package
+logncfun <- function(a0, ...){
+  hdbayes::glm.npp.lognc(
+    formula = formula, family = family, histdata = histdata, a0 = a0, ...
+  )
+}
+cl <- parallel::makeCluster(10)
+parallel::clusterSetRNGStream(cl, 123)
+parallel::clusterExport(cl, varlist = c('formula', 'family', 'histdata'))
+# call created function
+time.npp.1 <- system.time(
+  a0.lognc <- parLapply(
+    cl = cl, X = a0, fun = logncfun, iter_warmup = iter_warmup,
+    iter_sampling = iter_sampling, chains = nchains, refresh = 0
+  )
+)
+parallel::stopCluster(cl)
+
+a0.lognc <- data.frame( do.call(rbind, a0.lognc) )
+```
+We will now fit the NPP with both a uniform (Beta(1, 1)) and the informative prior 
+on $a_0$ devised above using the dictionary of $a_0$ and $Z(a_0)$ we just created:
+
+```{r nppfits, message=FALSE}
+time.npp.2 <- system.time(
+  fit.npp_unif <- glm.npp(
+    formula = formula, family = family, data.list = the.data,
+    a0.lognc = a0.lognc$a0,
+    lognc = matrix(a0.lognc$lognc, ncol = 1),
+    a0.shape1 = 1, a0.shape2 = 1, # uniform prior on a0
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+time.npp.2.star <- system.time(
+  fit.npp.star <- glm.npp(
+    formula = formula, family = family, data.list = the.data,
+    a0.lognc = a0.lognc$a0,
+    lognc = matrix(a0.lognc$lognc, ncol = 1),
+    a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b, # beta prior on a0
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+get_summaries(fit.npp_unif, pars.interest = base.pars)
+get_summaries(fit.npp.star, pars.interest = base.pars)
+```
+With all diagnostics failing to detect problems we move on.
+
+
+## Normalized asymptotic power prior (NAPP)
+
+The Normalized asymptotic power prior (NAPP) uses a large sample theory argument to formulate a normal approximation to the power prior, i.e., the prior is given by
+$$
+\beta | a_0 \sim N(\hat{\beta}_0, a_0^{-1} [I_n(\beta)]^{-1}),
+$$
+where $\hat{\beta}_0$ is the maximum likelihood estimate (MLE) of $\beta$
+based on the historical data and $I_n(\beta)$ is the associated information
+matrix (negative Hessian).
+
+In this case, the normalizing constant is known, so we do not need to estimate
+the normalizing constant before sampling.
+
+The following code analyzes the data set using the NAPP:
+```{r nappfits, message=FALSE}
+time.napp <- system.time(
+  fit.napp_unif <- glm.napp(
+    formula = formula, family = family, data.list = the.data,
+    a0.shape1 = 1, a0.shape2 = 1,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+
+time.napp.star <- system.time(
+  fit.napp.star <- glm.napp(
+    formula = formula, family = family, data.list = the.data,
+    a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+get_summaries(fit.napp_unif, pars.interest = base.pars)
+get_summaries(fit.napp.star, pars.interest = base.pars)
+```
+
+
+## Latent exchangeability prior (LEAP)
+
+The LEAP assumes that the historical data are generated from a finite mixture model consisting of $K \ge 2$ components, with the current data generated from the first component of this mixture. The posterior under the LEAP may be expressed hierarchically as
+$$
+\begin{align*}
+  y_i | x_i, \beta &\sim \text{Bernoulli}\left( \text{logit}^{-1}(x_i'\beta) \right)
+  , \ \ i = 1, \ldots, n\\
+  y_{0i} | x_{0i}, \beta, \beta_{0k}, \gamma &\sim \gamma_1 \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta) \right) + \sum_{k=2}^K \gamma_k \text{Bernoulli}\left( \text{logit}^{-1}(x_{0i}'\beta_{0k}) \right)
+  , \ \ i = 1, \ldots, n_0
+  \\
+  \beta, \beta_{0k} &\overset{\text{i.i.d.}}{\sim} N(\mu_0, \Sigma_{0}), \:k = 2, \ldots, K, \text{ where }\Sigma_{0} = \text{diag}(\sigma_{01}^2, \ldots, \sigma_{0p}^2) \\
+  \gamma &\sim \text{Dirichlet}(\alpha_{0})
+\end{align*}
+$$
+where $\gamma = (\gamma_1, \ldots, \gamma_K)'$ is a vector of mixing probabilities, $\alpha_{0} = (\alpha_1, \ldots, \alpha_K)'$ is a vector of concentration parameters, and $\mu_0$ and $\Sigma_{0}$ are respectively the prior mean and covariance matrices for the $K$ regression coefficients. The defaults in **hdbayes** are
+
+* $\mu_0 = \textbf{0}_p$
+* $\Sigma_{0} = 100 \times I_p$
+* $\alpha_{0} = \textbf{1}_K$, where $\textbf{1}_K$ denotes a $K$-dimensional vector of 1s
+* $K = 2$
+
+The LEAP can be fit as follows:
+```{r leapfits, message=FALSE}
+time.leap <- system.time(
+  fit.leap <- glm.leap(
+    formula = formula, family = family, data.list = the.data,
+    K = 2, prob.conc = rep(1, 2),
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    chains = nchains, parallel_chains = ncores,
+    refresh = 0
+  )
+)
+get_summaries(fit.leap, pars.interest = base.pars)
+```
+
+##  Comparison of methods
+After all this work, we can now finally compare the point estimate (MLE / posterior mean) and uncertainty (SE / posterior standard deviation) of all the methods considered here.
+
+```{r comparison}
+fit.list <- list('BHM' = fit.bhm,
+                 'Commensurate' = fit.commensurate,
+                 'RMAP_w=0.1' = fit.rmap.a,
+                 'RMAP_w=0.5' = fit.rmap.b,
+                 'RMAP_w=0.9' = fit.rmap.c,
+                 'NAPP_unif' = fit.napp_unif,
+                 'NAPP' = fit.napp.star,
+                 'NPP_unif' = fit.npp_unif,
+                 'NPP' = fit.npp.star,
+                 'PP_half' = fit.pp,
+                 'PP' = fit.pp.star,
+                 'LEAP' = fit.leap)
+```
+As we can see, there seems to be quite some variation in estimates across methods.
+To aid our understanding, we will now visualize the posterior distributions for
+each method:
+
+```{r prepfigs, echo=FALSE}
+get_quants <- function(x, name){
+  pars <- names(coef(fit.mle.cur))
+  summs <- get_summaries(x, pars.interest = pars)
+  out <- tibble::tibble(
+    parameter = pars,
+    mean = as.numeric(unlist(summs[, "mean"])),
+    sd = as.numeric(unlist(summs[, "sd"])),
+    lwr = as.numeric(unlist(summs[, "q5"])),
+    upr = as.numeric(unlist(summs[, "q95"]))
+  )
+  out$model <- name
+  return(out)
+} 
+
+
+model.names <- names(fit.list)
+
+results.list <- lapply(seq_along(fit.list), function(i){
+  get_quants(x = fit.list[[i]], name = model.names[i])
+})
+results <- do.call(rbind, results.list)
+
+# obtain MLE estimates of current and historical data models
+mle.estimates.past <- data.frame(
+  parameter = names(coef(fit.mle.hist)),
+  value = coef(fit.mle.hist),
+  MLE = "Historical"
+)
+mle.estimates.curr <- data.frame(
+  parameter = names(coef(fit.mle.cur)),
+  value = coef(fit.mle.cur),
+  MLE = "Current"
+)
+```
+
+```{r posteriorplots, echo=FALSE, fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+results$model <- as.factor(results$model)
+LL <- unique(results$model)
+
+Colours <- setNames( c("#465177", "#CDC24D", "#E1B11F", "#AF6522", "#613E30",
+                "#284739", "#497734", "#85A95C", "#9CB9BF", "#B19EEA",
+                "#DF3383", "#0072B2"),
+                LL)
+
+
+mle.estimates <- rbind(mle.estimates.past,
+                       mle.estimates.curr)
+
+not.plot <- c("NPP_unif", "NAPP_unif",
+              "PP_half",
+              "RMAP_w=0.5", "RMAP_w=0.9")
+
+ggplot() + 
+  geom_pointrange(data = subset(results, !model %in% not.plot ),
+                  mapping = aes(x = model,
+                                y = mean,
+                                ymin = lwr, ymax = upr,
+                                colour = model)) +
+  scale_color_manual(values = Colours) + 
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  scale_y_continuous("") +
+  scale_x_discrete("") +
+  facet_wrap(parameter~., scales = "free_y") +
+  ggtitle("AIDS example - logistic regression") +
+  theme_bw(base_size = 20) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+where we have omitted the NPP and NAPP with uniform priors and also the power
+prior with $a_0 = 1/2$ for clarity.
+The first observation to make is that the BHM and commensurate prior shrink the most 
+towards the historical MLE for the `treatment` effect, but the opposite behaviour
+occurs for the coefficient for `age`.
+Let's take a look at the coefficients under the RMAP prior with different values for $w$ ($w=0.1$, $w=0.5$ and $w=0.9$).
+
+```{r rmap_plots, echo=FALSE, fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+rmapstuff <- c("RMAP_w=0.1",
+                 "RMAP_w=0.5",
+                 "RMAP_w=0.9")
+
+ggplot() + 
+  geom_pointrange(
+    data = subset(results, model %in% rmapstuff ),
+    mapping = aes(x = model,
+                  y = mean,
+                  ymin = lwr, ymax = upr,
+                  colour = model)) +
+  scale_y_continuous("") +
+  scale_x_discrete("") +
+  scale_color_manual(values = Colours) + 
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  facet_wrap(parameter~., scales = "free_y") +
+  ggtitle("AIDS example - robust meta-analytic priors") +
+  theme_bw(base_size = 20) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+We can now plot the posterior summaries for the coefficients under the NPP and
+NAPP with uniform and informative priors on $a_0$ in order to visualize the effect
+these different prior choices have on the estimated coefficients.
+
+```{r nxpp_plots, echo=FALSE, fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+normalized <- c("NPP", "NPP_unif",
+                "NAPP", "NAPP_unif")
+ggplot() + 
+  geom_pointrange(
+    data = subset(results, model %in% normalized),
+    mapping = aes(x = model,
+                  y = mean,
+                  ymin = lwr, ymax = upr,
+                  colour = model)) +
+  scale_y_continuous("") +
+  scale_x_discrete("") +
+  scale_color_manual(values = Colours) + 
+  geom_hline(data = mle.estimates,
+             aes(yintercept = value, linetype = MLE)) +
+  scale_linetype_manual(values = c("dotted", "dashed")) + 
+  facet_wrap(parameter~., scales = "free_y") +
+  ggtitle("AIDS example - normalised power priors") +
+  theme_bw(base_size = 20) +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+```
+
+Finally, we will take a look at the posterior distribution of $a_0$ for the NPP
+and NAPP models under uniform and informative priors:
+
+```{r a0post_plots, echo=FALSE, fig.align='left', fig.height=6, fig.width=9, fig.fullwidth=TRUE}
+a0.posteriors <- do.call(rbind, list(
+  tibble(a0 = fit.napp.star$a0_hist_1,
+         model = "NPP"),
+  tibble(a0 = fit.npp_unif$a0_hist_1,
+         model = "NPP_unif"),
+  tibble(a0 = fit.napp.star$a0_hist_1,
+         model = "NAPP"),
+  tibble(a0 = fit.napp_unif$a0_hist_1,
+         model = "NAPP_unif")
+)) 
+
+ggplot() + 
+  geom_density(
+    data = a0.posteriors,
+    mapping = aes(x = a0, colour = model, fill = model),
+    alpha = 0.4) +
+  scale_color_manual(values = Colours) +
+  scale_fill_manual(values = Colours) +
+  stat_function(fun = function(x) dbeta(x, beta.pars$a,
+                                        beta.pars$b),
+                geom = "line", colour = "black",
+                linetype = "longdash") + 
+  geom_vline(xintercept = a0.star, linetype = "dotted") + 
+  scale_y_continuous("", expand = c(0, 0)) +
+  scale_x_continuous(expression(a[0]), expand = c(0, 0))+ 
+  theme_bw(base_size = 20)
+```
+
+where the vertical dotted line marks $a^\star = \frac{1}{2}\frac{n}{n_0}$ and the 
+dashed curve depicts the informative beta prior.
+As we can see, the prior does make a big difference with regards to the posterior
+for $a_0$.
+This is not unexpected, since $a_0$ is a hierarchical parameter and learning it 
+from data is not a simple task.
+
+Now a comparison of running times
+```{r timecomparison}
+time.bhm
+time.commensurate
+time.rmap
+time.pp.star
+time.npp.1 + time.npp.2
+time.npp.1 + time.npp.2.star
+time.napp
+time.napp.star
+time.leap
+```
+
+# References {-}
+
+<div id="refs"></div>
