@@ -15,8 +15,8 @@ Description: User-friendly functions for leveraging (multiple) historical data s
     Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>, robust meta-analytic-predictive (RMAP) prior by 
     Schmidli et al. (2014) <doi:10.1111/biom.12242>, the latent exchangeability prior (LEAP) by Alt et al. (2023) 
     <arXiv:2303.05223>, and a normal/half-normal prior. Functions for computing the marginal likelihood of a GLM 
-    under each of the aforementioned priors (except for the RMAP prior) are also included. The package compiles
-    all the 'CmdStan' models once during installation using the 'instantiate' package.
+    under each of the aforementioned priors are also included. The package compiles all the 'CmdStan' models 
+    once during installation using the 'instantiate' package.
 License: MIT + file LICENSE
 URL: https://github.com/ethan-alt/hdbayes
 BugReports: https://github.com/ethan-alt/hdbayes/issues
