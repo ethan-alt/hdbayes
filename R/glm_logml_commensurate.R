@@ -71,7 +71,7 @@
 #'   glm.logml.commensurate(
 #'     post.samples = d.cp,
 #'     bridge.args = list(silent = TRUE),
-#'     chains = 1, iter_warmup = 1000, iter_sampling = 2000
+#'     chains = 1, iter_warmup = 500, iter_sampling = 1000
 #'   )
 #' }
 glm.logml.commensurate = function(
