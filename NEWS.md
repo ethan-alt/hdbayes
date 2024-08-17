@@ -2,11 +2,13 @@
 
 ## Enhancements
 
-* Added function for sampling from the posterior distribution of a GLM under a normal/half-normal prior.
-
 * Added functions for computing the logarithm of the marginal likelihood of a GLM under all priors implemented in the package.
 
-* Changed the implementation of robust meta-analytic predictive prior (RMAP) from using a Gaussian mixture model to approximate the MAP prior to computing the updated mixture weights based on marginal likelihoods. Specifically, we removed `glm.rmap.bhm()` and `glm.rmap.bhm.approx()` functions. The posterior samples from using the RMAP now can be obtained via calling `glm.rmap()` function directly.
+* Updated the implementation of commensurate prior to be fully Bayesian.
+
+* Updated the implementation of robust meta-analytic predictive prior (RMAP) from using a Gaussian mixture model to approximate the MAP prior to computing the updated mixture weights based on marginal likelihoods. Specifically, we removed `glm.rmap.bhm()` and `glm.rmap.bhm.approx()` functions. The posterior samples from using the RMAP now can be obtained via calling `glm.rmap()` function directly.
+
+* Added function for sampling from the posterior distribution of a GLM under a normal/half-normal prior.
 
 * Added the vignette "AIDS_Progression".
 
