@@ -203,16 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 5.9 seconds.
-#> Chain 1 finished in 6.5 seconds.
-#> Chain 2 finished in 7.7 seconds.
-#> Chain 4 finished in 8.7 seconds.
+#> Chain 2 finished in 8.2 seconds.
+#> Chain 1 finished in 9.0 seconds.
+#> Chain 3 finished in 9.5 seconds.
+#> Chain 4 finished in 9.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 7.2 seconds.
-#> Total execution time: 8.9 seconds.
-#> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
-#> See https://mc-stan.org/misc/warnings for details.
+#> Mean chain execution time: 9.1 seconds.
+#> Total execution time: 10.0 seconds.
 
 suppressWarnings(
   fit.bhm[, 2:7] %>% 
@@ -222,12 +220,12 @@ suppressWarnings(
 #> # A tibble: 6 × 10
 #>   variable         mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>           <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)     0.841  0.84  0.246 0.245  0.444  1.25      1    9227.    7493.
-#> 2 z               0.625  0.623 0.284 0.281  0.165  1.09      1   10427.    7014.
-#> 3 x              -0.789 -0.787 0.165 0.163 -1.06  -0.522     1    9982.    7062.
-#> 4 (Intercept)_h…  0.929  0.921 0.296 0.284  0.461  1.43      1    9080.    7177.
-#> 5 z_hist_1        0.464  0.472 0.357 0.347 -0.13   1.03      1    8842.    7229.
-#> 6 x_hist_1       -0.839 -0.833 0.213 0.205 -1.20  -0.496     1    9488.    7331.
+#> 1 (Intercept)     0.842  0.84  0.246 0.246  0.438  1.25      1    9912.    7113.
+#> 2 z               0.619  0.615 0.286 0.283  0.151  1.1       1    8977.    6988.
+#> 3 x              -0.788 -0.786 0.166 0.159 -1.07  -0.519     1    9548.    6723.
+#> 4 (Intercept)_h…  0.937  0.926 0.302 0.293  0.458  1.44      1    8523.    6766.
+#> 5 z_hist_1        0.46   0.461 0.368 0.362 -0.159  1.05      1    8395.    6735.
+#> 6 x_hist_1       -0.842 -0.836 0.215 0.207 -1.21  -0.497     1    8746.    7471.
 ```
 
 ### Commensurate prior
@@ -276,14 +274,14 @@ fit.commensurate = glm.commensurate(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 1.0 seconds.
-#> Chain 2 finished in 1.1 seconds.
-#> Chain 3 finished in 1.0 seconds.
-#> Chain 4 finished in 1.0 seconds.
+#> Chain 2 finished in 1.2 seconds.
+#> Chain 1 finished in 1.3 seconds.
+#> Chain 3 finished in 1.2 seconds.
+#> Chain 4 finished in 1.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 1.1 seconds.
-#> Total execution time: 1.2 seconds.
+#> Mean chain execution time: 1.2 seconds.
+#> Total execution time: 1.4 seconds.
 
 suppressWarnings(
   fit.commensurate[, 2:10] %>% 
@@ -293,15 +291,15 @@ suppressWarnings(
 #> # A tibble: 9 × 10
 #>   variable         mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>           <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)     0.84   0.838 0.25  0.249  0.43   1.25      1    5213.    5334.
-#> 2 z               0.618  0.617 0.285 0.286  0.145  1.08      1    6147.    5499.
-#> 3 x              -0.784 -0.78  0.174 0.167 -1.08  -0.502     1    5742.    5226.
-#> 4 (Intercept)_h…  0.951  0.944 0.302 0.3    0.465  1.46      1    5398.    5545.
-#> 5 z_hist          0.462  0.458 0.357 0.355 -0.124  1.05      1    6093.    5317.
-#> 6 x_hist         -0.858 -0.855 0.228 0.23  -1.24  -0.483     1    6225.    5229.
-#> 7 comm_prec[1]    4.79   4.30  3.07  3.06   0.75  10.5       1    5374.    2879.
-#> 8 comm_prec[2]    4.62   4.08  3.01  2.96   0.69  10.3       1    5740.    3697.
-#> 9 comm_prec[3]    4.91   4.43  3.08  3.16   0.855 10.6       1    5472.    3404.
+#> 1 (Intercept)     0.838  0.837 0.251 0.251  0.435  1.26   1       5711.    5176.
+#> 2 z               0.625  0.624 0.28  0.285  0.168  1.08   1       6389.    5850.
+#> 3 x              -0.786 -0.784 0.17  0.167 -1.07  -0.509  1.00    6249.    5381.
+#> 4 (Intercept)_h…  0.942  0.933 0.306 0.301  0.443  1.46   1       5755.    5623.
+#> 5 z_hist          0.468  0.471 0.357 0.351 -0.124  1.04   1       6387.    5579.
+#> 6 x_hist         -0.854 -0.849 0.229 0.226 -1.24  -0.486  1       6247.    5721.
+#> 7 comm_prec[1]    4.73   4.16  3.06  3.03   0.724 10.5    1       5532.    3831.
+#> 8 comm_prec[2]    4.62   4.11  2.98  2.94   0.736 10.2    1       5644.    3474.
+#> 9 comm_prec[3]    4.93   4.42  3.08  3.08   0.834 10.7    1       5757.    3410.
 ```
 
 ### Robust meta-analytic predictive (MAP) prior
@@ -378,47 +376,47 @@ res.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 5.6 seconds.
-#> Chain 2 finished in 6.0 seconds.
-#> Chain 1 finished in 6.4 seconds.
-#> Chain 4 finished in 7.2 seconds.
+#> Chain 2 finished in 7.9 seconds.
+#> Chain 3 finished in 9.4 seconds.
+#> Chain 4 finished in 9.4 seconds.
+#> Chain 1 finished in 11.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 6.3 seconds.
-#> Total execution time: 7.4 seconds.
-#> Warning: 2 of 8000 (0.0%) transitions ended with a divergence.
+#> Mean chain execution time: 9.6 seconds.
+#> Total execution time: 11.9 seconds.
+#> Warning: 3 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 3.0 seconds.
-#> Chain 4 finished in 3.0 seconds.
-#> Chain 2 finished in 3.2 seconds.
-#> Chain 3 finished in 3.1 seconds.
+#> Chain 3 finished in 3.4 seconds.
+#> Chain 2 finished in 4.1 seconds.
+#> Chain 4 finished in 4.0 seconds.
+#> Chain 1 finished in 4.3 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 3.1 seconds.
-#> Total execution time: 3.3 seconds.
+#> Mean chain execution time: 4.0 seconds.
+#> Total execution time: 4.4 seconds.
 #> 
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 0.7 seconds.
-#> Chain 4 finished in 0.6 seconds.
 #> Chain 1 finished in 0.8 seconds.
-#> Chain 3 finished in 0.7 seconds.
+#> Chain 2 finished in 0.8 seconds.
+#> Chain 3 finished in 0.8 seconds.
+#> Chain 4 finished in 1.0 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.7 seconds.
-#> Total execution time: 0.9 seconds.
+#> Mean chain execution time: 0.9 seconds.
+#> Total execution time: 1.1 seconds.
 fit.rmap = res.rmap$post.samples
 fit.rmap[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 #> # A tibble: 3 × 10
-#>   variable      mean median    sd   mad     q5   q95  rhat ess_bulk ess_tail
-#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl> <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.842  0.846 0.25  0.244  0.426  1.26     1    4782.    3678.
-#> 2 z            0.617  0.609 0.285 0.286  0.166  1.10     1    4658.    3857.
-#> 3 x           -0.787 -0.785 0.168 0.167 -1.07  -0.52     1    4453.    3848.
+#>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
+#>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
+#> 1 (Intercept)  0.849  0.85  0.253 0.251  0.438  1.26      1    4111.    3289.
+#> 2 z            0.617  0.616 0.28  0.28   0.161  1.08      1    3921.    3705.
+#> 3 x           -0.791 -0.787 0.169 0.17  -1.08  -0.521     1    4315.    3679.
 ```
 
 ### Power prior
@@ -471,14 +469,14 @@ fit.pp = glm.pp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.6 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.8 seconds.
+#> Chain 2 finished in 0.8 seconds.
+#> Chain 3 finished in 0.9 seconds.
+#> Chain 4 finished in 0.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Mean chain execution time: 0.8 seconds.
+#> Total execution time: 1.0 seconds.
 
 fit.pp[, -1] %>% 
     summarise_draws() %>% 
@@ -486,9 +484,9 @@ fit.pp[, -1] %>%
 #> # A tibble: 3 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.823  0.819 0.24  0.243  0.438  1.22   1       4251.    4080.
-#> 2 z            0.617  0.616 0.273 0.27   0.166  1.07   1       4750.    4376.
-#> 3 x           -0.783 -0.779 0.165 0.163 -1.06  -0.521  1.00    4441.    4310.
+#> 1 (Intercept)  0.834  0.828 0.251 0.249  0.43   1.26   1       3788.    3746.
+#> 2 z            0.613  0.616 0.28  0.28   0.155  1.07   1.00    4106.    4060.
+#> 3 x           -0.788 -0.785 0.165 0.165 -1.06  -0.526  1.00    4306.    4689.
 ```
 
 ### Normalized power prior (NPP)
@@ -519,10 +517,11 @@ The posterior under the NPP may be summarized as
 The defaults in `hdbayes` are
 
 - ![\pi_0(\beta) \propto N(\beta \| ~\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cpi_0%28%5Cbeta%29%20%5Cpropto%20N%28%5Cbeta%20%7C%20~%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\pi_0(\beta) \propto N(\beta | ~\textbf{0}_p, 100 \times I_p)")
-- ![\alpha\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%201 "\alpha_{0} = 1")
-- ![\gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0%7D%20%3D%201 "\gamma_{0} = 1")
+- ![\pi_0(a\_{0h}) \propto a\_{0h}^{\alpha_0 - 1} (1 - a\_{0h})^{\gamma_0 - 1}](https://latex.codecogs.com/png.latex?%5Cpi_0%28a_%7B0h%7D%29%20%5Cpropto%20a_%7B0h%7D%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_%7B0h%7D%29%5E%7B%5Cgamma_0%20-%201%7D "\pi_0(a_{0h}) \propto a_{0h}^{\alpha_0 - 1} (1 - a_{0h})^{\gamma_0 - 1}")
+  with
+  ![\alpha\_{0} = \gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%20%5Cgamma_%7B0%7D%20%3D%201 "\alpha_{0} = \gamma_{0} = 1")
 
-when
+When
 ![\alpha\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%201 "\alpha_{0} = 1")
 and
 ![\gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0%7D%20%3D%201 "\gamma_{0} = 1"),
@@ -566,12 +565,12 @@ head(
     mutate(across(where(is.numeric), round, 3))
 )
 #>      a0   lognc min_ess_bulk max_Rhat
-#> 1 0.000   0.000     9607.838    1.000
-#> 2 0.014  -4.229     6501.686    1.001
-#> 3 0.027  -6.290     6768.113    1.001
-#> 4 0.041  -7.859     6756.573    1.000
-#> 5 0.054  -9.212     6579.915    1.000
-#> 6 0.068 -10.444     6727.823    1.000
+#> 1 0.000   0.000     9947.309    1.000
+#> 2 0.014  -4.230     6370.440    1.001
+#> 3 0.027  -6.285     6449.416    1.001
+#> 4 0.041  -7.859     6204.290    1.001
+#> 5 0.054  -9.212     6420.296    1.000
+#> 6 0.068 -10.439     6630.803    1.001
 ```
 
 The provided function `glm.npp.lognc` estimates the logarithm of the
@@ -595,9 +594,9 @@ R-hat value is less than 1.10
 
 ``` r
 min(a0.lognc$min_ess_bulk) ## lowest bulk effective sample size
-#> [1] 6418.662
+#> [1] 6059.067
 max(a0.lognc$max_Rhat)  ## highest R-hat value
-#> [1] 1.001215
+#> [1] 1.001153
 ```
 
 We can then plot the logarithm of the normalizing constant
@@ -630,7 +629,7 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 0.8 seconds.
+#> Chain 1 finished in 0.9 seconds.
 #> Chain 2 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
@@ -644,10 +643,10 @@ fit.npp[, -c(1, 6)] %>%
 #> # A tibble: 4 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.848  0.849 0.239 0.238  0.454  1.25   1       4513.    4243.
-#> 2 z            0.596  0.591 0.27  0.268  0.163  1.04   1.00    5178.    4553.
-#> 3 x           -0.794 -0.79  0.16  0.157 -1.06  -0.539  1.00    4496.    4483.
-#> 4 a0_hist_1    0.678  0.714 0.225 0.254  0.257  0.973  1.00    5523.    3608.
+#> 1 (Intercept)  0.855  0.851 0.239 0.244  0.463  1.25   1       4680.    5065.
+#> 2 z            0.596  0.591 0.27  0.271  0.16   1.05   1.00    5529.    4746.
+#> 3 x           -0.797 -0.793 0.164 0.162 -1.07  -0.536  1.00    5059.    4883.
+#> 4 a0_hist_1    0.677  0.714 0.226 0.255  0.254  0.976  1       4909.    3632.
 ```
 
 ### Normalized asymptotic power prior (NAPP)
@@ -678,26 +677,30 @@ fit.napp = glm.napp(
   refresh = 0
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
-#> 
+#> Chain 3 Informational Message: The current Metropolis proposal is about to be rejected because of the following issue:
+#> Chain 3 Exception: multi_normal_lpdf: Covariance matrix is not symmetric. Covariance matrix[1,2] = -inf, but Covariance matrix[2,1] = -inf (in '/var/folders/_g/wwn3pnf56mx5q1kv0t5574y80000gn/T/Rtmp1CEVrA/model-12ee5576a832.stan', line 129, column 6 to column 89)
+#> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
+#> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
+#> Chain 3
 #> Chain 1 finished in 0.6 seconds.
-#> Chain 2 finished in 0.5 seconds.
-#> Chain 3 finished in 0.5 seconds.
-#> Chain 4 finished in 0.5 seconds.
+#> Chain 2 finished in 0.6 seconds.
+#> Chain 3 finished in 0.6 seconds.
+#> Chain 4 finished in 0.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.5 seconds.
-#> Total execution time: 0.7 seconds.
+#> Mean chain execution time: 0.6 seconds.
+#> Total execution time: 0.8 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
 #> # A tibble: 5 × 10
 #>   variable       mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>         <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)   0.842  0.84  0.237 0.239  0.462  1.23   1       4394.    4256.
-#> 2 z             0.6    0.603 0.272 0.272  0.152  1.05   1       5292.    4475.
-#> 3 x            -0.79  -0.783 0.159 0.156 -1.06  -0.534  1.00    4786.    4121.
-#> 4 a0_hist_1     0.674  0.715 0.229 0.252  0.243  0.974  1       5164.    2855.
-#> 5 logit_a0s[1]  1.03   0.92  1.47  1.32  -1.14   3.64   1.00    5164.    2855.
+#> 1 (Intercept)   0.839  0.837 0.233 0.233  0.466  1.23   1.00    4035.    4757.
+#> 2 z             0.6    0.599 0.268 0.263  0.162  1.04   1.00    4589.    3985.
+#> 3 x            -0.787 -0.786 0.162 0.159 -1.06  -0.519  1.00    4323.    4214.
+#> 4 a0_hist_1     0.672  0.707 0.227 0.258  0.254  0.972  1       5792.    4259.
+#> 5 logit_a0s[1]  1.01   0.883 1.43  1.36  -1.08   3.54   1       5792.    4259.
 ```
 
 ### Latent exchangeability prior (LEAP)
@@ -761,14 +764,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 4 finished in 3.9 seconds.
-#> Chain 1 finished in 4.3 seconds.
-#> Chain 2 finished in 4.4 seconds.
-#> Chain 3 finished in 4.8 seconds.
+#> Chain 2 finished in 4.1 seconds.
+#> Chain 3 finished in 4.7 seconds.
+#> Chain 4 finished in 4.8 seconds.
+#> Chain 1 finished in 5.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.4 seconds.
-#> Total execution time: 5.0 seconds.
+#> Mean chain execution time: 4.8 seconds.
+#> Total execution time: 5.9 seconds.
 
 suppressWarnings(
  fit.leap[, 2:6] %>% 
@@ -778,11 +781,11 @@ suppressWarnings(
 #> # A tibble: 5 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.857  0.856 0.241 0.239  0.461  1.25   1       3216.    3232.
-#> 2 z            0.593  0.589 0.267 0.259  0.154  1.04   1.00    3905.    3929.
-#> 3 x           -0.79  -0.79  0.171 0.172 -1.07  -0.515  1       2760.    3668.
-#> 4 probs[1]     0.864  0.89  0.109 0.103  0.643  0.991  1       1763.    2204.
-#> 5 probs[2]     0.136  0.11  0.109 0.103  0.009  0.357  1       1763.    2204.
+#> 1 (Intercept)  0.85   0.847 0.245 0.245  0.465  1.26      1    2920.    3210.
+#> 2 z            0.602  0.599 0.277 0.277  0.155  1.06      1    3595.    3336.
+#> 3 x           -0.789 -0.785 0.17  0.172 -1.07  -0.518     1    2849.    2393.
+#> 4 probs[1]     0.863  0.889 0.108 0.101  0.647  0.99      1    1395.    2503.
+#> 5 probs[2]     0.137  0.111 0.108 0.101  0.01   0.353     1    1395.    2503.
 ```
 
 ### Normal/half-normal prior
@@ -819,12 +822,12 @@ fit.post = glm.post(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.5 seconds.
-#> Chain 2 finished in 0.4 seconds.
-#> Chain 3 finished in 0.4 seconds.
-#> Chain 4 finished in 0.4 seconds.
+#> Chain 2 finished in 0.5 seconds.
+#> Chain 3 finished in 0.5 seconds.
+#> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.4 seconds.
+#> Mean chain execution time: 0.5 seconds.
 #> Total execution time: 0.7 seconds.
 
 fit.post[, -1] %>% 
@@ -833,9 +836,9 @@ fit.post[, -1] %>%
 #> # A tibble: 3 × 10
 #>   variable      mean median    sd   mad     q5    q95  rhat ess_bulk ess_tail
 #>   <chr>        <dbl>  <dbl> <dbl> <dbl>  <dbl>  <dbl> <dbl>    <dbl>    <dbl>
-#> 1 (Intercept)  0.778  0.774 0.28  0.282  0.332  1.24   1.00    3586.    4047.
-#> 2 z            0.692  0.691 0.313 0.315  0.182  1.21   1.00    4209.    4234.
-#> 3 x           -0.77  -0.763 0.182 0.185 -1.08  -0.476  1.00    4291.    4489.
+#> 1 (Intercept)  0.778  0.772 0.279 0.272  0.328  1.25   1       3631.    3699.
+#> 2 z            0.693  0.697 0.304 0.301  0.19   1.20   1.00    4608.    4387.
+#> 3 x           -0.772 -0.767 0.186 0.182 -1.08  -0.471  1.00    3524.    3683.
 ```
 
 ## Comparison of methods
@@ -889,22 +892,22 @@ post.sd = cbind(
 ## posterior means
 round( post.mean, 3 )
 #>             truth mle.cur mle.hist    bhm commensurate robustmap   napp    npp
-#> (Intercept)   1.0   0.760    1.036  0.841        0.840     0.842  0.842  0.848
-#> z             0.5   0.677    0.313  0.625        0.618     0.617  0.600  0.596
-#> x            -1.0  -0.750   -0.856 -0.789       -0.784    -0.787 -0.790 -0.794
+#> (Intercept)   1.0   0.760    1.036  0.842        0.838     0.849  0.839  0.855
+#> z             0.5   0.677    0.313  0.619        0.625     0.617  0.600  0.596
+#> x            -1.0  -0.750   -0.856 -0.788       -0.786    -0.791 -0.787 -0.797
 #>                 pp   leap normal/half-normal
-#> (Intercept)  0.823  0.857              0.778
-#> z            0.617  0.593              0.692
-#> x           -0.783 -0.790             -0.770
+#> (Intercept)  0.834  0.850              0.778
+#> z            0.613  0.602              0.693
+#> x           -0.788 -0.789             -0.772
 
 ## posterior std dev.
 round( post.sd, 3 )
 #>             mle.cur mle.hist   bhm commensurate robustmap  napp   npp    pp
-#> (Intercept)   0.274    0.377 0.246        0.250     0.250 0.237 0.239 0.240
-#> z             0.308    0.442 0.284        0.285     0.285 0.272 0.270 0.273
-#> x             0.181    0.266 0.165        0.174     0.168 0.159 0.160 0.165
+#> (Intercept)   0.274    0.377 0.246        0.251     0.253 0.233 0.239 0.251
+#> z             0.308    0.442 0.286        0.280     0.280 0.268 0.270 0.280
+#> x             0.181    0.266 0.166        0.170     0.169 0.162 0.164 0.165
 #>              leap normal/half-normal
-#> (Intercept) 0.241              0.280
-#> z           0.267              0.313
-#> x           0.171              0.182
+#> (Intercept) 0.245              0.279
+#> z           0.277              0.304
+#> x           0.170              0.186
 ```
