@@ -1,9 +1,9 @@
 ---
-title: "AIDS_Progression"
+title: "AIDS-Progression"
 output: rmarkdown::html_vignette
 bibliography: hdbayes.bib
 vignette: >
-  %\VignetteIndexEntry{AIDS_Progression}
+  %\VignetteIndexEntry{AIDS-Progression}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
