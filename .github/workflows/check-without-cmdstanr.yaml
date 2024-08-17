@@ -48,9 +48,9 @@ jobs:
             any::knitr
             any::rmarkdown
             any::ggplot2
-            any::ggthemes
+            any::parallel
             any::tibble
-            any::wacolors
+            any::dplyr
           needs: check
 
       - uses: r-lib/actions/check-r-package@v2
