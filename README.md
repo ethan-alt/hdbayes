@@ -203,14 +203,14 @@ fit.bhm = glm.bhm(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 8.0 seconds.
-#> Chain 1 finished in 8.8 seconds.
-#> Chain 3 finished in 9.3 seconds.
-#> Chain 4 finished in 9.7 seconds.
+#> Chain 2 finished in 7.9 seconds.
+#> Chain 1 finished in 8.6 seconds.
+#> Chain 3 finished in 8.9 seconds.
+#> Chain 4 finished in 9.4 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 9.0 seconds.
-#> Total execution time: 9.9 seconds.
+#> Mean chain execution time: 8.7 seconds.
+#> Total execution time: 9.6 seconds.
 
 suppressWarnings(
   fit.bhm[, 2:7] %>% 
@@ -274,13 +274,13 @@ fit.commensurate = glm.commensurate(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 1 finished in 1.3 seconds.
+#> Chain 1 finished in 1.2 seconds.
 #> Chain 2 finished in 1.2 seconds.
-#> Chain 3 finished in 1.3 seconds.
+#> Chain 3 finished in 1.2 seconds.
 #> Chain 4 finished in 1.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 1.3 seconds.
+#> Mean chain execution time: 1.2 seconds.
 #> Total execution time: 1.4 seconds.
 
 suppressWarnings(
@@ -376,26 +376,26 @@ res.rmap = glm.rmap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 7.5 seconds.
-#> Chain 3 finished in 9.0 seconds.
-#> Chain 4 finished in 9.0 seconds.
-#> Chain 1 finished in 11.4 seconds.
+#> Chain 2 finished in 7.7 seconds.
+#> Chain 4 finished in 9.2 seconds.
+#> Chain 3 finished in 9.3 seconds.
+#> Chain 1 finished in 11.6 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 9.2 seconds.
-#> Total execution time: 11.5 seconds.
+#> Mean chain execution time: 9.4 seconds.
+#> Total execution time: 11.7 seconds.
 #> Warning: 3 of 8000 (0.0%) transitions ended with a divergence.
 #> See https://mc-stan.org/misc/warnings for details.
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 3 finished in 3.6 seconds.
-#> Chain 2 finished in 4.2 seconds.
-#> Chain 4 finished in 4.2 seconds.
-#> Chain 1 finished in 4.5 seconds.
+#> Chain 3 finished in 3.5 seconds.
+#> Chain 2 finished in 4.1 seconds.
+#> Chain 4 finished in 4.1 seconds.
+#> Chain 1 finished in 4.3 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.1 seconds.
-#> Total execution time: 4.6 seconds.
+#> Mean chain execution time: 4.0 seconds.
+#> Total execution time: 4.5 seconds.
 #> 
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
@@ -405,7 +405,7 @@ res.rmap = glm.rmap(
 #> Chain 4 finished in 0.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.9 seconds.
+#> Mean chain execution time: 0.8 seconds.
 #> Total execution time: 1.1 seconds.
 fit.rmap = res.rmap$post.samples
 fit.rmap[, -1] %>% 
@@ -470,7 +470,7 @@ fit.pp = glm.pp(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.7 seconds.
-#> Chain 2 finished in 0.7 seconds.
+#> Chain 2 finished in 0.8 seconds.
 #> Chain 3 finished in 0.8 seconds.
 #> Chain 4 finished in 0.8 seconds.
 #> 
@@ -518,22 +518,17 @@ The default initial prior on
 ![\beta](https://latex.codecogs.com/png.latex?%5Cbeta "\beta") for NPP
 is the same as that for PP:
 
-![\beta \sim N_p(\textbf{0}\_p, 100 \times I_p)](https://latex.codecogs.com/png.latex?%5Cbeta%20%5Csim%20N_p%28%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29 "\beta \sim N_p(\textbf{0}_p, 100 \times I_p)")
+![\beta \sim N_p(\textbf{0}\_p, 100 \times I_p).](https://latex.codecogs.com/png.latex?%5Cbeta%20%5Csim%20N_p%28%5Ctextbf%7B0%7D_p%2C%20100%20%5Ctimes%20I_p%29. "\beta \sim N_p(\textbf{0}_p, 100 \times I_p).")
 
 The default prior on each
 ![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") in
 `hdbayes` is:
 
-![\pi_0(a\_{0h}) \propto a\_{0h}^{\alpha_0 - 1} (1 - a\_{0h})^{\gamma_0 - 1}](https://latex.codecogs.com/png.latex?%5Cpi_0%28a_%7B0h%7D%29%20%5Cpropto%20a_%7B0h%7D%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_%7B0h%7D%29%5E%7B%5Cgamma_0%20-%201%7D "\pi_0(a_{0h}) \propto a_{0h}^{\alpha_0 - 1} (1 - a_{0h})^{\gamma_0 - 1}")
+![\pi_0(a\_{0h}) \propto a\_{0h}^{\alpha_0 - 1} (1 - a\_{0h})^{\gamma_0 - 1},](https://latex.codecogs.com/png.latex?%5Cpi_0%28a_%7B0h%7D%29%20%5Cpropto%20a_%7B0h%7D%5E%7B%5Calpha_0%20-%201%7D%20%281%20-%20a_%7B0h%7D%29%5E%7B%5Cgamma_0%20-%201%7D%2C "\pi_0(a_{0h}) \propto a_{0h}^{\alpha_0 - 1} (1 - a_{0h})^{\gamma_0 - 1},")
 
-with
-![\alpha\_{0} = \gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%20%5Cgamma_%7B0%7D%20%3D%201 "\alpha_{0} = \gamma_{0} = 1")
-
-When
-![\alpha\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%201 "\alpha_{0} = 1")
-and
-![\gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Cgamma_%7B0%7D%20%3D%201 "\gamma_{0} = 1"),
-the prior on
+where
+![\alpha\_{0} = \gamma\_{0} = 1](https://latex.codecogs.com/png.latex?%5Calpha_%7B0%7D%20%3D%20%5Cgamma_%7B0%7D%20%3D%201 "\alpha_{0} = \gamma_{0} = 1").
+In this case, the prior on
 ![a\_{0h}](https://latex.codecogs.com/png.latex?a_%7B0h%7D "a_{0h}") is
 a ![U(0,1)](https://latex.codecogs.com/png.latex?U%280%2C1%29 "U(0,1)")
 prior.
@@ -637,14 +632,14 @@ fit.npp = glm.npp(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 0.9 seconds.
-#> Chain 3 finished in 0.9 seconds.
-#> Chain 1 finished in 1.0 seconds.
-#> Chain 4 finished in 0.9 seconds.
+#> Chain 2 finished in 1.1 seconds.
+#> Chain 3 finished in 1.1 seconds.
+#> Chain 4 finished in 1.1 seconds.
+#> Chain 1 finished in 1.2 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.9 seconds.
-#> Total execution time: 1.1 seconds.
+#> Mean chain execution time: 1.1 seconds.
+#> Total execution time: 1.3 seconds.
 fit.npp[, -c(1, 6)] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -690,14 +685,14 @@ fit.napp = glm.napp(
 #> Chain 3 If this warning occurs sporadically, such as for highly constrained variable types like covariance matrices, then the sampler is fine,
 #> Chain 3 but if this warning occurs often then your model may be either severely ill-conditioned or misspecified.
 #> Chain 3
-#> Chain 1 finished in 0.6 seconds.
-#> Chain 2 finished in 0.6 seconds.
-#> Chain 3 finished in 0.6 seconds.
-#> Chain 4 finished in 0.6 seconds.
+#> Chain 1 finished in 0.7 seconds.
+#> Chain 2 finished in 0.7 seconds.
+#> Chain 3 finished in 0.7 seconds.
+#> Chain 4 finished in 0.8 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 0.6 seconds.
-#> Total execution time: 0.8 seconds.
+#> Mean chain execution time: 0.7 seconds.
+#> Total execution time: 0.9 seconds.
 fit.napp[, -1] %>% 
     summarise_draws() %>% 
     mutate(across(where(is.numeric), round, 3))
@@ -772,14 +767,14 @@ fit.leap = glm.leap(
 )
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
-#> Chain 2 finished in 4.0 seconds.
-#> Chain 3 finished in 4.6 seconds.
-#> Chain 4 finished in 4.8 seconds.
-#> Chain 1 finished in 5.8 seconds.
+#> Chain 2 finished in 4.9 seconds.
+#> Chain 3 finished in 5.6 seconds.
+#> Chain 4 finished in 5.8 seconds.
+#> Chain 1 finished in 6.9 seconds.
 #> 
 #> All 4 chains finished successfully.
-#> Mean chain execution time: 4.8 seconds.
-#> Total execution time: 5.9 seconds.
+#> Mean chain execution time: 5.8 seconds.
+#> Total execution time: 7.0 seconds.
 
 suppressWarnings(
  fit.leap[, 2:6] %>% 
@@ -830,8 +825,8 @@ fit.post = glm.post(
 #> Running MCMC with 4 chains, at most 15 in parallel...
 #> 
 #> Chain 1 finished in 0.5 seconds.
-#> Chain 2 finished in 0.4 seconds.
-#> Chain 3 finished in 0.4 seconds.
+#> Chain 2 finished in 0.5 seconds.
+#> Chain 3 finished in 0.5 seconds.
 #> Chain 4 finished in 0.5 seconds.
 #> 
 #> All 4 chains finished successfully.

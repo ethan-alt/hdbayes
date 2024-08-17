@@ -307,15 +307,13 @@ $$
 The default initial prior on $\beta$ for NPP is the same as that for PP: 
 
 $$
-\beta \sim N_p(\textbf{0}_p, 100 \times I_p)
+\beta \sim N_p(\textbf{0}_p, 100 \times I_p).
 $$
 
 The default prior on each $a_{0h}$ in `hdbayes` is: 
 
-$$\pi_0(a_{0h}) \propto a_{0h}^{\alpha_0 - 1} (1 - a_{0h})^{\gamma_0 - 1}$$
-with $\alpha_{0} = \gamma_{0} = 1$
-
-When $\alpha_{0} = 1$ and $\gamma_{0} = 1$, the prior on $a_{0h}$ is a $U(0,1)$ prior.
+$$\pi_0(a_{0h}) \propto a_{0h}^{\alpha_0 - 1} (1 - a_{0h})^{\gamma_0 - 1},$$
+where $\alpha_{0} = \gamma_{0} = 1$. In this case, the prior on $a_{0h}$ is a $U(0,1)$ prior.
 
 ### Estimating the normalizing constant
 We begin by estimating the normalizing constant over a fine grid of values.
