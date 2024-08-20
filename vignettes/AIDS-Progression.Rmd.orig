@@ -1,9 +1,9 @@
 ---
-title: "AIDS_Progression"
+title: "AIDS-Progression"
 output: rmarkdown::html_vignette
 bibliography: hdbayes.bib
 vignette: >
-  %\VignetteIndexEntry{AIDS_Progression}
+  %\VignetteIndexEntry{AIDS-Progression}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -145,14 +145,16 @@ get_summaries <- function(fit, pars.interest, digits = 2) {
 Now, a simple call to `glm.bhm()` will fit the model:
 ```{r bhm, message=FALSE}
 time.bhm <- system.time(
-  fit.bhm <- glm.bhm(
-    formula, family, the.data,
-    meta.mean.mean = 0, meta.mean.sd = 10,
-    meta.sd.mean = 0, meta.sd.sd = 0.5,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.bhm <- glm.bhm(
+      formula, family, the.data,
+      meta.mean.mean = 0, meta.mean.sd = 10,
+      meta.sd.mean = 0, meta.sd.sd = 0.5,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 get_summaries(fit.bhm, pars.interest = base.pars)
 ```
@@ -185,16 +187,17 @@ where $\beta = (\beta_1, \ldots, \beta_p)'$, $\beta_{0} = (\beta_{01}, \ldots, \
 Again, a simple call to the appropriate function will fit the model.
 ```{r commensurate, message=FALSE}
 time.commensurate <- system.time(
-  fit.commensurate <- glm.commensurate(
-    formula = formula, family = family, data.list = the.data,
-    p.spike = 0.1, spike.mean = 200, spike.sd = 0.1,
-    slab.mean = 0, slab.sd = 5,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.commensurate <- glm.commensurate(
+      formula = formula, family = family, data.list = the.data,
+      p.spike = 0.1, spike.mean = 200, spike.sd = 0.1,
+      slab.mean = 0, slab.sd = 5,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
-
 get_summaries(fit.commensurate, pars.interest = base.pars)
 ```
 And again the diagnostics are fine, so we may proceed with our exploration of
@@ -223,35 +226,41 @@ the default vague/non-informative prior $N_p(\mu_v, \Sigma_v)$ is specified as:
 We will explore how different values of $w$ affect the posterior results. The RMAP can be called with `glm.rmap()`:
 ```{r robustmap, message=FALSE}
 rmap.t1 <- system.time(
-  res.rmap.a <- glm.rmap(
-    formula = formula, family = family, data.list = the.data,
-    w = 0.1,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    res.rmap.a <- glm.rmap(
+      formula = formula, family = family, data.list = the.data,
+      w = 0.1,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 fit.rmap.a <- res.rmap.a[["post.samples"]]
 
 rmap.t2 <- system.time(
-  res.rmap.b <- glm.rmap(
-    formula = formula, family = family, data.list = the.data,
-    w = 0.5,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    res.rmap.b <- glm.rmap(
+      formula = formula, family = family, data.list = the.data,
+      w = 0.5,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 fit.rmap.b <- res.rmap.b[["post.samples"]]
 
 rmap.t3 <- system.time(
-  res.rmap.c <- glm.rmap(
-    formula = formula, family = family, data.list = the.data,
-    w = 0.9,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    res.rmap.c <- glm.rmap(
+      formula = formula, family = family, data.list = the.data,
+      w = 0.9,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 fit.rmap.c <- res.rmap.c[["post.samples"]]
 
@@ -298,23 +307,27 @@ and then proceed to call `glm.pp()` twice (once for $a_0 = 1/2$ and once for $a_
 
 ```{r pp}
 time.pp <- system.time(
-  fit.pp  <- glm.pp(
-    formula = formula, family = family, data.list = the.data,
-    a0 = 0.5,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.pp  <- glm.pp(
+      formula = formula, family = family, data.list = the.data,
+      a0 = 0.5,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 
 time.pp.star <- system.time(
-  fit.pp.star  <- glm.pp(
-    formula = formula, family = family, data.list = the.data,
-    a0 = a0.star,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.pp.star  <- glm.pp(
+      formula = formula, family = family, data.list = the.data,
+      a0 = a0.star,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 
 get_summaries(fit.pp, pars.interest = base.pars)
@@ -357,8 +370,27 @@ We will now construct a Beta prior for $a_0$ centred on $a^\star = \frac{1}{2}\f
 
 
 ```{r, message=FALSE}
+# function for eliciting hyperparameters of a Beta distribution from mean and variance or
+# mean and coefficient of variation (cv)
+# m0: the desired mean, a scalar between 0 and 1.
+# v0: the desired mean, a scalar between 0 and 1.
+# cv: the desired coefficient of variation, a scalar larger than 0.
+elicit_beta_mean_cv <- function(m0, v0 = NULL, cv = 1) {
+  if (!is.null(v0)) {
+    a <- -(m0 * v0 + m0 ^ 3 - m0 ^ 2) / v0
+    b <- ((m0 - 1) * v0 + m0 ^ 3 - 2 * m0 ^ 2 + m0) / v0
+  } else{
+    a <- -(m0 * (cv * m0) ^ 2 + m0 ^ 3 - m0 ^ 2) / (cv * m0) ^ 2
+    b <- ((m0 - 1) * (cv * m0) ^ 2 + m0 ^ 3 - 2 * m0 ^ 2 + m0) / (cv * m0) ^
+      2
+  }
+  if (a < 0 || b < 0) {
+    warning("Warning: at least one of the obtained parameters is not valid")
+  }
+  return(list(a = a, b = b))
+}
+
 # construct Beta prior with cv = 1
-devtools::source_url("https://raw.githubusercontent.com/maxbiostat/logPoolR/main/R/beta_elicitator.r")
 beta.pars <- elicit_beta_mean_cv(m0 = a0.star, cv = 1)
 ```
 
@@ -386,52 +418,59 @@ normalized power prior.
 a0       <- seq(0, 1, length.out = 21)
 histdata <- the.data[[2]]
 
-# wrapper to obtain log normalizing constant in parallel package
-logncfun <- function(a0, ...){
-  hdbayes::glm.npp.lognc(
-    formula = formula, family = family, histdata = histdata, a0 = a0, ...
-  )
+if( requireNamespace("parallel") ){
+  if (instantiate::stan_cmdstan_exists()) {
+    # wrapper to obtain log normalizing constant in parallel package
+    logncfun <- function(a0, ...){
+      hdbayes::glm.npp.lognc(
+        formula = formula, family = family, histdata = histdata, a0 = a0, ...
+      )
+    }
+    cl <- parallel::makeCluster(10)
+    parallel::clusterSetRNGStream(cl, 123)
+    parallel::clusterExport(cl, varlist = c('formula', 'family', 'histdata'))
+    # call created function
+    time.npp.1 <- system.time(
+      a0.lognc <- parLapply(
+        cl = cl, X = a0, fun = logncfun, iter_warmup = iter_warmup,
+        iter_sampling = iter_sampling, chains = nchains, refresh = 0
+      )
+    )
+    parallel::stopCluster(cl)
+  }
+  a0.lognc <- data.frame( do.call(rbind, a0.lognc) )
 }
-cl <- parallel::makeCluster(10)
-parallel::clusterSetRNGStream(cl, 123)
-parallel::clusterExport(cl, varlist = c('formula', 'family', 'histdata'))
-# call created function
-time.npp.1 <- system.time(
-  a0.lognc <- parLapply(
-    cl = cl, X = a0, fun = logncfun, iter_warmup = iter_warmup,
-    iter_sampling = iter_sampling, chains = nchains, refresh = 0
-  )
-)
-parallel::stopCluster(cl)
-
-a0.lognc <- data.frame( do.call(rbind, a0.lognc) )
 ```
 We will now fit the NPP with both a uniform (Beta(1, 1)) and the informative prior
 on $a_0$ devised above using the dictionary of $a_0$ and $Z(a_0)$ we just created:
 
 ```{r nppfits, message=FALSE}
 time.npp.2 <- system.time(
-  fit.npp_unif <- glm.npp(
-    formula = formula, family = family, data.list = the.data,
-    a0.lognc = a0.lognc$a0,
-    lognc = matrix(a0.lognc$lognc, ncol = 1),
-    a0.shape1 = 1, a0.shape2 = 1, # uniform prior on a0
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.npp_unif <- glm.npp(
+      formula = formula, family = family, data.list = the.data,
+      a0.lognc = a0.lognc$a0,
+      lognc = matrix(a0.lognc$lognc, ncol = 1),
+      a0.shape1 = 1, a0.shape2 = 1, # uniform prior on a0
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 
 time.npp.2.star <- system.time(
-  fit.npp.star <- glm.npp(
-    formula = formula, family = family, data.list = the.data,
-    a0.lognc = a0.lognc$a0,
-    lognc = matrix(a0.lognc$lognc, ncol = 1),
-    a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b, # beta prior on a0
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.npp.star <- glm.npp(
+      formula = formula, family = family, data.list = the.data,
+      a0.lognc = a0.lognc$a0,
+      lognc = matrix(a0.lognc$lognc, ncol = 1),
+      a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b, # beta prior on a0
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 
 get_summaries(fit.npp_unif, pars.interest = base.pars)
@@ -456,24 +495,29 @@ the normalizing constant before sampling.
 The following code analyzes the data set using the NAPP:
 ```{r nappfits, message=FALSE}
 time.napp <- system.time(
-  fit.napp_unif <- glm.napp(
-    formula = formula, family = family, data.list = the.data,
-    a0.shape1 = 1, a0.shape2 = 1,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.napp_unif <- glm.napp(
+      formula = formula, family = family, data.list = the.data,
+      a0.shape1 = 1, a0.shape2 = 1,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 
 time.napp.star <- system.time(
-  fit.napp.star <- glm.napp(
-    formula = formula, family = family, data.list = the.data,
-    a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b,
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.napp.star <- glm.napp(
+      formula = formula, family = family, data.list = the.data,
+      a0.shape1 = beta.pars$a, a0.shape2 = beta.pars$b,
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
+
 get_summaries(fit.napp_unif, pars.interest = base.pars)
 get_summaries(fit.napp.star, pars.interest = base.pars)
 ```
@@ -503,13 +547,15 @@ where $\gamma = (\gamma_1, \ldots, \gamma_K)'$ is a vector of mixing probabiliti
 The LEAP can be fit as follows:
 ```{r leapfits, message=FALSE}
 time.leap <- system.time(
-  fit.leap <- glm.leap(
-    formula = formula, family = family, data.list = the.data,
-    K = 2, prob.conc = rep(1, 2),
-    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
-    chains = nchains, parallel_chains = ncores,
-    refresh = 0
-  )
+  if (instantiate::stan_cmdstan_exists()) {
+    fit.leap <- glm.leap(
+      formula = formula, family = family, data.list = the.data,
+      K = 2, prob.conc = rep(1, 2),
+      iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+      chains = nchains, parallel_chains = ncores,
+      refresh = 0
+    )
+  }
 )
 get_summaries(fit.leap, pars.interest = base.pars)
 ```
