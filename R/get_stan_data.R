@@ -492,6 +492,13 @@ get.stan.data.leap = function(
   }
   disp.sd = to.vector(param = disp.sd, default.value = 10, len = K)
 
+  ## gamma.upper should be smaller than or equal to 1
+  if ( gamma.upper > 1 )
+    gamma.upper = 1
+  ## gamma.lower should be larger than or equal to 1
+  if ( gamma.lower < 0 )
+    gamma.lower = 0
+
   if (all.hist){
     standat = list(
       'n0'          = n0,
