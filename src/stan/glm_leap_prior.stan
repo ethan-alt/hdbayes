@@ -383,6 +383,11 @@ functions{
     }
     return sum(contrib);
   }
+
+  real logit_beta_lpdf(real x, real shape1, real shape2) {
+    return
+      -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p_exp(-x);
+  }
 }
 data {
   int<lower=0>          n0;                     // sample size of historical data
@@ -407,19 +412,21 @@ transformed data {
   int K_gt_2             = (K > 2) ? (1) : (0);
   vector[K-1] conc_delta = conc[2:K];
   real lognc_disp        = normal_lccdf(0 | disp_mean, disp_sd);
-  real lognc_gamma       = 0;
+  real lognc_logit_gamma = 0;
 
   if( gamma_upper != 1 || gamma_lower != 0 )
-    lognc_gamma = lognc_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
+    lognc_logit_gamma = lognc_logit_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
 }
 parameters {
   matrix[p,K] betaMat;       // pxK matrix of regression coefficients; p = number of covars, K = number of components
   vector<lower=0>[(dist > 2) ? K : 0] dispersion;  // K-dim vector of dispersion params
-  real<lower=gamma_lower,upper=gamma_upper> gamma;  // probability of being exchangeable
+  real<lower=logit(gamma_lower),upper=logit(gamma_upper)> logit_gamma; // logit of probability of being exchangeable
   simplex[K-1] delta_raw;
 }
 transformed parameters {
   simplex[K] probs;
+  real<lower=gamma_lower,upper=gamma_upper> gamma = inv_logit(logit_gamma);
+
   // Compute probability of being in first component and marginalized log probability
   probs[1]   = gamma;
   probs[2:K] = (1 - gamma) * delta_raw;
@@ -442,9 +449,8 @@ model {
 
   // If two components, get beta prior on gamma;
   // If >2 components, get a dirichlet prior on raw delta
-  target += -lognc_gamma;
-  if ( gamma_shape1 != 1 || gamma_shape2 != 1)
-    target += beta_lpdf(gamma | gamma_shape1, gamma_shape2);
+  target += logit_beta_lpdf(logit_gamma | gamma_shape1, gamma_shape2) - lognc_logit_gamma;
+
   if (K_gt_2)
     target += dirichlet_lpdf(delta_raw | conc_delta);
 }
