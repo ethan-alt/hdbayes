@@ -15,6 +15,8 @@ glm.leap(
   beta.sd = NULL,
   disp.mean = NULL,
   disp.sd = NULL,
+  gamma.lower = 0,
+  gamma.upper = 1,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -56,6 +58,12 @@ parameters for the half-normal priors on the dispersion parameters. If a scalar 
 \item{disp.sd}{a scalar or a vector whose dimension is equal to the number of classes (\code{K}) giving the scale
 parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
 as for \code{disp.mean}. Defaults to a vector of 10s.}
+
+\item{gamma.lower}{a scalar giving the lower bound for probability of subjects in historical data being exchangeable
+with subjects in current data. Defaults to 0.}
+
+\item{gamma.upper}{a scalar giving the upper bound for probability of subjects in historical data being exchangeable
+with subjects in current data. Defaults to 1.}
 
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}

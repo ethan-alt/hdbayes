@@ -407,6 +407,10 @@ transformed data {
   int K_gt_2             = (K > 2) ? (1) : (0);
   vector[K-1] conc_delta = conc[2:K];
   real lognc_disp        = normal_lccdf(0 | disp_mean, disp_sd);
+  real lognc_gamma       = 0;
+
+  if( gamma_upper != 1 || gamma_lower != 0 )
+    lognc_gamma = lognc_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
 }
 parameters {
   matrix[p,K] betaMat;       // pxK matrix of regression coefficients; p = number of covars, K = number of components
@@ -438,6 +442,7 @@ model {
 
   // If two components, get beta prior on gamma;
   // If >2 components, get a dirichlet prior on raw delta
+  target += -lognc_gamma;
   if ( gamma_shape1 != 1 || gamma_shape2 != 1)
     target += beta_lpdf(gamma | gamma_shape1, gamma_shape2);
   if (K_gt_2)

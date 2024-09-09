@@ -36,6 +36,10 @@
 #' @param disp.sd           a scalar or a vector whose dimension is equal to the number of classes (`K`) giving the scale
 #'                          parameters for the half-normal priors on the dispersion parameters. If a scalar is provided, same
 #'                          as for `disp.mean`. Defaults to a vector of 10s.
+#' @param gamma.lower       a scalar giving the lower bound for probability of subjects in historical data being exchangeable
+#'                          with subjects in current data. Defaults to 0.
+#' @param gamma.upper       a scalar giving the upper bound for probability of subjects in historical data being exchangeable
+#'                          with subjects in current data. Defaults to 1.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -77,6 +81,8 @@ glm.leap = function(
     beta.sd           = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
+    gamma.lower       = 0,
+    gamma.upper       = 1,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -97,7 +103,9 @@ glm.leap = function(
     beta.mean      = beta.mean,
     beta.sd        = beta.sd,
     disp.mean      = disp.mean,
-    disp.sd        = disp.sd
+    disp.sd        = disp.sd,
+    gamma.lower    = gamma.lower,
+    gamma.upper    = gamma.upper
   )
 
   glm_leap = instantiate::stan_package_model(
