@@ -1,4 +1,10 @@
-# hdbayes 0.1.0
+# hdbayes (development version)
+
+## Enhancements
+
+* added lower and upper bounds for probability of being exchangeable for LEAP implementation
+
+# hdbayes 0.1.1
 
 ## Enhancements
 
