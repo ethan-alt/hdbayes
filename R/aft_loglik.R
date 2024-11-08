@@ -1,6 +1,6 @@
 #' compute log density for Gumbel distribution (same as gumbel_lpdf in Stan)
 #' density function: f(x) = 1/sigma * exp{-z - exp(-z)}, where z = (x-mu)/sigma
-#' @param x
+#' @param x     real number
 #' @param mu    location parameter for Gumbel distribution
 #' @param sigma scale parameter for Gumbel distribution
 #' @noRd
@@ -14,7 +14,7 @@ log_dgumbel = function(x, mu = 0, sigma = 1) {
 
 #' compute log(CDF) for Gumbel distribution (same as gumbel_lcdf in Stan)
 #' CDF(x) = exp{-exp(-z)}, where z = (x-mu)/sigma
-#' @param x
+#' @param x     real number
 #' @param mu    location parameter for Gumbel distribution
 #' @param sigma scale parameter for Gumbel distribution
 #' @noRd
