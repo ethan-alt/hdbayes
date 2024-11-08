@@ -42,7 +42,8 @@ Suggests:
     parallel,
     rmarkdown,
     tibble,
-    dplyr
+    dplyr,
+    survival
 Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
@@ -56,6 +57,10 @@ Collate:
     'IBCSG_hist-data.R'
     'actg019-data.R'
     'actg036-data.R'
+    'data_checks_aft.R'
+    'get_stan_data_aft.R'
+    'aft_post.R'
+    'aft_pp.R'
     'data_checks.R'
     'expfam_loglik.R'
     'get_stan_data.R'
