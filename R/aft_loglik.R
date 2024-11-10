@@ -38,7 +38,7 @@ aft_model_lp = function(y_obs, y_cen, eta_obs, eta_cen, scale, dist) {
   # Compute likelihood
   if ( dist == 1 ) { # log-normal
     loglik = sum( stats::dnorm(y_obs, mean = eta_obs, sd = scale, log = T) ) + # uncensored data
-      sum( pnorm(y_cen, mean = eta_cen, sd = scale, lower.tail = F, log.p = T) ) # censored data
+      sum( stats::pnorm(y_cen, mean = eta_cen, sd = scale, lower.tail = F, log.p = T) ) # censored data
   }else if ( dist == 2 ) { # log-logistic
     loglik = sum( stats::dlogis(y_obs, location = eta_obs, scale = scale, log = T) ) + # uncensored data
       sum( stats::plogis(y_cen, location = eta_cen, scale = scale, lower.tail = F, log.p = T) ) # censored data
