@@ -12,7 +12,7 @@
 #' @importFrom callr r
 #' @importFrom fs dir_copy
 #' @importFrom formula.tools is.two.sided lhs.vars
-#' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian dbeta pbeta rbinom
+#' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian dbeta pbeta rbinom dlogis plogis
 #' @importFrom posterior variables merge_chains
 #' @importFrom enrichwith enrich
 #' @importFrom mclust Mclust mclustBIC
