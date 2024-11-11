@@ -1,6 +1,7 @@
 #' Posterior of Bayesian hierarchical model (BHM)
 #'
-#' Sample from the posterior distribution of an accelerated failure time (AFT) using the Bayesian hierarchical model (BHM).
+#' Sample from the posterior distribution of an accelerated failure time (AFT) model using the Bayesian
+#' hierarchical model (BHM).
 #'
 #' The Bayesian hierarchical model (BHM) assumes that the regression coefficients for the historical and
 #' current data are different, but are correlated through a common distribution, whose hyperparameters
