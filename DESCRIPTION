@@ -62,6 +62,7 @@ Collate:
     'aft_bhm.R'
     'aft_loglik.R'
     'aft_bhm_lognc.R'
+    'aft_leap.R'
     'aft_logml_map.R'
     'aft_logml_post.R'
     'aft_pp_lognc.R'

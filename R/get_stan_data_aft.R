@@ -148,7 +148,9 @@ get.aft.stan.data.leap = function(
     beta.sd           = NULL,
     scale.mean        = NULL,
     scale.sd          = NULL,
-    probs.conc        = NULL,
+    prob.conc         = NULL,
+    gamma.lower       = 0,
+    gamma.upper       = 1,
     get.loglik        = FALSE
 ) {
   data.checks.aft(formula, data.list, dist)
@@ -178,12 +180,12 @@ get.aft.stan.data.leap = function(
     X0            = stats::model.matrix(formula, histdata)
   }
 
-  ## Default probs.conc is a vector of 1s
-  if ( !is.null(probs.conc) ){
-    if ( !( is.vector(probs.conc) & (length(probs.conc) %in% c(1, K)) ) )
-      stop("probs.conc must be a scalar or a vector of length ", K, " if probs.conc is not NULL")
+  ## Default prob.conc is a vector of 1s
+  if ( !is.null(prob.conc) ){
+    if ( !( is.vector(prob.conc) & (length(prob.conc) %in% c(1, K)) ) )
+      stop("prob.conc must be a scalar or a vector of length ", K, " if prob.conc is not NULL")
   }
-  probs.conc = to.vector(param = probs.conc, default.value = 1, len = K)
+  prob.conc = to.vector(param = prob.conc, default.value = 1, len = K)
 
   ## Default prior on regression coefficients is N(0, 10^2)
   if ( !is.null(beta.mean) ){
@@ -209,6 +211,13 @@ get.aft.stan.data.leap = function(
   }
   scale.sd = to.vector(param = scale.sd, default.value = 10, len = 1)
 
+  ## gamma.upper should be smaller than or equal to 1
+  if ( gamma.upper > 1 )
+    gamma.upper = 1
+  ## gamma.lower should be larger than or equal to 1
+  if ( gamma.lower < 0 )
+    gamma.lower = 0
+
   standat = list(
     'dist'            = dist.to.integer(dist),
     'n'               = length(eventind),
@@ -230,7 +239,9 @@ get.aft.stan.data.leap = function(
     'beta_sd'         = beta.sd,
     'scale_mean'      = scale.mean,
     'scale_sd'        = scale.sd,
-    'probs_conc'      = probs.conc,
+    'prob_conc'       = prob.conc,
+    'gamma_lower'     = gamma.lower,
+    'gamma_upper'     = gamma.upper,
     'get_loglik'      = as.integer(get.loglik)
   )
   return(standat)
