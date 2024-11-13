@@ -75,7 +75,8 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of an accelerated failure time (AFT) using the Bayesian hierarchical model (BHM).
+Sample from the posterior distribution of an accelerated failure time (AFT) model using the Bayesian
+hierarchical model (BHM).
 }
 \details{
 The Bayesian hierarchical model (BHM) assumes that the regression coefficients for the historical and
