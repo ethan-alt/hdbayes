@@ -354,3 +354,117 @@ get.aft.stan.data.bhm = function(
   )
   return(standat)
 }
+
+#' get Stan data for commensurate prior (CP)
+#'
+#' @include data_checks_aft.R
+#'
+#' @noRd
+get.aft.stan.data.cp = function(
+    formula,
+    data.list,
+    dist              = "weibull",
+    beta0.mean        = NULL,
+    beta0.sd          = NULL,
+    p.spike           = 0.1,
+    spike.mean        = 200,
+    spike.sd          = 0.1,
+    slab.mean         = 0,
+    slab.sd           = 5,
+    scale.mean        = NULL,
+    scale.sd          = NULL,
+    get.loglik        = FALSE
+) {
+  data.checks.aft(formula, data.list, dist)
+
+  ## current data
+  data          = data.list[[1]]
+  ## extract names and variables for response, censoring, etc.
+  time.name     = all.vars(formula)[1]
+  eventind.name = all.vars(formula)[2]
+  t             = data[, time.name]
+  y             = log(t)
+  eventind      = as.integer( data[, eventind.name] )
+  X             = stats::model.matrix(formula, data)
+  p             = ncol(X)
+
+  ## historical data
+  if( length(data.list) == 1 ){
+    t0        = 0
+    y0        = log(t0)
+    eventind0 = 0
+    X0        = matrix(0, 1, p)
+  } else{
+    histdata      = do.call(rbind, data.list[-1])
+    t0            = histdata[, time.name]
+    y0            = log(t0)
+    eventind0     = as.integer( histdata[, eventind.name] )
+    X0            = stats::model.matrix(formula, histdata)
+  }
+
+  ## Default prior on regression coefficients is N(0, 10^2)
+  if ( !is.null(beta0.mean) ){
+    if ( !( is.vector(beta0.mean) & (length(beta0.mean) %in% c(1, p)) ) )
+      stop("beta0.mean must be a scalar or a vector of length ", p, " if beta0.mean is not NULL")
+  }
+  beta0.mean = to.vector(param = beta0.mean, default.value = 0, len = p)
+  if ( !is.null(beta0.sd) ){
+    if ( !( is.vector(beta0.sd) & (length(beta0.sd) %in% c(1, p)) ) )
+      stop("beta0.sd must be a scalar or a vector of length ", p, " if beta0.sd is not NULL")
+  }
+  beta0.sd = to.vector(param = beta0.sd, default.value = 10, len = p)
+
+  ## check p.spike
+  p.spike = as.numeric(p.spike)
+  if ( p.spike < 0 | p.spike > 1 )
+    stop("p.spike must be a scalar between 0 and 1")
+
+  ## Default half-normal prior (spike component) on commensurability parameter is N^{+}(200, 0.1)
+  spike.mean = as.numeric(spike.mean)
+  spike.sd   = as.numeric(spike.sd)
+
+  ## Default half-normal prior (slab component) on commensurability parameter is N^{+}(0, 5)
+  slab.mean = as.numeric(slab.mean)
+  slab.sd   = as.numeric(slab.sd)
+
+  ## Default half-normal prior on scale parameter is N^{+}(0, 10^2)
+  if ( !is.null(scale.mean) ){
+    if ( !( is.vector(scale.mean) & (length(scale.mean) == 1) ) )
+      stop("scale.mean must be a scalar if scale.mean is not NULL")
+  }
+  scale.mean = to.vector(param = scale.mean, default.value = 0, len = 1)
+  if ( !is.null(scale.sd) ){
+    if ( !( is.vector(scale.sd) & (length(scale.sd) == 1) ) )
+      stop("scale.sd must be a scalar if scale.sd is not NULL")
+  }
+  scale.sd = to.vector(param = scale.sd, default.value = 10, len = 1)
+
+  standat = list(
+    'dist'            = dist.to.integer(dist),
+    'n'               = length(eventind),
+    'n_obs'           = sum(eventind),
+    'n_cen'           = sum(1 - eventind),
+    'n0_obs'          = sum(eventind0),
+    'n0_cen'          = sum(1 - eventind0),
+    'p'               = p,
+    'y_obs'           = y[which(eventind == 1)],
+    'y_cen'           = y[which(eventind == 0)],
+    'X_obs'           = X[which(eventind == 1), ],
+    'X_cen'           = X[which(eventind == 0), ],
+    'y0_obs'          = y0[which(eventind0 == 1)],
+    'y0_cen'          = y0[which(eventind0 == 0)],
+    'X0_obs'          = X0[which(eventind0 == 1), ],
+    'X0_cen'          = X0[which(eventind0 == 0), ],
+    'beta0_mean'      = beta0.mean,
+    'beta0_sd'        = beta0.sd,
+    'p_spike'         = p.spike,
+    'mu_spike'        = spike.mean,
+    'sigma_spike'     = spike.sd,
+    'mu_slab'         = slab.mean,
+    'sigma_slab'      = slab.sd,
+    'scale_mean'      = scale.mean,
+    'scale_sd'        = scale.sd,
+    'get_loglik'      = as.integer(get.loglik)
+  )
+  return(standat)
+}
