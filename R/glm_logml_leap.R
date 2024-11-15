@@ -85,12 +85,8 @@ glm.logml.leap = function(
 ) {
   stan.data = attr(post.samples, 'data')
   K         = stan.data$K
-  if ( K == 1 ){
-    stop("data.list should include at least one historical data set")
-  }
 
   d        = as.matrix(post.samples)
-
   p        = stan.data$p
   oldnames = paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")
   if ( stan.data$dist > 2 ) {
