@@ -94,7 +94,6 @@ model {
   vector[n0_obs] eta0_obs     = X0_obs * beta0;    // linear predictor for historical data uncensored
   vector[n0_cen] eta0_cen     = X0_cen * beta0;    // linear predictor for historical data censored
 
-
   // half-normal prior on scale
   target += normal_lpdf( scale0 | scale_mean, scale_sd ) - scale_prior_lognc;
 
