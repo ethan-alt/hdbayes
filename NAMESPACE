@@ -2,6 +2,7 @@
 
 export(aft.bhm)
 export(aft.leap)
+export(aft.logml.leap)
 export(aft.logml.map)
 export(aft.logml.post)
 export(aft.logml.pp)
