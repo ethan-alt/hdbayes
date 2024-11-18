@@ -1,5 +1,6 @@
 #' compute log density for Gumbel distribution (same as gumbel_lpdf in Stan)
 #' density function: f(x) = 1/sigma * exp{-z - exp(-z)}, where z = (x-mu)/sigma
+#'
 #' @param x     real number
 #' @param mu    location parameter for Gumbel distribution
 #' @param sigma scale parameter for Gumbel distribution
@@ -14,6 +15,7 @@ log_dgumbel = function(x, mu = 0, sigma = 1) {
 
 #' compute log(CDF) for Gumbel distribution (same as gumbel_lcdf in Stan)
 #' CDF(x) = exp{-exp(-z)}, where z = (x-mu)/sigma
+#'
 #' @param x     real number
 #' @param mu    location parameter for Gumbel distribution
 #' @param sigma scale parameter for Gumbel distribution
@@ -27,6 +29,7 @@ log_pgumbel <- function(x, mu = 0, sigma = 1) {
 }
 
 #' compute log density for an AFT model
+#'
 #' @param y_obs      log of observed event time (uncensored)
 #' @param y_cen      log of censored time
 #' @param eta_obs    linear predictor for uncensored
