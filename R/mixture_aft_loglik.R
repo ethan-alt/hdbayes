@@ -87,3 +87,12 @@ aft_model_cen_mixture_lp = function(y_cen, eta_cen, scale, log_probs, dist) {
 
   return(log_sum_exp(contribs))
 }
+
+#' compute log(1 + exp(x))
+#'
+#' @param x real value
+#' @noRd
+log1p_exp = function(x) {
+  ifelse(x > 0, x + log1p(exp(-x)), log1p(exp(x)))
+}
+

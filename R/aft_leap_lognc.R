@@ -70,7 +70,7 @@ aft.leap.lognc = function(
   K        = stan.data$K
   oldnames = paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")
   oldnames = c(oldnames, paste0( 'scaleVec[', 1:K, ']' ))
-  oldnames = c(oldnames, "gamma")
+  oldnames = c(oldnames, "logit_gamma")
   if ( K > 2 ){
     oldnames = c(oldnames, paste0("delta_raw[", 1:(K-2), "]"))
   }
@@ -85,11 +85,12 @@ aft.leap.lognc = function(
   gamma_shape1    = stan.data$prob_conc[1]
   gamma_shape2    = sum(stan.data$prob_conc[2:K])
 
-  stan.data$lognc_gamma = 0
+  stan.data$lognc_logit_gamma = 0
   if( stan.data$gamma_lower != 0 || stan.data$gamma_upper != 1 ) {
-    stan.data$lognc_gamma = log( pbeta(stan.data$gamma_upper, shape1 = gamma_shape1, shape2 = gamma_shape2) -
-                                   pbeta(stan.data$gamma_lower, shape1 = gamma_shape1, shape2 = gamma_shape2) )
+    stan.data$lognc_logit_gamma = log( pbeta(stan.data$gamma_upper, shape1 = gamma_shape1, shape2 = gamma_shape2) -
+                                         pbeta(stan.data$gamma_lower, shape1 = gamma_shape1, shape2 = gamma_shape2) )
   }
+
   stan.data$is_prior = is.prior
 
   ## estimate log normalizing constant
@@ -111,22 +112,20 @@ aft.leap.lognc = function(
     conc         = data$prob_conc
     gamma_shape1 = conc[1]
     gamma_shape2 = sum(conc[2:K])
-    gamma        = pars[["gamma"]]
-    probs        = c(gamma, 1 - gamma)
+    logit_gamma  = pars[["logit_gamma"]]
+    log1m_gamma  = -log1p_exp(logit_gamma) # log(1 - gamma)
+    log_probs    = c(logit_gamma, 0) + log1m_gamma
 
-    if ( gamma_shape1 != 1 || gamma_shape2 != 1 ){
-      prior_lp = prior_lp + dbeta(gamma, gamma_shape1, gamma_shape2, log = T)
-    }
-    prior_lp     = prior_lp - data$lognc_gamma
+    prior_lp     = prior_lp + logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
+      data$lognc_logit_gamma
 
     if( K > 2 ){
       delta_raw = as.numeric(pars[paste0("delta_raw[", 1:(K-2), "]")])
       delta_raw = c(delta_raw, 1 - sum(delta_raw))
       prior_lp  = prior_lp + dirichlet_lp(delta_raw, conc[2:K])
-      probs     = c(gamma, (1 - gamma) * delta_raw)
+      log_probs = c(logit_gamma, log(delta_raw)) + log1m_gamma
     }
 
-    log_probs   = log(probs)
     Eta0_obs    = data$X0_obs %*% betaMat
     Eta0_cen    = data$X0_cen %*% betaMat
     y0_obs      = data$y0_obs
@@ -150,8 +149,8 @@ aft.leap.lognc = function(
     return(data_lp + prior_lp)
   }
 
-  lb = c(rep(-Inf, p*K), rep(0, K), stan.data$gamma_lower)
-  ub = c(rep(Inf, (p+1)*K), stan.data$gamma_upper)
+  lb = c(rep(-Inf, p*K), rep(0, K), binomial('logit')$linkfun(stan.data$gamma_lower))
+  ub = c(rep(Inf, (p+1)*K), binomial('logit')$linkfun(stan.data$gamma_upper))
   if( K > 2 ){
     lb = c(lb, rep(0, K-2))
     ub = c(ub, rep(1, K-2))

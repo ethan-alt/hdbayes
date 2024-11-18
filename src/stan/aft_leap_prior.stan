@@ -81,6 +81,11 @@ functions{
 
     return(log_sum_exp(contribs));
   }
+
+  real logit_beta_lpdf(real x, real shape1, real shape2) {
+    return
+      -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p_exp(-x);
+  }
 }
 data {
   int<lower=1,upper=3>       dist;
@@ -103,39 +108,32 @@ data {
 transformed data {
   real gamma_shape1      = prob_conc[1];
   real gamma_shape2      = sum(prob_conc[2:K]);
+  real logit_gamma_lower = logit(gamma_lower);
+  real logit_gamma_upper = logit(gamma_upper);
+  real lognc_logit_gamma = 0;
   int  K_gt_2            = (K > 2) ? (1) : (0);
   vector[K-1] conc_delta = prob_conc[2:K];
-  real lognc_gamma       = 0;
   real scale_prior_lognc = normal_lccdf(0 | scale_mean, scale_sd);
 
   if( gamma_upper != 1 || gamma_lower != 0 )
-    lognc_gamma = lognc_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
+    lognc_logit_gamma = lognc_logit_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
 }
 parameters {
   matrix[p, K] betaMat;
   row_vector<lower=0>[K] scaleVec;
-  real<lower=gamma_lower,upper=gamma_upper> gamma; // probability of being exchangeable
-  simplex[K-1] delta_raw;
-}
-transformed parameters {
-  simplex[K] probs;
-
-  // Compute probability of being in first component and marginalized log probability
-  probs[1]   = gamma;
-  probs[2:K] = (1 - gamma) * delta_raw;
+  simplex[K-1]           delta_raw;
+  real<lower=logit_gamma_lower,upper=logit_gamma_upper> logit_gamma; // logit of probability of being exchangeable
 }
 model {
   // Temporary calculations
   matrix[n0_obs, K] Eta0_obs = (X0_obs * betaMat);        // linear predictors for historical data uncensored
   matrix[n0_cen, K] Eta0_cen = (X0_cen * betaMat);        // linear predictors for historical data censored
-  vector[K] logprobs         = log(probs);
+  vector[K]         logprobs = append_row(logit_gamma, log(delta_raw)) - log1p_exp(logit_gamma);
 
   // Priors
   // If two components, get beta prior on gamma;
   // If >2 components, get a dirichlet prior on raw delta
-  target += -lognc_gamma;
-  if ( gamma_shape1 != 1 || gamma_shape2 != 1)
-    target += beta_lpdf(gamma | gamma_shape1, gamma_shape2);
+  target += logit_beta_lpdf(logit_gamma | gamma_shape1, gamma_shape2) - lognc_logit_gamma;
 
   if (K_gt_2)
     target += dirichlet_lpdf(delta_raw | conc_delta);
