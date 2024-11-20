@@ -6,7 +6,7 @@
 #' @param sigma scale parameter for Gumbel distribution
 #' @noRd
 log_dgumbel = function(x, mu = 0, sigma = 1) {
-  if (sigma <= 0){
+  if ( any(sigma <= 0) ){
     stop("Scale parameter sigma must be positive")
   }
   z = (x - mu) / sigma
