@@ -108,7 +108,7 @@ aft.leap.lognc = function(
       prior_lp = prior_lp + as.numeric( dnorm(scaleVec[k], mean = data$scale_mean, sd = data$scale_sd, log = T) ) - data$scale_prior_lognc
     }
 
-    ## prior on gamma
+    ## prior on logit(gamma)
     conc         = data$prob_conc
     gamma_shape1 = conc[1]
     gamma_shape2 = sum(conc[2:K])
