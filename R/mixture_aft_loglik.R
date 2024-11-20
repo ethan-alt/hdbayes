@@ -12,11 +12,11 @@
 aft_model_obs_lpdf = function(y_obs, eta_obs, scale, dist) {
   # Compute likelihood
   if ( dist == 1 ) { # log-normal
-    loglik = sum( stats::dnorm(y_obs, mean = eta_obs, sd = scale, log = T) ) # uncensored data
+    loglik = stats::dnorm(y_obs, mean = eta_obs, sd = scale, log = T) # uncensored data
   }else if ( dist == 2 ) { # log-logistic
-    loglik = sum( stats::dlogis(y_obs, location = eta_obs, scale = scale, log = T) ) # uncensored data
+    loglik = stats::dlogis(y_obs, location = eta_obs, scale = scale, log = T) # uncensored data
   }else if ( dist == 3 ) { # weibull
-    loglik = sum( log_dgumbel(-y_obs, mu = -eta_obs, sigma = scale) ) # uncensored data
+    loglik = log_dgumbel(-y_obs, mu = -eta_obs, sigma = scale) # uncensored data
   }else{
     stop("Distribution not supported.")
   }
@@ -35,11 +35,11 @@ aft_model_obs_lpdf = function(y_obs, eta_obs, scale, dist) {
 aft_model_cen_lpdf = function(y_cen, eta_cen, scale, dist) {
   # Compute likelihood
   if ( dist == 1 ) { # log-normal
-    loglik = sum( pnorm(y_cen, mean = eta_cen, sd = scale, lower.tail = F, log.p = T) ) # censored data
+    loglik = pnorm(y_cen, mean = eta_cen, sd = scale, lower.tail = F, log.p = T) # censored data
   }else if ( dist == 2 ) { # log-logistic
-    loglik = sum( stats::plogis(y_cen, location = eta_cen, scale = scale, lower.tail = F, log.p = T) ) # censored data
+    loglik = stats::plogis(y_cen, location = eta_cen, scale = scale, lower.tail = F, log.p = T) # censored data
   }else if ( dist == 3 ) { # weibull
-    loglik = sum( log_pgumbel(-y_cen, mu = -eta_cen, sigma = scale) ) # censored data
+    loglik = log_pgumbel(-y_cen, mu = -eta_cen, sigma = scale) # censored data
   }else{
     stop("Distribution not supported.")
   }
