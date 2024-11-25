@@ -12,6 +12,7 @@
 #'
 #' @param post.samples      samples from the latent exchangeability prior (LEAP), with an attribute called 'data' which
 #'                          includes the list of variables specified in the data block of the Stan program.
+#' @param is.prior          whether the samples are from the LEAP (using historical data set only). Defaults to FALSE.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`)
 #'                          to pass onto [bridgesampling::bridge_sampler()].
 #'
