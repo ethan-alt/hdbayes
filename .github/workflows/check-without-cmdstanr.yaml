@@ -39,6 +39,13 @@ jobs:
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
 
+      # Install qpdf for macOS
+      - name: Install qpdf on macOS
+        if: runner.os == 'macOS'
+        run: |
+          brew update
+          brew install qpdf
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           dependencies: '"hard"' # do not install packages in Suggests
