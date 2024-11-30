@@ -69,7 +69,7 @@ glm.leap.lognc = function(
   if ( stan.data$dist > 2 ) {
     oldnames = c(oldnames, paste0( 'dispersion[', 1:K, ']' ))
   }
-  oldnames = c(oldnames, "gamma")
+  oldnames = c(oldnames, "logit_gamma")
   if ( K > 2 ){
     oldnames = c(oldnames, paste0("delta_raw[", 1:(K-2), "]"))
   }
@@ -80,13 +80,13 @@ glm.leap.lognc = function(
   ## compute log normalizing constants for half-normal priors
   stan.data$lognc_disp  = sum( pnorm(0, mean = stan.data$disp_mean, sd = stan.data$disp_sd, lower.tail = F, log.p = T) )
 
-  ## compute log normalizing constants for gamma
+  ## compute log normalizing constants for logit(gamma)
   gamma_shape1    = stan.data$conc[1]
   gamma_shape2    = sum(stan.data$conc[2:K])
 
-  stan.data$lognc_gamma = 0
+  stan.data$lognc_logit_gamma = 0
   if( stan.data$gamma_lower != 0 || stan.data$gamma_upper != 1 ) {
-    stan.data$lognc_gamma = log( pbeta(stan.data$gamma_upper, shape1 = gamma_shape1, shape2 = gamma_shape2) -
+    stan.data$lognc_logit_gamma = log( pbeta(stan.data$gamma_upper, shape1 = gamma_shape1, shape2 = gamma_shape2) -
                                          pbeta(stan.data$gamma_lower, shape1 = gamma_shape1, shape2 = gamma_shape2) )
   }
 
@@ -99,23 +99,22 @@ glm.leap.lognc = function(
                             sd = as.numeric(data$sd_beta), log = T) )
     betaMat    = matrix(betaMat, nrow = p, ncol = K)
 
-    ## prior on gamma
+    ## prior on logit(gamma)
     conc         = data$conc
     gamma_shape1 = conc[1]
     gamma_shape2 = sum(conc[2:K])
-    gamma        = pars[["gamma"]]
-    probs        = c(gamma, 1 - gamma)
+    logit_gamma  = pars[["logit_gamma"]]
+    log1m_gamma  = -log1p_exp(logit_gamma) # log(1 - gamma)
+    log_probs    = c(logit_gamma, 0) + log1m_gamma
 
-    if ( gamma_shape1 != 1 || gamma_shape2 != 1 ){
-      prior_lp = prior_lp + dbeta(gamma, gamma_shape1, gamma_shape2, log = T)
-    }
-    prior_lp     = prior_lp - data$lognc_gamma
+    prior_lp     = prior_lp + logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
+      data$lognc_logit_gamma
 
     if( K > 2 ){
-      delta_raw = pars[paste0("delta_raw[", 1:(K-2), "]")]
+      delta_raw = as.numeric(pars[paste0("delta_raw[", 1:(K-2), "]")])
       delta_raw = c(delta_raw, 1 - sum(delta_raw))
       prior_lp  = prior_lp + dirichlet_lp(delta_raw, conc[2:K])
-      probs     = c(gamma, (1 - gamma) * delta_raw)
+      log_probs = c(logit_gamma, log(delta_raw)) + log1m_gamma
     }
 
     dist         = data$dist
@@ -127,7 +126,7 @@ glm.leap.lognc = function(
     }else {
       dispersion = rep(1.0, K)
     }
-    hist_lp      = glm_mixture_lp(data$y0, betaMat, dispersion, probs, data$X0, dist, link, data$offs0)
+    hist_lp      = glm_mixture_lp(data$y0, betaMat, dispersion, log_probs, data$X0, dist, link, data$offs0)
     return(hist_lp + prior_lp)
   }
 
@@ -137,8 +136,8 @@ glm.leap.lognc = function(
     lb = c(lb, rep(0, K) )
     ub = c(ub, rep(Inf, K) )
   }
-  lb = c(lb, stan.data$gamma_lower)
-  ub = c(ub, stan.data$gamma_upper)
+  lb = c(lb, binomial('logit')$linkfun(stan.data$gamma_lower))
+  ub = c(ub, binomial('logit')$linkfun(stan.data$gamma_upper))
   if( K > 2 ){
     lb = c(lb, rep(0, K-2))
     ub = c(ub, rep(1, K-2))

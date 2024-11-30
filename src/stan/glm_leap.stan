@@ -111,21 +111,20 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //' @param offs offset
   //'
   //' @return n x K matrix of log likelihood contributions
   matrix normal_glm_mixture_contrib(
-    vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
+    vector y, matrix X, matrix beta, vector disp, vector log_probs, int link, matrix offs
   ) {
     // compute logarithm of normalizing constant
     real log_2pi = 1.837877066409345483560659;  // log(2*pi)
     int n = rows(y);
     int p = cols(X);
-    int K = rows(probs);
+    int K = rows(log_probs);
     matrix [n,K] theta;
-    vector[K] log_probs = log(probs);
     vector[K] inv_disp = inv(disp);
     matrix[n,K] contrib;
     vector[n] y_sq = square(y);
@@ -158,19 +157,18 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters (ignored for the likelihood calculation)
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //' @param offs offset
   //'
   //' @return n x K matrix of log likelihood contributions
   matrix bernoulli_glm_mixture_contrib(
-    vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
+    vector y, matrix X, matrix beta, vector disp, vector log_probs, int link, matrix offs
   ) {
     int n = rows(y);
     int p = cols(X);
-    int K = rows(probs);
+    int K = rows(log_probs);
     matrix [n,K] theta;
-    vector[K] log_probs = log(probs);
     matrix[n,K] contrib;
 
     // Compute canonical parameter: theta = logit(mu)
@@ -197,18 +195,17 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters (ignored for the likelihood calculation)
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //'
   //' @return n x K matrix of log likelihood contributions
   matrix poisson_glm_mixture_contrib(
-    vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
+    vector y, matrix X, matrix beta, vector disp, vector log_probs, int link, matrix offs
   ) {
     int n = rows(y);
     int p = cols(X);
-    int K = rows(probs);
+    int K = rows(log_probs);
     matrix [n,K] theta;
-    vector[K] log_probs = log(probs);
     matrix[n,K] contrib;
     vector[n] log_y_factorial = lgamma(y+1);
 
@@ -237,19 +234,18 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //' @param offs offset
   //'
   //' @return n x K matrix of log likelihood contributions
   matrix gamma_glm_mixture_contrib(
-    vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
+    vector y, matrix X, matrix beta, vector disp, vector log_probs, int link, matrix offs
     ) {
     int n = rows(y);
     int p = cols(X);
-    int K = rows(probs);
+    int K = rows(log_probs);
     matrix [n,K] theta;
-    vector[K] log_probs = log(probs);
     matrix[n,K] contrib;
     vector[n] log_y = log(y);
     vector[K] inv_disp = inv(disp);
@@ -283,20 +279,19 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //' @param offs offset
   //'
   //' @return n x K matrix of log likelihood contributions
   matrix invgauss_glm_mixture_contrib(
-    vector y, matrix X, matrix beta, vector disp, vector probs, int link, matrix offs
+    vector y, matrix X, matrix beta, vector disp, vector log_probs, int link, matrix offs
   ) {
     real log_2pi = 1.837877066409345483560659;  // log(2*pi)
     int n = rows(y);
     int p = cols(X);
-    int K = rows(probs);
+    int K = rows(log_probs);
     matrix [n,K] theta;
-    vector[K] log_probs = log(probs);
     matrix[n,K] contrib;
     vector[n] log_y_cubed = 3 * log(y);
     vector[n] inv_y = inv(y);
@@ -329,7 +324,7 @@ functions{
   //' @param y vector of responses
   //' @param beta p x K matrix of regression coefficients
   //' @param phi K-dimensional vector of dispersion parameters
-  //' @param probs K-dimensional vector of mixture component probabilities
+  //' @param log_probs K-dimensional vector of log of mixture component probabilities
   //' @param matrix X n x p design matrix
   //' @param dist index pertaining to distribution
   //' @param link index pertaining to link function
@@ -338,19 +333,19 @@ functions{
   //' @return n x K matrix of log likelihood contributions:
   //'   res[i, k] = log density for subject i in class k
   matrix glm_mixture_contrib(
-    vector y, matrix beta, vector disp, vector probs
+    vector y, matrix beta, vector disp, vector log_probs
     , matrix X, int dist, int link, matrix offs
   ) {
     if (dist == 1)
-      return bernoulli_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
+      return bernoulli_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs);
     else if (dist == 2)
-      return poisson_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
+      return poisson_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs);
     else if (dist == 3)
-      return normal_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
+      return normal_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs);
     else if (dist == 4)
-      return gamma_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
+      return gamma_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs);
     else if (dist == 5)
-      return invgauss_glm_mixture_contrib(y, X, beta, disp, probs, link, offs);
+      return invgauss_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs);
     else reject("Distribution not supported");
     return beta; // never reached
   }
@@ -364,24 +359,29 @@ functions{
   //' @param X design matrix (incl. intercept if applicable)
   //' @param beta matrix of regression coefficients
   //' @param disp vector of dispersion parameters
-  //' @param probs vector of component probabilities
+  //' @param log_probs vector of log of component probabilities
   //' @param link index of link function
   //' @param offs offset
   //'
   //' @return sum of log likelihood (a real number)
   real glm_mixture_lp(
-    vector y, matrix beta, vector disp, vector probs
+    vector y, matrix beta, vector disp, vector log_probs
     , matrix X, int dist, int link, matrix offs
   ) {
     int n = rows(y);
-    int K = rows(probs);
+    int K = rows(log_probs);
     vector[n] contrib; // log probability summing over all components
-    matrix[n, K] contribs = glm_mixture_contrib(y, beta, disp, probs, X, dist, link, offs);
+    matrix[n, K] contribs = glm_mixture_contrib(y, beta, disp, log_probs, X, dist, link, offs);
 
     for (i in 1:n) {
       contrib[i] = log_sum_exp(contribs[i,]);
     }
     return sum(contrib);
+  }
+
+  real logit_beta_lpdf(real x, real shape1, real shape2) {
+    return
+      -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p_exp(-x);
   }
 }
 data {
@@ -408,41 +408,38 @@ data {
 transformed data {
   real gamma_shape1      = conc[1];
   real gamma_shape2      = sum(conc[2:K]);
+  real logit_gamma_lower = logit(gamma_lower);
+  real logit_gamma_upper = logit(gamma_upper);
   int K_gt_2             = (K > 2) ? (1) : (0);
   vector[K-1] conc_delta = conc[2:K];
   real lognc_disp        = normal_lccdf(0 | disp_mean, disp_sd);
-  real lognc_gamma       = 0;
+  real lognc_logit_gamma = 0;
 
   if( gamma_upper != 1 || gamma_lower != 0 )
-    lognc_gamma = lognc_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
+    lognc_logit_gamma = lognc_logit_gamma + log_diff_exp( beta_lcdf(gamma_upper | gamma_shape1, gamma_shape2), beta_lcdf(gamma_lower | gamma_shape1, gamma_shape2) );
 }
 parameters {
   matrix[p,K] betaMat;       // pxK matrix of regression coefficients; p = number of covars, K = number of components
   vector<lower=0>[(dist > 2) ? K : 0] dispersion;  // K-dim vector of dispersion params
-  real<lower=gamma_lower,upper=gamma_upper> gamma; // probability of being exchangeable
+  real<lower=logit_gamma_lower,upper=logit_gamma_upper> logit_gamma; // logit of probability of being exchangeable
   simplex[K-1] delta_raw;
 }
-transformed parameters {
-  simplex[K] probs;
-
-  // Compute probability of being in first component and marginalized log probability
-  probs[1]   = gamma;
-  probs[2:K] = (1 - gamma) * delta_raw;
-}
 model {
+  vector[K] logprobs = append_row(logit_gamma, log(delta_raw)) - log1p_exp(logit_gamma);
+
   // initial priors
   for ( k in 1:K ) {
     target += normal_lpdf(betaMat[, k] | mean_beta[,k], sd_beta[,k]);
   }
   if ( dist <= 2 ) {
     // historical data likelihood
-    target += glm_mixture_lp(y0, betaMat, ones_vector(K), probs, X0, dist, link, offs0);
+    target += glm_mixture_lp(y0, betaMat, ones_vector(K), logprobs, X0, dist, link, offs0);
     // current data likelihood
     target += glm_lp(y, betaMat[, 1], 1.0, X, dist, link, offs[,1]);
   }
   else {
     // historical data likelihood
-    target += glm_mixture_lp(y0, betaMat, dispersion, probs, X0, dist, link, offs0);
+    target += glm_mixture_lp(y0, betaMat, dispersion, logprobs, X0, dist, link, offs0);
     // half-normal prior for dispersion
     target += normal_lpdf(dispersion | disp_mean, disp_sd) - lognc_disp;
     // current data likelihood
@@ -451,14 +448,18 @@ model {
 
   // If two components, get beta prior on gamma;
   // If >2 components, get a dirichlet prior on raw delta
-  target += -lognc_gamma;
-  if ( gamma_shape1 != 1 || gamma_shape2 != 1)
-    target += beta_lpdf(gamma | gamma_shape1, gamma_shape2);
+  target += logit_beta_lpdf(logit_gamma | gamma_shape1, gamma_shape2) - lognc_logit_gamma;
 
   if (K_gt_2)
     target += dirichlet_lpdf(delta_raw | conc_delta);
 }
 generated quantities {
   vector[p] beta = betaMat[, 1];
+  real<lower=gamma_lower,upper=gamma_upper> gamma = inv_logit(logit_gamma);
+  simplex[K]                                probs;
+
+  // Compute probability of being in first component and marginalized log probability
+  probs[1]   = gamma;
+  probs[2:K] = (1 - gamma) * delta_raw;
 }
 

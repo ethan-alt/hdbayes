@@ -8,6 +8,13 @@ log_sum_exp = function(x){
   x_max + log( sum(exp(x - x_max)) )
 }
 
+#' compute log(1 + exp(x))
+#'
+#' @param x real value
+#' @noRd
+log1p_exp = function(x) {
+  ifelse(x > 0, x + log1p(exp(-x)), log1p(exp(x)))
+}
 
 #' compute log density for dirichlet
 #' @param x real number
@@ -27,17 +34,16 @@ dirichlet_lp = function(x, conc){
 #' @param link  integer giving link function
 #' @param offs  offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-normal_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
+normal_glm_mixture_contrib = function(y, X, beta, disp, log_probs, link, offs) {
   log_2pi = 1.837877066409345483560659
-  K         = length(probs)
+  K         = length(log_probs)
   theta     = X %*% beta + offs
   if ( link != 1 ){
     theta = get_lp2mean(theta, link)
   }
 
-  log_probs = log(probs)
   inv_disp  = 1/disp
   y_sq      = y^2
   contrib   = sapply(1:K, function(k){
@@ -58,18 +64,17 @@ normal_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
 #' @param link  integer giving link function
 #' @param offs  offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-bernoulli_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
-  K         = length(probs)
+bernoulli_glm_mixture_contrib = function(y, X, beta, disp, log_probs, link, offs) {
+  K         = length(log_probs)
   theta     = X %*% beta + offs
   if ( link != 3 ){
     theta = binomial('logit')$linkfun( get_lp2mean(theta, link) )
   }
 
-  log_probs = log(probs)
   contrib   = sapply(1:K, function(k){
-    log_probs[k] + y * theta[, k] - log1p( exp(theta[, k]) )
+    log_probs[k] + y * theta[, k] - log1p_exp( theta[, k] )
   })
   return( contrib )
 }
@@ -84,16 +89,15 @@ bernoulli_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
 #' @param link  integer giving link function
 #' @param offs  offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-poisson_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
-  K         = length(probs)
+poisson_glm_mixture_contrib = function(y, X, beta, disp, log_probs, link, offs) {
+  K         = length(log_probs)
   theta     = X %*% beta + offs
   if ( link != 2 ){
     theta = log( get_lp2mean(theta, link) )
   }
 
-  log_probs       = log(probs)
   log_y_factorial = lgamma(y+1)
   contrib         = sapply(1:K, function(k){
     log_probs[k] + y * theta[, k] - exp(theta[, k]) - log_y_factorial
@@ -111,16 +115,15 @@ poisson_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
 #' @param link  integer giving link function
 #' @param offs  offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-gamma_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
-  K         = length(probs)
+gamma_glm_mixture_contrib = function(y, X, beta, disp, log_probs, link, offs) {
+  K         = length(log_probs)
   theta     = X %*% beta + offs
   if ( link != 4 ){
     theta = 1 / get_lp2mean(theta, link)
   }
 
-  log_probs = log(probs)
   log_y     = log(y)
   inv_disp  = 1/disp
   contrib   = sapply(1:K, function(k){
@@ -141,17 +144,16 @@ gamma_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
 #' @param link  integer giving link function
 #' @param offs  offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-invgauss_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
+invgauss_glm_mixture_contrib = function(y, X, beta, disp, log_probs, link, offs) {
   log_2pi   = 1.837877066409345483560659
-  K         = length(probs)
+  K         = length(log_probs)
   theta     = X %*% beta + offs
   if ( link != 9 ){
     theta = 1 / ( get_lp2mean(theta, link)^2 )
   }
 
-  log_probs   = log(probs)
   log_y_cubed = 3 * log(y)
   inv_y       = 1/y
   inv_disp    = 1/disp
@@ -172,19 +174,19 @@ invgauss_glm_mixture_contrib = function(y, X, beta, disp, probs, link, offs) {
 #' @param link integer giving link function
 #' @param offs offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-glm_mixture_contrib = function(y, beta, disp, probs, X, dist, link, offs) {
+glm_mixture_contrib = function(y, beta, disp, log_probs, X, dist, link, offs) {
   if (dist == 1) {     # Bernoulli
-    return( bernoulli_glm_mixture_contrib(y, X, beta, disp, probs, link, offs) )
+    return( bernoulli_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs) )
   }else if (dist == 2) {  # Poisson
-    return( poisson_glm_mixture_contrib(y, X, beta, disp, probs, link, offs) )
+    return( poisson_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs) )
   }else if (dist == 3) {  # Normal
-    return( normal_glm_mixture_contrib(y, X, beta, disp, probs, link, offs) )
+    return( normal_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs) )
   }else if (dist == 4) { # Gamma
-    return( gamma_glm_mixture_contrib(y, X, beta, disp, probs, link, offs) )
+    return( gamma_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs) )
   }else if (dist == 5) { # Inverse-Gaussian
-    return( invgauss_glm_mixture_contrib(y, X, beta, disp, probs, link, offs) )
+    return( invgauss_glm_mixture_contrib(y, X, beta, disp, log_probs, link, offs) )
   }else{
     stop("Distribution not supported")
   }
@@ -199,11 +201,11 @@ glm_mixture_contrib = function(y, beta, disp, probs, X, dist, link, offs) {
 #' @param link integer giving link function
 #' @param offs offset
 #' @param disp  vector of dispersion parameters
-#' @param probs vector of component probabilities
+#' @param log_probs vector of log of component probabilities
 #' @noRd
-glm_mixture_lp = function(y, beta, disp, probs, X, dist, link, offs) {
+glm_mixture_lp = function(y, beta, disp, log_probs, X, dist, link, offs) {
   n        = length(y)
-  contribs = glm_mixture_contrib(y, beta, disp, probs, X, dist, link, offs)
+  contribs = glm_mixture_contrib(y, beta, disp, log_probs, X, dist, link, offs)
   contrib  = sapply(1:n, function(i){
     log_sum_exp(contribs[i,])
   })
