@@ -81,7 +81,8 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a GLM using the latent exchangeability prior (LEAP) by Alt et al. (2023).
+Sample from the posterior distribution of a GLM using the latent exchangeability prior (LEAP) by Alt et al. (2024)
+\url{doi:10.1093/biomtc/ujae083}.
 }
 \details{
 The latent exchangeability prior (LEAP) discounts the historical data by identifying the most relevant individuals
@@ -105,5 +106,5 @@ if (instantiate::stan_cmdstan_exists()) {
 }
 }
 \references{
-Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
+Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2024). LEAP: The latent exchangeability prior for borrowing information from historical data. Biometrics, 80(3).
 }
