@@ -1,7 +1,7 @@
 #' Posterior of latent exchangeability prior (LEAP)
 #'
 #' Sample from the posterior distribution of an accelerated failure time (AFT) model using the latent exchangeability
-#' prior (LEAP) by Alt et al. (2023).
+#' prior (LEAP) by Alt et al. (2024) <doi:10.1093/biomtc/ujae083>.
 #'
 #' The latent exchangeability prior (LEAP) discounts the historical data by identifying the most relevant individuals
 #' from the historical data. It is equivalent to a prior induced by the posterior of a finite mixture model for the
@@ -25,12 +25,12 @@
 #' @param prob.conc         a scalar or a vector of length `K` giving the concentration parameters for Dirichlet prior.
 #'                          If length == 2, a `Beta(prob.conc[1], prob.conc[2])` prior is used. If a scalar is provided,
 #'                          `prob.conc` will be a vector of repeated elements of the given scalar. Defaults to a vector of 1s.
-#' @param beta.mean         a scalar or a `p x K` matrix of mean parameters for initial prior on regression coefficients,
-#'                          where `p` is the number of regression coefficients (including intercept). If a scalar is provided,
-#'                          `beta.mean` will be a matrix of repeated elements of the given scalar. Defaults to a matrix of 0s.
-#' @param beta.sd           a scalar or a `p x K` matrix of sd parameters for the initial prior on regression coefficients,
-#'                          where `p` is the number of regression coefficients (including intercept). If a scalar is provided,
-#'                          same as for `beta.mean`. Defaults to a matrix of 10s.
+#' @param beta.mean         a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the mean parameters for the initial prior on regression coefficients. If a scalar is provided,
+#'                          `beta.mean` will be a vector of repeated elements of the given scalar. Defaults to a vector of 0s.
+#' @param beta.sd           a scalar or a vector whose dimension is equal to the number of regression coefficients giving
+#'                          the sd parameters for the initial prior on regression coefficients. If a scalar is provided,
+#'                          same as for `beta.mean`. Defaults to a vector of 10s.
 #' @param scale.mean        location parameter for the half-normal prior on the scale parameters for each class. Defaults to 0.
 #' @param scale.sd          scale parameter for the half-normal prior on the scale parameters for each class. Defaults to 10.
 #' @param gamma.lower       a scalar giving the lower bound for probability of subjects in historical data being exchangeable
@@ -51,7 +51,7 @@
 #'  the list of variables specified in the data block of the Stan program.
 #'
 #' @references
-#'  Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2023). LEAP: The latent exchangeability prior for borrowing information from historical data. arXiv preprint.
+#'  Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2024). LEAP: The latent exchangeability prior for borrowing information from historical data. Biometrics, 80(3).
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
