@@ -20,8 +20,8 @@ pwe_lpdf = function(y, eta, lambda, breaks, j, J, death_ind) {
   cumhaz = lambda_j * (y - breaks[j]) + cumblhaz[j]
   cumhaz = cumhaz * exp(eta)
 
-  # log likelihood = sum( event_ind * log(hazard) - cumhaz )
+  # log likelihood = event_ind * log(hazard) - cumhaz
   # log(hazard) = log( lambda * exp(eta) ) = log(lambda) + eta
-  loglik = sum( death_ind * ( log(lambda_j) + eta ) - cumhaz )
+  loglik = death_ind * ( log(lambda_j) + eta ) - cumhaz
   return(loglik)
 }

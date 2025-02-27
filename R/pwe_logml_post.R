@@ -83,7 +83,7 @@ pwe.logml.post = function(
       sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
 
     eta = data$X1 %*% beta
-    data_lp = pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind)
+    data_lp = sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
 
     return(data_lp + prior_lp)
   }

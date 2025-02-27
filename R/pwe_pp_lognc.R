@@ -93,11 +93,11 @@ pwe.pp.lognc = function(
       sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
 
     eta0    = data$X0 %*% beta
-    data_lp = data$a0 * pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0)
+    data_lp = data$a0 * sum( pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0) )
 
     if( !data$is_prior ){
       eta = data$X1 %*% beta
-      data_lp = data_lp + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind)
+      data_lp = data_lp + sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
     }
     return(data_lp + prior_lp)
   }
