@@ -1,0 +1,73 @@
+// fit PWE model
+// sample from power prior (Not posterior)
+functions {
+  //' PWE log likelihood
+  //' @param y               failure / censoring time
+  //' @param eta             linear predictor
+  //' @param lambda          vector of baseline hazards
+  //' @param log_lambda      vector of log(lambda)
+  //' @param breaks          (J+1)-dim vector giving intervals
+  //' @param j               index of the interval for which the individual failed / was censored: j \in {1, ..., J}
+  //' @param death_ind       integer giving whether individual died (death_ind == 1) or was censored (death_ind == 0)
+  //' @param lambda_d_breaks (J-1)-dim vector giving lambda[j] * (s[j] - s[j-1]), j = 1, ..., J-1
+  real pwe_lpdf(real y, real eta, vector lambda, vector log_lambda, vector breaks, int j, int death_ind, vector cumblhaz) {
+    real loglik;
+
+    // Initialize cumhaz to lambda[j] ( y - s[j] )
+    real cumhaz = lambda[j] * ( y - breaks[j] );
+
+    // add on (sum_{g=1}^{j-1} lambda[j] * ( s[j] - s[j-1] )
+    if ( j > 1 )
+      cumhaz += cumblhaz[j-1];
+
+    // Initialize loglik = - cumhaz * exp(x'beta) = log(Survival)
+    loglik = -cumhaz * exp(eta);
+
+    // If individual experienced event, add log hazard: log(lambda[j]) + x'beta
+    if ( death_ind == 1 )
+      loglik += log_lambda[j] + eta;
+
+    return(loglik);
+  }
+}
+data {
+  int<lower=0>                    n0;            // historical data sample size
+  int<lower=0>                    J;             // number of time intervals
+  int<lower=0>                    p;             // number of regression coefficients
+  vector[n0]                      y0;            // event times in historical data
+  matrix[n0,p]                    X0;            // historical data design matrix (EXCLUDING intercept term)
+  array[n0] int<lower=1,upper=J>  intindx0;      // index giving interval into which obs i failed / was censored for historical data
+  array[n0] int<lower=0,upper=1>  death_ind0;    // event indicator (1 = event; 0 = censored) for historical data
+  vector[J+1]                     breaks;        // J+1-dim interval of breaks
+  real<lower=0,upper=1>           a0;            // power prior parameter
+  vector[p]                       beta_mean;     // mean for normal initial prior on coefficients
+  vector<lower=0>[p]              beta_sd;       // sd for normal initial prior on coefficients
+  vector[J]                       hazard_mean;   // location parameter for half-normal prior on baseline hazards
+  vector<lower=0>[J]              hazard_sd;     // scale parameter for half-normal prior on baseline hazards
+}
+transformed data{
+  real lognc_hazard = normal_lccdf(0 | hazard_mean, hazard_sd);
+}
+parameters {
+  vector<lower=0>[J]    lambda;       // the J hazards for each interval
+  vector[p]             beta;         // regression coefficients
+}
+model {
+  vector[n0]  eta0       = X0 * beta;
+  vector[J]   log_lambda = log(lambda);
+  vector[J-1] cumblhaz;
+
+  // compute lambda[j] * (s[j] * s[j-1])
+  cumblhaz = cumulative_sum( lambda[1:(J-1)] .* ( breaks[2:J] - breaks[1:(J-1)] ) );
+
+  // half-normal prior on baseline hazards
+  target += normal_lpdf(lambda | hazard_mean, hazard_sd) - lognc_hazard;
+
+  // noninformative initial prior
+  target += normal_lpdf(beta | beta_mean, beta_sd);
+
+  // power prior
+  for ( i in 1:n0 )
+    target += a0 * pwe_lpdf(y0[i] | eta0[i], lambda, log_lambda, breaks, intindx0[i], death_ind0[i], cumblhaz);
+}
+
