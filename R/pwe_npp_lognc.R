@@ -1,9 +1,9 @@
 #' Estimate the logarithm of the normalizing constant for normalized power prior (NPP) for one data set
 #'
 #' Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
-#' constant for the NPP for a fixed value of the power prior parameter \eqn{a_0 \in (0, 1)} for one data
-#' set. The initial priors are independent normal priors on the regression coefficients and half-normal
-#' priors on the baseline hazard parameters.
+#' constant of a piecewise exponential (PWE) model under the NPP for a fixed value of the power prior
+#' parameter \eqn{a_0 \in (0, 1)} for one data set. The initial priors are independent normal priors on
+#' the regression coefficients and half-normal priors on the baseline hazard parameters.
 #'
 #' @include data_checks_pwe.R
 #' @include pwe_pp_lognc.R

@@ -28,7 +28,7 @@ where event is a binary indicator for event (0 = no event, 1 = event has occurre
 censoring is assumed to be right-censoring.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical data sets. For fitting accelerated failure time (AFT) models, all historical
+are the historical data sets. For fitting piecewise exponential (PWE) models, all historical
 data sets will be stacked into one historical data set.}
 
 \item{breaks}{a numeric vector specifying the time points that define the boundaries of the piecewise

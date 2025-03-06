@@ -156,5 +156,5 @@ prior.
 Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
 }
 \seealso{
-\code{\link[=glm.npp.lognc]{glm.npp.lognc()}}
+\code{\link[=aft.npp.lognc]{aft.npp.lognc()}}
 }

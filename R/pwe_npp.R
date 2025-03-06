@@ -21,7 +21,7 @@
 #'                          where event is a binary indicator for event (0 = no event, 1 = event has occurred). The type of
 #'                          censoring is assumed to be right-censoring.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical data sets. For fitting accelerated failure time (AFT) models, all historical
+#'                          are the historical data sets. For fitting piecewise exponential (PWE) models, all historical
 #'                          data sets will be stacked into one historical data set.
 #' @param a0.lognc          a vector giving values of the power prior parameter for which the logarithm of the normalizing
 #'                          constant has been evaluated.
@@ -61,7 +61,7 @@
 #'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
 #'  the list of variables specified in the data block of the Stan program.
 #'
-#' @seealso [glm.npp.lognc()]
+#' @seealso [pwe.npp.lognc()]
 #'
 #' @references
 #'  Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.

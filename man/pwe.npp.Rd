@@ -32,7 +32,7 @@ where event is a binary indicator for event (0 = no event, 1 = event has occurre
 censoring is assumed to be right-censoring.}
 
 \item{data.list}{a list of \code{data.frame}s. The first element in the list is the current data, and the rest
-are the historical data sets. For fitting accelerated failure time (AFT) models, all historical
+are the historical data sets. For fitting piecewise exponential (PWE) models, all historical
 data sets will be stacked into one historical data set.}
 
 \item{a0.lognc}{a vector giving values of the power prior parameter for which the logarithm of the normalizing
@@ -168,5 +168,5 @@ half-normal priors.
 Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
 }
 \seealso{
-\code{\link[=glm.npp.lognc]{glm.npp.lognc()}}
+\code{\link[=pwe.npp.lognc]{pwe.npp.lognc()}}
 }

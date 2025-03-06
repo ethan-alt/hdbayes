@@ -70,9 +70,9 @@ estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat.
 }
 \description{
 Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the normalizing
-constant for the NPP for a fixed value of the power prior parameter \eqn{a_0 \in (0, 1)} for one data
-set. The initial priors are independent normal priors on the regression coefficients and half-normal
-priors on the baseline hazard parameters.
+constant of a piecewise exponential (PWE) model under the NPP for a fixed value of the power prior
+parameter \eqn{a_0 \in (0, 1)} for one data set. The initial priors are independent normal priors on
+the regression coefficients and half-normal priors on the baseline hazard parameters.
 }
 \examples{
 if (instantiate::stan_cmdstan_exists()) {

@@ -24,7 +24,7 @@
 #'                          where event is a binary indicator for event (0 = no event, 1 = event has occurred). The type of
 #'                          censoring is assumed to be right-censoring.
 #' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                          are the historical data sets. For fitting accelerated failure time (AFT) models, all historical
+#'                          are the historical data sets. For fitting piecewise exponential (PWE) models, all historical
 #'                          data sets will be stacked into one historical data set.
 #' @param breaks            a numeric vector specifying the time points that define the boundaries of the piecewise
 #'                          intervals. The values should be in ascending order, with the final value being greater than

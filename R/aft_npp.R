@@ -56,7 +56,7 @@
 #'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
 #'  the list of variables specified in the data block of the Stan program.
 #'
-#' @seealso [glm.npp.lognc()]
+#' @seealso [aft.npp.lognc()]
 #'
 #' @references
 #'  Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
