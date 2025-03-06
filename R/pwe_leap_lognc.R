@@ -145,7 +145,7 @@ pwe.leap.lognc = function(
     })
     contribs = as.matrix(contribs, ncol = K)
     data_lp  = apply(contribs, 1, log_sum_exp)
-    data_lp  = sum ( data_lp )
+    data_lp  = sum( data_lp )
 
     if( !data$is_prior ){
       eta = data$X1 %*% betaMat[, 1]
