@@ -54,7 +54,6 @@ data {
   vector<lower=0>[J]              hazard_sd;      // scale parameter for half-normal prior on baseline hazards
   int<lower=0,upper=1>            get_loglik;     // whether to generate log-likelihood matrix
 }
-
 transformed data {
   real lognc_spike   = normal_lccdf(0 | mu_spike, sigma_spike); // \Phi(mu_spike / sigma_spike)
   real lognc_slab    = normal_lccdf(0 | mu_slab, sigma_slab);   // \Phi(mu_slab / sigma_slab)

@@ -1,15 +1,16 @@
 #' Estimate the logarithm of the normalizing constant for commensurate prior (CP)
 #'
 #' Uses bridge sampling to estimate the logarithm of the normalizing constant for the commensurate prior (CP) using
-#' historical data set.
+#' all data sets or using historical data set only.
 #'
 #' @include aft_loglik.R
 #' @include mixture_loglik.R
 #'
 #' @noRd
 #'
-#' @param post.samples      samples from the commensurate prior (CP), with an attribute called 'data' which includes
-#'                          the list of variables specified in the data block of the Stan program.
+#' @param post.samples      posterior samples of an AFT model under the commensurate prior (CP) or samples from the CP,
+#'                          with an attribute called 'data' which includes the list of variables specified in the data
+#'                          block of the Stan program.
 #' @param is.prior          whether the samples are from the CP (using historical data set only). Defaults to FALSE.
 #' @param bridge.args       a `list` giving arguments (other than `samples`, `log_posterior`, `data`, `lb`, and `ub`)
 #'                          to pass onto [bridgesampling::bridge_sampler()].

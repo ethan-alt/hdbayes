@@ -48,7 +48,6 @@ data {
   vector[J]                       hazard_mean;    // location parameter for half-normal prior on baseline hazards
   vector<lower=0>[J]              hazard_sd;      // scale parameter for half-normal prior on baseline hazards
 }
-
 transformed data {
   real lognc_spike   = normal_lccdf(0 | mu_spike, sigma_spike); // \Phi(mu_spike / sigma_spike)
   real lognc_slab    = normal_lccdf(0 | mu_slab, sigma_slab);   // \Phi(mu_slab / sigma_slab)

@@ -82,6 +82,7 @@
 #'       chains = 1, iter_warmup = 1000, iter_sampling = 2000
 #'     )
 #'   }
+#' }
 pwe.logml.map = function(
     post.samples,
     bridge.args       = NULL,
