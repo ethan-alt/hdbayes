@@ -23,7 +23,7 @@ The function returns a \code{list} with the following objects
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
 \item{bs}{an object of class \code{bridge} or \code{bridge_list} containing the output from using \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_sampler()}}
-to compute the logarithm of the marginal likelihood of the AFT model under the normal/half-normal prior}
+to compute the logarithm of the marginal likelihood of the PWE model under the normal/half-normal prior}
 }
 }
 \description{

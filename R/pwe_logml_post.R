@@ -21,7 +21,7 @@
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
 #'    \item{bs}{an object of class `bridge` or `bridge_list` containing the output from using [bridgesampling::bridge_sampler()]
-#'    to compute the logarithm of the marginal likelihood of the AFT model under the normal/half-normal prior}
+#'    to compute the logarithm of the marginal likelihood of the PWE model under the normal/half-normal prior}
 #'  }
 #'
 #' @references
