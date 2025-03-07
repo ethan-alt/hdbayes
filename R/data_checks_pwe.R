@@ -1,18 +1,24 @@
 #' check if the input data are in appropriate forms for all methods
-#' @param formula     a two-sided formula giving the relationship between the response variable and covariates.
-#'                    The response is a survival object as returned by the `survival::Surv(time, event)` function,
-#'                    where event is a binary indicator for event (0 = no event, 1 = event has occurred). The type
-#'                    of censoring is assumed to be right-censoring.
-#' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
-#'                    are the historical data sets. For fitting piecewise exponential (PWE) models, all
-#'                    historical data sets will be stacked into one historical data set.
-#' @param breaks      a numeric vector specifying the time points that define the boundaries of the piecewise
-#'                    intervals. The values should be in ascending order, with the final value being greater
-#'                    than or equal to the maximum observed time.
+#' @param formula           a two-sided formula giving the relationship between the response variable and covariates.
+#'                          The response is a survival object as returned by the `survival::Surv(time, event)` function,
+#'                          where event is a binary indicator for event (0 = no event, 1 = event has occurred). The type
+#'                          of censoring is assumed to be right-censoring.
+#' @param data.list         a list of `data.frame`s. The first element in the list is the current data, and the rest
+#'                          are the historical data sets. For fitting piecewise exponential (PWE) models, all
+#'                          historical data sets will be stacked into one historical data set.
+#' @param breaks            a numeric vector specifying the time points that define the boundaries of the piecewise
+#'                          intervals. The values should be in ascending order, with the final value being greater
+#'                          than or equal to the maximum observed time.
+#' @param strata.list       a list of vectors specifying the stratum ID for each observation in the corresponding data set
+#'                          in `data.list`. The first element in the list corresponds to the current data, and the rest
+#'                          correspond to the historical data sets. Each vector should have the same length as the number
+#'                          of rows in the respective data set in `data.list`, with values representing stratum labels
+#'                          as positive integers (e.g., 1, 2, 3, ...). Defaults to NULL.
+#' @param is.stratified.pp  whether the method is the stratified power prior. Defaults to FALSE.
 #'
 #' @noRd
 data.checks.pwe = function(
-    formula, data.list, breaks
+    formula, data.list, breaks, strata.list = NULL, is.stratified.pp = FALSE
 ) {
   if ( !inherits(formula, "formula") )
     stop('formula must be of type "formula"')
@@ -33,6 +39,21 @@ data.checks.pwe = function(
     stop('breaks must be a vector of numeric values')
     if( any( order(breaks) != 1:length(breaks) ) ){
       breaks = breaks[order(breaks)] # breaks should be in ascending order
+    }
+  }
+
+  if( is.stratified.pp ){
+    if ( !( is.list(strata.list) ) )
+      stop("strata.list must be a list of vectors giving the stratum ID for each observation")
+    if ( length(strata.list) != length(data.list) )
+      stop("strata.list and data.list must have equal lengths")
+    for( i in seq_len( length(strata.list) ) ){
+      if ( !( is.vector(strata.list[[i]]) ) )
+        stop("element ", i, " in strata.list must be a vector")
+      if ( any( is.na(strata.list[[i]]) ) )
+        stop("element ", i, " in strata.list cannot contain missing values")
+      if ( length(strata.list[[i]]) != nrow(data.list[[i]]) )
+        stop("the length of element ", i, " in strata.list must be equal to the number of rows in element ", i, " in data.list")
     }
   }
 }
