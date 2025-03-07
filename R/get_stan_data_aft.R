@@ -589,3 +589,118 @@ get.aft.stan.data.npp = function(
   )
   return(standat)
 }
+
+#' get Stan data for stratified PP
+#'
+#' @include data_checks_aft.R
+#'
+#' @noRd
+get.aft.stan.data.stratified.pp = function(
+    formula,
+    data.list,
+    strata.list,
+    a0.strata,
+    dist              = "weibull",
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    scale.mean        = NULL,
+    scale.sd          = NULL,
+    get.loglik        = FALSE
+) {
+  data.checks.aft(formula, data.list, dist,
+                  strata.list = strata.list, is.stratified.pp = TRUE)
+
+  ## current data
+  data          = data.list[[1]]
+  stratum.curr  = strata.list[[1]]
+  ## extract names and variables for response, censoring, etc.
+  time.name     = all.vars(formula)[1]
+  eventind.name = all.vars(formula)[2]
+  ## re-order data by event indicator and stratum
+  data          = data[order(data[, eventind.name], stratum.curr), ]
+  t             = data[, time.name]
+  y             = log(t)
+  eventind      = as.integer( data[, eventind.name] )
+  X             = stats::model.matrix(formula, data)
+  p             = ncol(X)
+
+  ## historical data
+  histdata      = do.call(rbind, data.list[-1])
+  stratum.hist  = do.call(c, strata.list[-1])
+  ## re-order histdata by event indicator and stratum
+  histdata      = histdata[order(histdata[, eventind.name], stratum.hist), ]
+  t0            = histdata[, time.name]
+  y0            = log(t0)
+  eventind0     = as.integer( histdata[, eventind.name] )
+  X0            = stats::model.matrix(formula, histdata)
+
+  ## get the number of strata
+  K = as.integer( max( stratum.curr, stratum.hist ) )
+
+  ## get strata assignment for current and historical data
+  stratumID.obs  = stratum.curr[which(eventind == 1)]
+  stratumID.cen  = stratum.curr[which(eventind == 0)]
+  stratumID0.obs = stratum.hist[which(eventind0 == 1)]
+  stratumID0.cen = stratum.hist[which(eventind0 == 0)]
+
+  ## check a0.strata values
+  if ( !( is.vector(a0.strata) & (length(a0.strata) %in% c(1, K)) ) )
+    stop("a0.strata must be a scalar or a vector of length ", K)
+  a0.strata = to.vector(param = a0.strata, len = K)
+  if ( any(a0.strata < 0 | a0.strata > 1 ) )
+    stop("Each element of a0.strata must be a scalar between 0 and 1")
+
+  ## Default prior on regression coefficients is N(0, 10^2)
+  if ( !is.null(beta.mean) ){
+    if ( !( is.vector(beta.mean) & (length(beta.mean) %in% c(1, p)) ) )
+      stop("beta.mean must be a scalar or a vector of length ", p, " if beta.mean is not NULL")
+  }
+  beta.mean = to.vector(param = beta.mean, default.value = 0, len = p)
+  if ( !is.null(beta.sd) ){
+    if ( !( is.vector(beta.sd) & (length(beta.sd) %in% c(1, p)) ) )
+      stop("beta.sd must be a scalar or a vector of length ", p, " if beta.sd is not NULL")
+  }
+  beta.sd = to.vector(param = beta.sd, default.value = 10, len = p)
+
+  ## Default half-normal prior on scale parameter is N^{+}(0, 10^2)
+  if ( !is.null(scale.mean) ){
+    if ( !( is.vector(scale.mean) & (length(scale.mean) == 1) ) )
+      stop("scale.mean must be a scalar if scale.mean is not NULL")
+  }
+  scale.mean = to.vector(param = scale.mean, default.value = 0, len = 1)
+  if ( !is.null(scale.sd) ){
+    if ( !( is.vector(scale.sd) & (length(scale.sd) == 1) ) )
+      stop("scale.sd must be a scalar if scale.sd is not NULL")
+  }
+  scale.sd = to.vector(param = scale.sd, default.value = 10, len = 1)
+
+  standat = list(
+    'dist'            = dist.to.integer(dist),
+    'n'               = length(eventind),
+    'n_obs'           = sum(eventind),
+    'n_cen'           = sum(1 - eventind),
+    'n0_obs'          = sum(eventind0),
+    'n0_cen'          = sum(1 - eventind0),
+    'p'               = p,
+    'y_obs'           = y[which(eventind == 1)],
+    'y_cen'           = y[which(eventind == 0)],
+    'X_obs'           = X[which(eventind == 1), ],
+    'X_cen'           = X[which(eventind == 0), ],
+    'y0_obs'          = y0[which(eventind0 == 1)],
+    'y0_cen'          = y0[which(eventind0 == 0)],
+    'X0_obs'          = X0[which(eventind0 == 1), ],
+    'X0_cen'          = X0[which(eventind0 == 0), ],
+    'K'               = K,
+    'stratumID_obs'   = stratumID.obs,
+    'stratumID_cen'   = stratumID.cen,
+    'stratumID0_obs'  = stratumID0.obs,
+    'stratumID0_cen'  = stratumID0.cen,
+    'a0s'             = a0.strata,
+    'beta_mean'       = beta.mean,
+    'beta_sd'         = beta.sd,
+    'scale_mean'      = scale.mean,
+    'scale_sd'        = scale.sd,
+    'get_loglik'      = as.integer(get.loglik)
+  )
+  return(standat)
+}

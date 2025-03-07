@@ -690,3 +690,127 @@ get.pwe.stan.data.npp = function(
   )
   return(standat)
 }
+
+#' get Stan data for stratified PP
+#'
+#' @include data_checks_pwe.R
+#'
+#' @noRd
+get.pwe.stan.data.stratified.pp = function(
+    formula,
+    data.list,
+    strata.list,
+    breaks,
+    a0.strata,
+    beta.mean         = NULL,
+    beta.sd           = NULL,
+    base.hazard.mean  = NULL,
+    base.hazard.sd    = NULL,
+    get.loglik        = FALSE
+) {
+  data.checks.pwe(formula, data.list, breaks,
+                  strata.list = strata.list, is.stratified.pp = TRUE)
+
+  ## current data
+  data          = data.list[[1]]
+  stratum.curr  = strata.list[[1]]
+  ## extract names and variables for response, censoring, etc.
+  time.name     = all.vars(formula)[1]
+  eventind.name = all.vars(formula)[2]
+  y1            = data[, time.name]
+  eventind      = as.integer( data[, eventind.name] )
+  X1            = stats::model.matrix(formula, data)
+
+  ## make sure no design matrices have intercepts
+  if ( '(Intercept)' %in% colnames(X1) )
+    X1 = X1[, -1, drop = F]
+
+  p = ncol(X1)
+  J = length(breaks) - 1  ## number of intervals
+
+  ## historical data
+  histdata      = do.call(rbind, data.list[-1])
+  stratum.hist  = do.call(c, strata.list[-1])
+  y0            = histdata[, time.name]
+  eventind0     = as.integer( histdata[, eventind.name] )
+  X0            = stats::model.matrix(formula, histdata)
+
+  if ( '(Intercept)' %in% colnames(X0) )
+    X0 = X0[, -1, drop = F]
+
+  ## create index giving interval into which obs failed / was censored
+  intindx = sapply(y1, function(t){
+    if( t == 0 ){
+      return(1)
+    }else{
+      return(findInterval(t, breaks, left.open = TRUE))
+    }
+  })
+  intindx0 = sapply(y0, function(t){
+    if( t == 0 ){
+      return(1)
+    }else{
+      return(findInterval(t, breaks, left.open = TRUE))
+    }
+  })
+
+  ## get the number of strata
+  K = as.integer( max( stratum.curr, stratum.hist ) )
+
+  ## check a0.strata values
+  if ( !( is.vector(a0.strata) & (length(a0.strata) %in% c(1, K)) ) )
+    stop("a0.strata must be a scalar or a vector of length ", K)
+  a0.strata = to.vector(param = a0.strata, len = K)
+  if ( any(a0.strata < 0 | a0.strata > 1 ) )
+    stop("Each element of a0.strata must be a scalar between 0 and 1")
+
+  ## Default prior on regression coefficients is N(0, 10^2)
+  if ( !is.null(beta.mean) ){
+    if ( !( is.vector(beta.mean) & (length(beta.mean) %in% c(1, p)) ) )
+      stop("beta.mean must be a scalar or a vector of length ", p, " if beta.mean is not NULL")
+  }
+  beta.mean = to.vector(param = beta.mean, default.value = 0, len = p)
+  if ( !is.null(beta.sd) ){
+    if ( !( is.vector(beta.sd) & (length(beta.sd) %in% c(1, p)) ) )
+      stop("beta.sd must be a scalar or a vector of length ", p, " if beta.sd is not NULL")
+  }
+  beta.sd = to.vector(param = beta.sd, default.value = 10, len = p)
+
+  ## Default half-normal priors on baseline hazards are N^{+}(0, 10^2)
+  if ( !is.null(base.hazard.mean) ){
+    if ( !( is.vector(base.hazard.mean) & (length(base.hazard.mean) %in% c(1, J)) ) )
+      stop("base.hazard.mean must be a scalar or a vector of length ", J, " if base.hazard.mean is not NULL")
+  }
+  base.hazard.mean = to.vector(param = base.hazard.mean, default.value = 0, len = J)
+  if ( !is.null(base.hazard.sd) ){
+    if ( !( is.vector(base.hazard.sd) & (length(base.hazard.sd) %in% c(1, J)) ) )
+      stop("base.hazard.sd must be a scalar or a vector of length ", J, " if base.hazard.sd is not NULL")
+  }
+  base.hazard.sd = to.vector(param = base.hazard.sd, default.value = 10, len = J)
+
+  standat = list(
+    'n1'                = nrow(X1)
+    , 'n0'              = nrow(X0)
+    , 'J'               = J
+    , 'p'               = p
+    , 'y1'              = y1
+    , 'y0'              = y0
+    , 'X1'              = X1
+    , 'X0'              = X0
+    , 'intindx'         = intindx
+    , 'intindx0'        = intindx0
+    , 'death_ind'       = eventind
+    , 'death_ind0'      = eventind0
+    , 'breaks'          = breaks
+    , 'K'               = K
+    , 'stratumID'       = stratum.curr
+    , 'stratumID0'      = stratum.hist
+    , 'a0s'             = a0.strata
+    , 'beta_mean'       = beta.mean
+    , 'beta_sd'         = beta.sd
+    , 'hazard_mean'     = base.hazard.mean
+    , 'hazard_sd'       = base.hazard.sd
+    , 'get_loglik'      = as.integer(get.loglik)
+  )
+  return(standat)
+}
