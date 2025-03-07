@@ -2,7 +2,12 @@
 
 ## Enhancements
 
-* added lower and upper bounds for probability of being exchangeable for LEAP implementation
+* Added functions for sampling from the posterior distributions of various survival models, including an accelerated failure 
+time (AFT) model, a piecewise exponential (PWE) model, and a standard cure rate (CurePWE) model.
+
+* Added functions to compute the log marginal likelihoods of the AFT model, PWE model, and CurePWE model under various priors.
+
+* Added lower and upper bounds for probability of being exchangeable for LEAP implementation for GLM models.
 
 # hdbayes 0.1.1
 
