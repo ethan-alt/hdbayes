@@ -162,13 +162,14 @@ curepwe.leap.lognc = function(
     data_lp     = sum( apply(data_lp, 1, log_sum_exp) )
 
     if( !data$is_prior ){
-      ## prior on logit_p_cured
-      prior_lp = prior_lp + dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
-
       eta           = data$X1 %*% betaMat[, 1]
       logit_p_cured = as.numeric( pars[["logit_p_cured"]] ) # logit of p_cured
       log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
       log_p_cured   = logit_p_cured + log1m_p_cured # log(p_cured)
+
+      ## prior on logit_p_cured
+      prior_lp = prior_lp + dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+
       contribs      = cbind(log_p_cured + log(1 - data$death_ind),
                             log1m_p_cured + pwe_lpdf(data$y1, eta, lambdaMat[, 1], data$breaks, data$intindx, data$J, data$death_ind))
       data_lp       = data_lp + sum( apply(contribs, 1, log_sum_exp) )
