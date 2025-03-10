@@ -93,22 +93,22 @@ curepwe.pp.lognc = function(
     lambda        = as.numeric( pars[paste0("lambda[", 1:data$J,"]")] )
     logit_p_cured = as.numeric( pars[["logit_p_cured"]] )
     log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
-    log_probs     = c(logit_p_cured, 0) + log1m_p_cured # c(log(p_cured), log(1 - p_cured))
+    log_p_cured   = logit_p_cured + log1m_p_cured # log(p_cured)
 
     prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
       sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
       dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
 
     eta0      = data$X0 %*% beta
-    contribs0 = cbind(log_probs[1] + log(1 - data$death_ind0),
-                      log_probs[2] + pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0))
+    contribs0 = cbind(log_p_cured + log(1 - data$death_ind0),
+                      log1m_p_cured + pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0))
     data_lp   = apply(contribs0, 1, log_sum_exp)
     data_lp   = data$a0 * sum( data_lp )
 
     if( !data$is_prior ){
       eta      = data$X1 %*% beta
-      contribs = cbind(log_probs[1] + log(1 - data$death_ind),
-                       log_probs[2] + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
+      contribs = cbind(log_p_cured + log(1 - data$death_ind),
+                       log1m_p_cured + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
       data_lp  = data_lp + sum( apply(contribs, 1, log_sum_exp) )
     }
     return(data_lp + prior_lp)

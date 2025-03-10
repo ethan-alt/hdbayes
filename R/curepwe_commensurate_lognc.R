@@ -110,7 +110,7 @@ curepwe.commensurate.lognc = function(
 
     logit_p_cured0 = as.numeric( pars[["logit_p_cured0"]] )
     log1m_p_cured0 = -log1p_exp(logit_p_cured0) # log(1 - p_cured0)
-    log_probs0     = c(logit_p_cured0, 0) + log1m_p_cured0 # c(log(p_cured0), log(1 - p_cured0))
+    log_p_cured0   = logit_p_cured0 + log1m_p_cured0 # log(p_cured0)
 
     ## prior on beta0 and beta
     prior_lp   = sum( dnorm(beta0, mean = data$beta0_mean, sd = data$beta0_sd, log = T) ) +
@@ -129,8 +129,8 @@ curepwe.commensurate.lognc = function(
     }) )
 
     eta0       = data$X0 %*% beta0
-    contribs0  = cbind(log_probs0[1] + log(1 - data$death_ind0),
-                       log_probs0[2] + pwe_lpdf(data$y0, eta0, lambda0, data$breaks, data$intindx0, data$J, data$death_ind0))
+    contribs0  = cbind(log_p_cured0 + log(1 - data$death_ind0),
+                       log1m_p_cured0 + pwe_lpdf(data$y0, eta0, lambda0, data$breaks, data$intindx0, data$J, data$death_ind0))
     data_lp    = sum( apply(contribs0, 1, log_sum_exp) )
 
     if ( !data$is_prior ) {
@@ -138,15 +138,15 @@ curepwe.commensurate.lognc = function(
 
       logit_p_cured = as.numeric( pars[["logit_p_cured"]] )
       log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
-      log_probs     = c(logit_p_cured, 0) + log1m_p_cured # c(log(p_cured), log(1 - p_cured))
+      log_p_cured   = logit_p_cured + log1m_p_cured # log(p_cured)
 
       ## priors on lambda and logit_p_cured
       prior_lp   = prior_lp + sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
         dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
 
       eta        = data$X1 %*% beta
-      contribs   = cbind(log_probs[1] + log(1 - data$death_ind),
-                         log_probs[2] + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
+      contribs   = cbind(log_p_cured + log(1 - data$death_ind),
+                         log1m_p_cured + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
       data_lp    = data_lp + sum( apply(contribs, 1, log_sum_exp) )
     }
     return(data_lp + prior_lp)
