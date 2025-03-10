@@ -32,7 +32,6 @@ Imports:
     stats,
     posterior,
     enrichwith,
-    mclust,
     bridgesampling,
     mvtnorm
 Suggests:

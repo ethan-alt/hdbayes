@@ -15,7 +15,6 @@
 #' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian dbeta pbeta rbinom dlogis plogis
 #' @importFrom posterior variables merge_chains
 #' @importFrom enrichwith enrich
-#' @importFrom mclust Mclust mclustBIC
 #' @importFrom bridgesampling bridge_sampler
 #' @importFrom mvtnorm dmvnorm
 NULL
