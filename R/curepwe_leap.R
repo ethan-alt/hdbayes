@@ -163,8 +163,8 @@ curepwe.leap = function(
   X1       = standat$X1
   J        = standat$J
   K        = standat$K
-  oldnames = c("p_cured", paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames = c("p_cured", colnames(X1), paste0("basehaz[", 1:J, "]"))
+  oldnames = c("p_cured", "p_cured0", paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
+  newnames = c("p_cured", "p_cured0", colnames(X1), paste0("basehaz[", 1:J, "]"))
   oldnames = c(oldnames, paste0( 'probs[', 1:K, ']' ))
   newnames = c(newnames, paste0( 'probs[', 1:K, ']' ))
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)

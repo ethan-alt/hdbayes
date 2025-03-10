@@ -29,17 +29,16 @@ functions {
     return(loglik);
   }
 
-  //' compute log likelihood for a mixture of CurePWE models
+  //' compute log likelihood for a mixture of PWE models
   //'
-  real curepwe_mixture_lpdf(
-    real y, vector p_curedVec, row_vector eta, matrix lambdaMat, matrix log_lambdaMat, vector breaks, int j, int death_ind, matrix cumblhazMat, vector log_probs
+  real pwe_mixture_lpdf(
+    real y, row_vector eta, matrix lambdaMat, matrix log_lambdaMat, vector breaks, int j, int death_ind, matrix cumblhazMat, vector log_probs
   ) {
-    int  K       = rows(log_probs);
-    real logcens = log(1 - death_ind);
+    int K = rows(log_probs);
     vector[K] contribs; // log likelihood contribution of each component
 
     for (k in 1:K) {
-      contribs[k] = log_probs[k] + log_mix(p_curedVec[k], logcens, pwe_lpdf(y | eta[k], lambdaMat[, k], log_lambdaMat[, k], breaks, j, death_ind, cumblhazMat[, k]));
+      contribs[k] = log_probs[k] + pwe_lpdf(y | eta[k], lambdaMat[, k], log_lambdaMat[, k], breaks, j, death_ind, cumblhazMat[, k]);
     }
 
     return log_sum_exp(contribs);
@@ -73,8 +72,8 @@ data {
   vector<lower=0>[p]              beta_sd;       // sd for normal initial prior on coefficients
   vector[J]                       hazard_mean;   // location parameter for half-normal prior on baseline hazards
   vector<lower=0>[J]              hazard_sd;     // scale parameter for half-normal prior on baseline hazards
-  real                            logit_p_cured_mean; // mean for normal prior on logit_p_curedVec
-  real<lower=0>                   logit_p_cured_sd;   // sd for normal prior on logit_p_curedVec
+  real                            logit_p_cured_mean; // mean for normal prior on logit_p_cured
+  real<lower=0>                   logit_p_cured_sd;   // sd for normal prior on logit_p_cured
   int<lower=0,upper=1>            get_loglik;    // whether to generate log-likelihood matrix
 }
 transformed data {
@@ -100,14 +99,16 @@ transformed data {
     logcens0[i] = log(1 - death_ind0[i]);
 }
 parameters {
-  vector[K]             logit_p_curedVec;  // Kx1 vector of logit of proportions of cured individuals
-  matrix<lower=0>[J,K]  lambdaMat;         // JxK matrix of hazards for each interval
-  matrix[p,K]           betaMat;           // pxK matrix of regression coefficients; p = number of covars, K = number of components
+  real                  logit_p_cured;  // logit of proportion of cured individuals for current data model
+  real                  logit_p_cured0; // logit of proportion of cured individuals for historical data model
+  matrix<lower=0>[J,K]  lambdaMat;      // JxK matrix of hazards for each interval
+  matrix[p,K]           betaMat;        // pxK matrix of regression coefficients; p = number of covars, K = number of components
   simplex[K-1]          delta_raw;
   real<lower=logit_gamma_lower,upper=logit_gamma_upper> logit_gamma; // logit of probability of being exchangeable
 }
 transformed parameters{
-  vector<lower=0,upper=1>[K] p_curedVec = inv_logit(logit_p_curedVec); // Kx1 vector of proportions of cured individuals
+  real<lower=0,upper=1> p_cured  = inv_logit(logit_p_cured); // proportion of cured individuals for current data model
+  real<lower=0,upper=1> p_cured0 = inv_logit(logit_p_cured0); // proportion of cured individuals for historical data model
 }
 model {
   vector[n1]    eta           = X1 * betaMat[, 1];
@@ -127,17 +128,24 @@ model {
     cumblhazMat[, k] = cumulative_sum( lambdaMat[1:(J-1), k] .* ( breaks[2:J] - breaks[1:(J-1)] ) );
   }
 
-  // prior on logit_p_curedVec
-  target += normal_lpdf(logit_p_curedVec | logit_p_cured_mean, logit_p_cured_sd);
+  // prior on logit_p_cured
+  target += normal_lpdf(logit_p_cured | logit_p_cured_mean, logit_p_cured_sd);
+  target += normal_lpdf(logit_p_cured0 | logit_p_cured_mean, logit_p_cured_sd);
 
   // historical data likelihood
-  for ( i in 1:n0 )
-    target += curepwe_mixture_lpdf(y0[i] | p_curedVec, eta0Mat[i, ], lambdaMat, log_lambdaMat, breaks, intindx0[i], death_ind0[i], cumblhazMat, logprobs);
+  // \pi_0 * (1 - event indicator) + (1 - \pi_0) * \sum_{k = 1}^{K} {probability of being in component k * PWE model likelihood for component k}
+  for ( i in 1:n0 ){
+    target += log_mix(
+      p_cured0,
+      logcens0[i],
+      pwe_mixture_lpdf(y0[i] | eta0Mat[i, ], lambdaMat, log_lambdaMat, breaks, intindx0[i], death_ind0[i], cumblhazMat, logprobs)
+    );
+  }
 
   // current data likelihood
   for ( i in 1:n1 ){
     target += log_mix(
-      p_curedVec[1],
+      p_cured,
       logcens[i],
       pwe_lpdf(y1[i] | eta[i], lambdaMat[, 1], log_lambdaMat[, 1], breaks, intindx[i], death_ind[i], cumblhazMat[, 1])
     );
@@ -158,7 +166,6 @@ generated quantities{
   vector[J]   log_lambda = log(lambda);
   vector[J-1] cumblhaz   = cumulative_sum( lambda[1:(J-1)] .* ( breaks[2:J] - breaks[1:(J-1)] ) );
   real<lower=gamma_lower,upper=gamma_upper> gamma = inv_logit(logit_gamma);
-  real<lower=0,upper=1>                     p_cured = p_curedVec[1];
   simplex[K]                                probs;
 
   // Compute probability of being in first component and marginalized log probability
