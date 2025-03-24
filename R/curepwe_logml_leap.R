@@ -1,4 +1,4 @@
-#' Log marginal likelihood of a standard cure rate (CurePWE) model under latent exchangeability prior (LEAP)
+#' Log marginal likelihood of a mixture cure rate (CurePWE) model under latent exchangeability prior (LEAP)
 #'
 #' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
 #' likelihood of a CurePWE model under the latent exchangeability prior (LEAP).

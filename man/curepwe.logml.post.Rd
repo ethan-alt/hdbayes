@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_post.R
 \name{curepwe.logml.post}
 \alias{curepwe.logml.post}
-\title{Log marginal likelihood of a standard cure rate (CurePWE) model under a normal/half-normal prior}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) model under a normal/half-normal prior}
 \usage{
 curepwe.logml.post(post.samples, bridge.args = NULL)
 }

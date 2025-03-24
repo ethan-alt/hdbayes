@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_npp.R
 \name{curepwe.logml.npp}
 \alias{curepwe.logml.npp}
-\title{Log marginal likelihood of a piecewise exponential (PWE) model under normalized power prior (NPP)}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) model under normalized power prior (NPP)}
 \usage{
 curepwe.logml.npp(post.samples, bridge.args = NULL)
 }
@@ -27,7 +27,7 @@ to compute the logarithm of the marginal likelihood of the normalized power prio
 }
 }
 \description{
-Uses bridge sampling to estimate the logarithm of the marginal likelihood of a PWE model under the
+Uses bridge sampling to estimate the logarithm of the marginal likelihood of a CurePWE model under the
 normalized power prior (NPP).
 }
 \examples{

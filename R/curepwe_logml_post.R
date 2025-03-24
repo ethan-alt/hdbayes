@@ -1,4 +1,4 @@
-#' Log marginal likelihood of a standard cure rate (CurePWE) model under a normal/half-normal prior
+#' Log marginal likelihood of a mixture cure rate (CurePWE) model under a normal/half-normal prior
 #'
 #' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a CurePWE model under the normal/half-normal prior.
 #'

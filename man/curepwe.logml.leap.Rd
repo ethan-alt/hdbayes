@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_leap.R
 \name{curepwe.logml.leap}
 \alias{curepwe.logml.leap}
-\title{Log marginal likelihood of a standard cure rate (CurePWE) model under latent exchangeability prior (LEAP)}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) model under latent exchangeability prior (LEAP)}
 \usage{
 curepwe.logml.leap(
   post.samples,

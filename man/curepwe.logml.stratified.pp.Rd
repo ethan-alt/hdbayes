@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_stratified_pp.R
 \name{curepwe.logml.stratified.pp}
 \alias{curepwe.logml.stratified.pp}
-\title{Log marginal likelihood of a standard cure rate (CurePWE) model under the stratified power prior (PP)}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) model under the stratified power prior (PP)}
 \usage{
 curepwe.logml.stratified.pp(
   post.samples,

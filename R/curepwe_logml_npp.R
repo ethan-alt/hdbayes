@@ -1,6 +1,6 @@
-#' Log marginal likelihood of a piecewise exponential (PWE) model under normalized power prior (NPP)
+#' Log marginal likelihood of a mixture cure rate (CurePWE) model under normalized power prior (NPP)
 #'
-#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a PWE model under the
+#' Uses bridge sampling to estimate the logarithm of the marginal likelihood of a CurePWE model under the
 #' normalized power prior (NPP).
 #'
 #' @include pwe_loglik.R

@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_commensurate.R
 \name{curepwe.logml.commensurate}
 \alias{curepwe.logml.commensurate}
-\title{Log marginal likelihood of a standard cure rate (CurePWE) under the commensurate prior (CP)}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) under the commensurate prior (CP)}
 \usage{
 curepwe.logml.commensurate(
   post.samples,

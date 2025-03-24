@@ -2,7 +2,7 @@
 % Please edit documentation in R/curepwe_logml_map.R
 \name{curepwe.logml.map}
 \alias{curepwe.logml.map}
-\title{Log marginal likelihood of a standard cure rate (CurePWE) model under the meta-analytic predictive (MAP) prior}
+\title{Log marginal likelihood of a mixture cure rate (CurePWE) model under the meta-analytic predictive (MAP) prior}
 \usage{
 curepwe.logml.map(
   post.samples,

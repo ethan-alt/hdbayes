@@ -1,6 +1,6 @@
 #' Posterior of a normal/half-normal prior
 #'
-#' Sample from the posterior distribution of a standard cure rate model using a normal/half-normal prior. The model
+#' Sample from the posterior distribution of a mixture cure rate model using a normal/half-normal prior. The model
 #' assumes that a fraction \eqn{\pi} of the population is "cured", while the remaining \eqn{1 - \pi} are susceptible
 #' to the event of interest. The survival function for the entire population is given by:
 #' \deqn{S_{\text{pop}}(t) = \pi + (1 - \pi) S(t),}

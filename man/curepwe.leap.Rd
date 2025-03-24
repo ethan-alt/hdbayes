@@ -89,7 +89,7 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a standard cure rate model (referred to as the \strong{CurePWE model})
+Sample from the posterior distribution of a mixture cure rate model (referred to as the \strong{CurePWE model})
 using the latent exchangeability prior (LEAP) by Alt et al. (2024) \url{doi:10.1093/biomtc/ujae083}. The CurePWE model
 assumes that a fraction \eqn{\pi} of the population is "cured", while the remaining \eqn{1 - \pi} are susceptible
 to the event of interest. The survival function for the entire population is given by:

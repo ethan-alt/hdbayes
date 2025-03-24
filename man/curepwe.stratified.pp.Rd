@@ -86,7 +86,7 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a standard cure rate model (referred to as the \strong{CurePWE model})
+Sample from the posterior distribution of a mixture cure rate model (referred to as the \strong{CurePWE model})
 using the power prior (PP) within predefined strata. If the strata and power prior parameters (\eqn{a_0}'s) are
 determined based on propensity scores, this function can be used to sample from the posterior of a CurePWE model
 under the propensity score-integrated power prior (PSIPP) by Wang et al. (2019) \url{doi:10.1080/10543406.2019.1657133}.

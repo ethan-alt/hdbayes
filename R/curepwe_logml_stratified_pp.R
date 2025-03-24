@@ -1,4 +1,4 @@
-#' Log marginal likelihood of a standard cure rate (CurePWE) model under the stratified power prior (PP)
+#' Log marginal likelihood of a mixture cure rate (CurePWE) model under the stratified power prior (PP)
 #'
 #' @description Uses Markov chain Monte Carlo (MCMC) and bridge sampling to estimate the logarithm of the marginal
 #' likelihood of a CurePWE model under the stratified power prior (PP).

@@ -94,7 +94,7 @@ The function returns an object of class \code{draws_df} giving posterior samples
 the list of variables specified in the data block of the Stan program.
 }
 \description{
-Sample from the posterior distribution of a standard cure rate model (referred to as the \strong{CurePWE model})
+Sample from the posterior distribution of a mixture cure rate model (referred to as the \strong{CurePWE model})
 using the commensurate prior (CP) by Hobbs et al. (2011) \url{doi:10.1111/j.1541-0420.2011.01564.x}. The CurePWE model
 assumes that a fraction \eqn{\pi} of the population is "cured", while the remaining \eqn{1 - \pi} are susceptible
 to the event of interest. The survival function for the entire population is given by:

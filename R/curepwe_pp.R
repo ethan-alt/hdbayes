@@ -1,6 +1,6 @@
 #' Posterior of power prior (PP) with fixed \eqn{a_0}
 #'
-#' Sample from the posterior distribution of a standard cure rate model (referred to as the **CurePWE model**)
+#' Sample from the posterior distribution of a mixture cure rate model (referred to as the **CurePWE model**)
 #' using the power prior (PP) by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>. The CurePWE model assumes
 #' that a fraction \eqn{\pi} of the population is "cured", while the remaining \eqn{1 - \pi} are susceptible to
 #' the event of interest. The survival function for the entire population is given by:
