@@ -166,12 +166,19 @@ curepwe.stratified.pp = function(
   X1       = standat$X1
   J        = standat$J
   K        = standat$K
-  oldnames = c(paste0("p_curedVec[", 1:K, "]"),
-               paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
-               paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
-  newnames = c(paste0("p_cured", "_stratum_", 1:K),
-               paste0(colnames(X1), '_stratum_', rep(1:K, each = p)),
-               paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames = c(paste0("p_curedVec[", 1:K, "]"),
+                 paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
+                 paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
+    newnames = c(paste0("p_cured", "_stratum_", 1:K),
+                 paste0(colnames(X1), '_stratum_', rep(1:K, each = p)),
+                 paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+  }else{
+    oldnames = c(paste0("p_curedVec[", 1:K, "]"),
+                 paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
+    newnames = c(paste0("p_cured", "_stratum_", 1:K),
+                 paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+  }
 
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute

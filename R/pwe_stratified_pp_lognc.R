@@ -80,10 +80,18 @@ pwe.stratified.pp.lognc = function(
   X0        = stan.data$X0
   J         = stan.data$J
   K         = stan.data$K
-  oldnames = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
-               paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
-  newnames = c(paste0( colnames(X0), '_stratum_', rep(1:K, each = p) ),
-               paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
+                 paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
+    newnames = c(paste0( colnames(X0), '_stratum_', rep(1:K, each = p) ),
+                 paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+    lb       = c(rep(-Inf, p*K), rep(0, J*K))
+
+  }else{
+    oldnames = c(paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"))
+    newnames = c(paste0("basehaz", "_stratum_", rep(1:K, each = J), "[", 1:J, "]"))
+    lb       = c(rep(0, J*K))
+  }
   colnames(d)[colnames(d) %in% newnames] = oldnames
   d = d[, oldnames, drop=F]
 
@@ -95,38 +103,57 @@ pwe.stratified.pp.lognc = function(
   log_density = function(pars, data){
     p          = data$p
     K          = data$K
-    beta       = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
-    beta       = matrix(beta, nrow = p, ncol = K)
     lambda     = pars[paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]")]
     lambda     = matrix(lambda, nrow = J, ncol = K)
-    prior_lp   = sum( sapply(1:K, function(k){
-      sum(dnorm(beta[, k], mean = data$beta_mean, sd = data$beta_sd, log = T)) +
-        sum(dnorm(lambda[, k], mean = data$hazard_mean, sd = data$hazard_sd, log = T)) - data$lognc_hazard
-    }) )
-
-    Eta0       = data$X0 %*% beta
     stratumID0 = data$stratumID0
     a0s        = data$a0s
     y0         = data$y0
-    data_lp    = sapply(1:data$n0, function(i){
-      a0s[ stratumID0[i] ] * pwe_lpdf(y0[i], Eta0[i, stratumID0[i]], lambda[, stratumID0[i]],
-                                      data$breaks, data$intindx0[i], data$J, data$death_ind0[i])
-    })
+
+    if( p > 0 ){
+      beta       = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
+      beta       = matrix(beta, nrow = p, ncol = K)
+      prior_lp   = sum( sapply(1:K, function(k){
+        sum(dnorm(beta[, k], mean = data$beta_mean, sd = data$beta_sd, log = T)) +
+          sum(dnorm(lambda[, k], mean = data$hazard_mean, sd = data$hazard_sd, log = T)) - data$lognc_hazard
+      }) )
+      Eta0       = data$X0 %*% beta
+      data_lp    = sapply(1:data$n0, function(i){
+        a0s[ stratumID0[i] ] * pwe_lpdf(y0[i], Eta0[i, stratumID0[i]], lambda[, stratumID0[i]],
+                                        data$breaks, data$intindx0[i], data$J, data$death_ind0[i])
+      })
+
+    }else{
+      prior_lp   = sum( sapply(1:K, function(k){
+        sum(dnorm(lambda[, k], mean = data$hazard_mean, sd = data$hazard_sd, log = T)) - data$lognc_hazard
+      }) )
+      data_lp    = sapply(1:data$n0, function(i){
+        a0s[ stratumID0[i] ] * pwe_lpdf(y0[i], 0, lambda[, stratumID0[i]],
+                                        data$breaks, data$intindx0[i], data$J, data$death_ind0[i])
+      })
+    }
+
     data_lp    = sum(data_lp)
 
     if( !data$is_prior ){
-      Eta       = data$X1 %*% beta
       stratumID = data$stratumID
       y1        = data$y1
-      data_lp = data_lp + sum( sapply(1:data$n1, function(i){
-        pwe_lpdf(y1[i], Eta[i, stratumID[i]], lambda[, stratumID[i]],
-                 data$breaks, data$intindx[i], data$J, data$death_ind[i])
-      }))
+      if( p > 0 ){
+        Eta     = data$X1 %*% beta
+        data_lp = data_lp + sum( sapply(1:data$n1, function(i){
+          pwe_lpdf(y1[i], Eta[i, stratumID[i]], lambda[, stratumID[i]],
+                   data$breaks, data$intindx[i], data$J, data$death_ind[i])
+        }))
+
+      }else{
+        data_lp = data_lp + sum( sapply(1:data$n1, function(i){
+          pwe_lpdf(y1[i], 0, lambda[, stratumID[i]],
+                   data$breaks, data$intindx[i], data$J, data$death_ind[i])
+        }))
+      }
     }
     return(data_lp + prior_lp)
   }
 
-  lb           = c(rep(-Inf, p*K), rep(0, J*K))
   ub           = rep(Inf, length(lb))
   names(ub)    = colnames(d)
   names(lb)    = names(ub)
