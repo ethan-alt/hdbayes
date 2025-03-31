@@ -207,8 +207,13 @@ curepwe.npp = function(
   p        = standat$p
   X1       = standat$X1
   J        = standat$J
-  oldnames = c("p_cured", paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"), "a0")
-  newnames = c("p_cured", colnames(X1), paste0("basehaz[", 1:J, "]"), "a0")
+  if( p > 0 ){
+    oldnames = c("p_cured", paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"), "a0")
+    newnames = c("p_cured", colnames(X1), paste0("basehaz[", 1:J, "]"), "a0")
+  }else{
+    oldnames = c("p_cured", paste0("lambda[", 1:J, "]"), "a0")
+    newnames = c("p_cured", paste0("basehaz[", 1:J, "]"), "a0")
+  }
 
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute

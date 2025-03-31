@@ -68,8 +68,16 @@ curepwe.logml.post = function(
   p         = stan.data$p
   X1        = stan.data$X1
   J         = stan.data$J
-  oldnames  = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames  = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames  = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
+    newnames  = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+    lb        = c(rep(-Inf, p), rep(0, J), -Inf)
+
+  }else{
+    oldnames  = paste0("lambda[", 1:J, "]")
+    newnames  = paste0("basehaz[", 1:J, "]")
+    lb        = c(rep(0, J), -Inf)
+  }
   colnames(d)[colnames(d) %in% newnames] = oldnames
   oldnames  = c(oldnames, "logit_p_cured")
   d = d[, oldnames, drop=F]
@@ -79,27 +87,34 @@ curepwe.logml.post = function(
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
-    beta          = as.numeric( pars[paste0("beta[", 1:data$p,"]")] )
+    p             = data$p
     lambda        = as.numeric( pars[paste0("lambda[", 1:data$J,"]")] )
     logit_p_cured = as.numeric( pars[["logit_p_cured"]] )
     log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
     log_probs     = c(logit_p_cured, 0) + log1m_p_cured # c(log(p_cured), log(1 - p_cured))
 
-    prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
-      sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
-      dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+    if( p > 0 ){
+      beta     = as.numeric( pars[paste0("beta[", 1:p,"]")] )
+      prior_lp = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
+        sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
+        dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+      eta      = data$X1 %*% beta
 
-    eta      = data$X1 %*% beta
+    }else{
+      prior_lp = sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
+        dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+      eta      = 0
+    }
+
     contribs = cbind(log_probs[1] + log(1 - data$death_ind),
-                    log_probs[2] + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
+                     log_probs[2] + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
     data_lp  = apply(contribs, 1, log_sum_exp)
     data_lp  = sum( data_lp )
 
     return(data_lp + prior_lp)
   }
 
-  lb           = c(rep(-Inf, p), rep(0, J), -Inf)
-  ub           = rep(Inf, p+J+1)
+  ub           = rep(Inf, length(lb))
   names(ub)    = colnames(d)
   names(lb)    = names(ub)
 

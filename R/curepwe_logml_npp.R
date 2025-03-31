@@ -109,8 +109,16 @@ curepwe.logml.npp = function(
   p         = stan.data$p
   X1        = stan.data$X1
   J         = stan.data$J
-  oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
+    newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+    lb       = c(rep(-Inf, p), rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower), -Inf)
+
+  }else{
+    oldnames = paste0("lambda[", 1:J, "]")
+    newnames = paste0("basehaz[", 1:J, "]")
+    lb       = c(rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower), -Inf)
+  }
   colnames(d)[colnames(d) %in% newnames] = oldnames
   oldnames  = c(oldnames, "logit_a0", "logit_p_cured")
   d = d[, oldnames, drop=F]
@@ -134,29 +142,36 @@ curepwe.logml.npp = function(
     a0_shape2  = data$a0_shape2
     a0_lower   = data$a0_lower
     a0_upper   = data$a0_upper
+    p          = data$p
 
-    beta          = as.numeric( pars[paste0("beta[", 1:data$p,"]")] )
     lambda        = as.numeric( pars[paste0("lambda[", 1:data$J,"]")] )
     logit_p_cured = as.numeric( pars[["logit_p_cured"]] )
     log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
     log_probs     = c(logit_p_cured, 0) + log1m_p_cured # c(log(p_cured), log(1 - p_cured))
 
-    prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
-      sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
-      dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
-
     logit_a0   = as.numeric(pars["logit_a0"])
     a0         = binomial('logit')$linkinv(logit_a0)
     ## prior on logit(a0)
-    prior_lp   = prior_lp + logit_beta_lp(logit_a0, shape1 = a0_shape1, shape2 = a0_shape2) - data$lognc_logit_a0
+    prior_lp   = logit_beta_lp(logit_a0, shape1 = a0_shape1, shape2 = a0_shape2) - data$lognc_logit_a0
 
-    eta0      = data$X0 %*% beta
+    if( p > 0 ){
+      beta       = as.numeric( pars[paste0("beta[", 1:p,"]")] )
+      prior_lp   = prior_lp + sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
+        sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
+        dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+      eta        = data$X1 %*% beta
+      eta0       = data$X0 %*% beta
+
+    }else{
+      prior_lp   = prior_lp + sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard +
+        dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
+      eta        = 0
+      eta0       = 0
+    }
+
     contribs0 = cbind(log_probs[1] + log(1 - data$death_ind0),
                       log_probs[2] + pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0))
-    data_lp   = apply(contribs0, 1, log_sum_exp)
-    data_lp   = a0 * sum( data_lp )
-
-    eta      = data$X1 %*% beta
+    data_lp   = a0 * sum( apply(contribs0, 1, log_sum_exp) )
     contribs = cbind(log_probs[1] + log(1 - data$death_ind),
                      log_probs[2] + pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind))
     data_lp  = data_lp + sum( apply(contribs, 1, log_sum_exp) )
@@ -166,8 +181,7 @@ curepwe.logml.npp = function(
     return(data_lp + prior_lp)
   }
 
-  lb        = c(rep(-Inf, p), rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower), -Inf)
-  ub        = c(rep(Inf, p+J), binomial('logit')$linkfun(stan.data$a0_upper), Inf)
+  ub        = c(rep(Inf, length(lb) - 2), binomial('logit')$linkfun(stan.data$a0_upper), Inf)
   names(ub) = colnames(d)
   names(lb) = names(ub)
 
