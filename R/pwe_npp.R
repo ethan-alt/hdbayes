@@ -181,8 +181,13 @@ pwe.npp = function(
   p        = standat$p
   X1       = standat$X1
   J        = standat$J
-  oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"), "a0")
-  newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"), "a0")
+  if( p > 0 ){
+    oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"), "a0")
+    newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"), "a0")
+  }else{
+    oldnames = c(paste0("lambda[", 1:J, "]"), "a0")
+    newnames = c(paste0("basehaz[", 1:J, "]"), "a0")
+  }
 
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute

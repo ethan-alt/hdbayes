@@ -108,8 +108,16 @@ pwe.logml.npp = function(
   p         = stan.data$p
   X1        = stan.data$X1
   J         = stan.data$J
-  oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
+    newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+    lb        = c(rep(-Inf, p), rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower))
+
+  }else{
+    oldnames = paste0("lambda[", 1:J, "]")
+    newnames = paste0("basehaz[", 1:J, "]")
+    lb        = c(rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower))
+  }
   colnames(d)[colnames(d) %in% newnames] = oldnames
   oldnames  = c(oldnames, "logit_a0")
   d = d[, oldnames, drop=F]
@@ -133,29 +141,34 @@ pwe.logml.npp = function(
     a0_shape2  = data$a0_shape2
     a0_lower   = data$a0_lower
     a0_upper   = data$a0_upper
-
-    beta       = as.numeric( pars[paste0("beta[", 1:data$p,"]")] )
+    p          = data$p
     lambda     = as.numeric( pars[paste0("lambda[", 1:data$J,"]")] )
-    prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
-      sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
-
     logit_a0   = as.numeric(pars["logit_a0"])
     a0         = binomial('logit')$linkinv(logit_a0)
     ## prior on logit(a0)
-    prior_lp   = prior_lp + logit_beta_lp(logit_a0, shape1 = a0_shape1, shape2 = a0_shape2) - data$lognc_logit_a0
+    prior_lp   = logit_beta_lp(logit_a0, shape1 = a0_shape1, shape2 = a0_shape2) - data$lognc_logit_a0
 
-    eta     = data$X1 %*% beta
-    eta0    = data$X0 %*% beta
-    data_lp = a0 * sum( pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0) ) +
-      sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+    if( p > 0 ){
+      beta       = as.numeric( pars[paste0("beta[", 1:p,"]")] )
+      prior_lp   = prior_lp + sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
+        sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
+      eta        = data$X1 %*% beta
+      eta0       = data$X0 %*% beta
+      data_lp    = a0 * sum( pwe_lpdf(data$y0, eta0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0) ) +
+        sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+
+    }else{
+      prior_lp   = prior_lp + sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
+      data_lp    = a0 * sum( pwe_lpdf(data$y0, 0, lambda, data$breaks, data$intindx0, data$J, data$death_ind0) ) +
+        sum( pwe_lpdf(data$y1, 0, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+    }
 
     ## subtract log nc from power prior
     prior_lp = prior_lp - pp_lognc(a0, data$a0_lognc, data$lognc)
     return(data_lp + prior_lp)
   }
 
-  lb        = c(rep(-Inf, p), rep(0, J), binomial('logit')$linkfun(stan.data$a0_lower))
-  ub        = c(rep(Inf, p+J), binomial('logit')$linkfun(stan.data$a0_upper))
+  ub        = c(rep(Inf, length(lb) - 1), binomial('logit')$linkfun(stan.data$a0_upper))
   names(ub) = colnames(d)
   names(lb) = names(ub)
 

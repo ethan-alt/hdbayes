@@ -67,8 +67,16 @@ pwe.logml.post = function(
   p         = stan.data$p
   X1        = stan.data$X1
   J         = stan.data$J
-  oldnames  = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames  = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+  if( p > 0 ){
+    oldnames  = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
+    newnames  = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
+    lb        = c(rep(-Inf, p), rep(0, J))
+
+  }else{
+    oldnames  = paste0("lambda[", 1:J, "]")
+    newnames  = paste0("basehaz[", 1:J, "]")
+    lb        = rep(0, J)
+  }
   colnames(d)[colnames(d) %in% newnames] = oldnames
   d = d[, oldnames, drop=F]
 
@@ -77,19 +85,25 @@ pwe.logml.post = function(
 
   ## log of the unnormalized posterior density function
   log_density = function(pars, data){
-    beta       = as.numeric( pars[paste0("beta[", 1:data$p,"]")] )
+    p          = data$p
     lambda     = as.numeric( pars[paste0("lambda[", 1:data$J,"]")] )
-    prior_lp   = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
-      sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
 
-    eta = data$X1 %*% beta
-    data_lp = sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+    if( p > 0 ){
+      beta     = as.numeric( pars[paste0("beta[", 1:p,"]")] )
+      prior_lp = sum( dnorm(beta, mean = data$beta_mean, sd = data$beta_sd, log = T) ) +
+        sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
+      eta      = data$X1 %*% beta
+      data_lp  = sum( pwe_lpdf(data$y1, eta, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+
+    }else{
+      prior_lp = sum( dnorm(lambda, mean = data$hazard_mean, sd = data$hazard_sd, log = T) ) - data$lognc_hazard
+      data_lp  = sum( pwe_lpdf(data$y1, 0, lambda, data$breaks, data$intindx, data$J, data$death_ind) )
+    }
 
     return(data_lp + prior_lp)
   }
 
-  lb           = c(rep(-Inf, p), rep(0, J))
-  ub           = rep(Inf, p+J)
+  ub           = rep(Inf, length(lb))
   names(ub)    = colnames(d)
   names(lb)    = names(ub)
 
