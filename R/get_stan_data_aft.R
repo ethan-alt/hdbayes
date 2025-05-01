@@ -612,12 +612,10 @@ get.aft.stan.data.stratified.pp = function(
 
   ## current data
   data          = data.list[[1]]
-  stratum.curr  = strata.list[[1]]
+  data$stratum  = strata.list[[1]]
   ## extract names and variables for response, censoring, etc.
   time.name     = all.vars(formula)[1]
   eventind.name = all.vars(formula)[2]
-  ## re-order data by event indicator and stratum
-  data          = data[order(data[, eventind.name], stratum.curr), ]
   t             = data[, time.name]
   y             = log(t)
   eventind      = as.integer( data[, eventind.name] )
@@ -625,23 +623,15 @@ get.aft.stan.data.stratified.pp = function(
   p             = ncol(X)
 
   ## historical data
-  histdata      = do.call(rbind, data.list[-1])
-  stratum.hist  = do.call(c, strata.list[-1])
-  ## re-order histdata by event indicator and stratum
-  histdata      = histdata[order(histdata[, eventind.name], stratum.hist), ]
-  t0            = histdata[, time.name]
-  y0            = log(t0)
-  eventind0     = as.integer( histdata[, eventind.name] )
-  X0            = stats::model.matrix(formula, histdata)
+  histdata         = do.call(rbind, data.list[-1])
+  histdata$stratum = strata.list[[2]]
+  t0               = histdata[, time.name]
+  y0               = log(t0)
+  eventind0        = as.integer( histdata[, eventind.name] )
+  X0               = stats::model.matrix(formula, histdata)
 
   ## get the number of strata
-  K = as.integer( max( stratum.curr, stratum.hist ) )
-
-  ## get strata assignment for current and historical data
-  stratumID.obs  = stratum.curr[which(eventind == 1)]
-  stratumID.cen  = stratum.curr[which(eventind == 0)]
-  stratumID0.obs = stratum.hist[which(eventind0 == 1)]
-  stratumID0.cen = stratum.hist[which(eventind0 == 0)]
+  K = as.integer( max( data$stratum, histdata$stratum ) )
 
   ## check a0.strata values
   if ( !( is.vector(a0.strata) & (length(a0.strata) %in% c(1, K)) ) )
@@ -674,6 +664,11 @@ get.aft.stan.data.stratified.pp = function(
   }
   scale.sd = to.vector(param = scale.sd, default.value = 10, len = 1)
 
+  idx.obs  = which(eventind == 1)
+  idx.cen  = which(eventind == 0)
+  idx0.obs = which(eventind0 == 1)
+  idx0.cen = which(eventind0 == 0)
+
   standat = list(
     'dist'            = dist.to.integer(dist),
     'n'               = length(eventind),
@@ -682,19 +677,19 @@ get.aft.stan.data.stratified.pp = function(
     'n0_obs'          = sum(eventind0),
     'n0_cen'          = sum(1 - eventind0),
     'p'               = p,
-    'y_obs'           = y[which(eventind == 1)],
-    'y_cen'           = y[which(eventind == 0)],
-    'X_obs'           = X[which(eventind == 1), ],
-    'X_cen'           = X[which(eventind == 0), ],
-    'y0_obs'          = y0[which(eventind0 == 1)],
-    'y0_cen'          = y0[which(eventind0 == 0)],
-    'X0_obs'          = X0[which(eventind0 == 1), ],
-    'X0_cen'          = X0[which(eventind0 == 0), ],
+    'y_obs'           = y[idx.obs],
+    'y_cen'           = y[idx.cen],
+    'X_obs'           = X[idx.obs, ],
+    'X_cen'           = X[idx.cen, ],
+    'y0_obs'          = y0[idx0.obs],
+    'y0_cen'          = y0[idx0.cen],
+    'X0_obs'          = X0[idx0.obs, ],
+    'X0_cen'          = X0[idx0.cen, ],
     'K'               = K,
-    'stratumID_obs'   = stratumID.obs,
-    'stratumID_cen'   = stratumID.cen,
-    'stratumID0_obs'  = stratumID0.obs,
-    'stratumID0_cen'  = stratumID0.cen,
+    'stratumID_obs'   = data$stratum[idx.obs],
+    'stratumID_cen'   = data$stratum[idx.cen],
+    'stratumID0_obs'  = histdata$stratum[idx0.obs],
+    'stratumID0_cen'  = histdata$stratum[idx0.cen],
     'a0s'             = a0.strata,
     'beta_mean'       = beta.mean,
     'beta_sd'         = beta.sd,
