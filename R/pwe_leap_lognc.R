@@ -76,9 +76,11 @@ pwe.leap.lognc = function(
   p        = stan.data$p
   J        = stan.data$J
   K        = stan.data$K
-  oldnames = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
-               paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"),
+  oldnames = c(paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"),
                "logit_gamma")
+  if( p > 0 ){
+    oldnames  = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"), oldnames)
+  }
   if ( K > 2 ){
     oldnames = c(oldnames, paste0("delta_raw[", 1:(K-2), "]"))
   }
@@ -106,18 +108,8 @@ pwe.leap.lognc = function(
     p          = data$p
     J          = data$J
     K          = data$K
-    betaMat    = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
-    betaMat    = matrix(betaMat, nrow = p, ncol = K)
     lambdaMat  = pars[paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]")]
     lambdaMat  = matrix(lambdaMat, nrow = J, ncol = K)
-
-    prior_lp   = 0
-    for( k in 1:K ){
-      prior_lp = prior_lp + sum( dnorm(betaMat[, k], mean = as.numeric(data$beta_mean),
-                                       sd = as.numeric(data$beta_sd), log = T) )
-      prior_lp = prior_lp + sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
-                                       sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
-    }
 
     ## prior on logit(gamma)
     conc         = data$conc
@@ -127,7 +119,7 @@ pwe.leap.lognc = function(
     log1m_gamma  = -log1p_exp(logit_gamma) # log(1 - gamma)
     log_probs    = c(logit_gamma, 0) + log1m_gamma
 
-    prior_lp     = prior_lp + logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
+    prior_lp     = logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
       data$lognc_logit_gamma
 
     if( K > 2 ){
@@ -137,18 +129,44 @@ pwe.leap.lognc = function(
       log_probs = c(logit_gamma, log(delta_raw)) + log1m_gamma
     }
 
-    eta0Mat  = data$X0 %*% betaMat
+    if( p > 0 ){
+      betaMat    = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
+      betaMat    = matrix(betaMat, nrow = p, ncol = K)
 
-    # log likelihood contribution of each component
-    contribs = sapply(1:K, function(k){
-      log_probs[k] + pwe_lpdf(data$y0, eta0Mat[, k], lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
-    })
+      for( k in 1:K ){
+        prior_lp = prior_lp + sum( dnorm(betaMat[, k], mean = as.numeric(data$beta_mean),
+                                         sd = as.numeric(data$beta_sd), log = T) ) +
+          sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
+                     sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
+      }
+      eta0Mat  = data$X0 %*% betaMat
+
+      # log likelihood contribution of each component
+      contribs = sapply(1:K, function(k){
+        log_probs[k] + pwe_lpdf(data$y0, eta0Mat[, k], lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
+      })
+
+    }else{
+      for( k in 1:K ){
+        prior_lp = prior_lp + sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
+                                         sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
+      }
+
+      # log likelihood contribution of each component
+      contribs = sapply(1:K, function(k){
+        log_probs[k] + pwe_lpdf(data$y0, 0, lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
+      })
+    }
     contribs = as.matrix(contribs, ncol = K)
     data_lp  = apply(contribs, 1, log_sum_exp)
     data_lp  = sum( data_lp )
 
     if( !data$is_prior ){
-      eta = data$X1 %*% betaMat[, 1]
+      if( p > 0 ){
+        eta = data$X1 %*% betaMat[, 1]
+      }else{
+        eta = 0
+      }
       data_lp = data_lp + sum( pwe_lpdf(data$y1, eta, lambdaMat[, 1], data$breaks, data$intindx, data$J, data$death_ind) )
     }
 

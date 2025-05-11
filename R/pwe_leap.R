@@ -139,10 +139,13 @@ pwe.leap = function(
   X1       = standat$X1
   J        = standat$J
   K        = standat$K
-  oldnames = c(paste0("beta[", 1:p, "]"), paste0("lambda[", 1:J, "]"))
-  newnames = c(colnames(X1), paste0("basehaz[", 1:J, "]"))
-  oldnames = c(oldnames, paste0( 'probs[', 1:K, ']' ))
-  newnames = c(newnames, paste0( 'probs[', 1:K, ']' ))
+  oldnames = c(paste0("lambda[", 1:J, "]"), paste0( 'probs[', 1:K, ']' ))
+  newnames = c(paste0("basehaz[", 1:J, "]"), paste0( 'probs[', 1:K, ']' ))
+  if( p > 0 ){
+    oldnames = c(paste0("beta[", 1:p, "]"), oldnames)
+    newnames = c(colnames(X1), newnames)
+  }
+
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat

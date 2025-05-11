@@ -76,9 +76,11 @@ curepwe.leap.lognc = function(
   p        = stan.data$p
   J        = stan.data$J
   K        = stan.data$K
-  oldnames = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"),
-               paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"),
+  oldnames = c(paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]"),
                "logit_gamma")
+  if( p > 0 ){
+    oldnames = c(paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]"), oldnames)
+  }
   if ( is.prior ){
     oldnames = c(oldnames, "logit_p_cured0")
   }else{
@@ -111,24 +113,11 @@ curepwe.leap.lognc = function(
     p              = data$p
     J              = data$J
     K              = data$K
-    betaMat        = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
-    betaMat        = matrix(betaMat, nrow = p, ncol = K)
     lambdaMat      = pars[paste0("lambdaMat[", rep(1:J, K), ',', rep(1:K, each = J), "]")]
     lambdaMat      = matrix(lambdaMat, nrow = J, ncol = K)
     logit_p_cured0 = as.numeric( pars[["logit_p_cured0"]] )
     log1m_p_cured0 = -log1p_exp(logit_p_cured0) # log(1 - p_cured0)
     log_p_cured0   = logit_p_cured0 + log1m_p_cured0 # log(p_cured0)
-
-    prior_lp   = 0
-    for( k in 1:K ){
-      prior_lp = prior_lp + sum( dnorm(betaMat[, k], mean = as.numeric(data$beta_mean),
-                                       sd = as.numeric(data$beta_sd), log = T) )
-      prior_lp = prior_lp + sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
-                                       sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
-    }
-
-    ## prior on logit_p_cured0
-    prior_lp = prior_lp + dnorm(logit_p_cured0, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
 
     ## prior on logit(gamma)
     conc         = data$conc
@@ -138,8 +127,11 @@ curepwe.leap.lognc = function(
     log1m_gamma  = -log1p_exp(logit_gamma) # log(1 - gamma)
     log_probs    = c(logit_gamma, 0) + log1m_gamma
 
-    prior_lp     = prior_lp + logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
+    prior_lp     = logit_beta_lp(logit_gamma, gamma_shape1, gamma_shape2) -
       data$lognc_logit_gamma
+
+    ## prior on logit_p_cured0
+    prior_lp     = prior_lp + dnorm(logit_p_cured0, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
 
     if( K > 2 ){
       delta_raw = as.numeric(pars[paste0("delta_raw[", 1:(K-2), "]")])
@@ -148,21 +140,46 @@ curepwe.leap.lognc = function(
       log_probs = c(logit_gamma, log(delta_raw)) + log1m_gamma
     }
 
-    eta0Mat  = data$X0 %*% betaMat
+    if( p > 0 ){
+      betaMat        = pars[paste0("betaMat[", rep(1:p, K), ',', rep(1:K, each = p), "]")]
+      betaMat        = matrix(betaMat, nrow = p, ncol = K)
 
-    # log likelihood contribution for the non-cured population
-    contribs0 = sapply(1:K, function(k){
-      log_probs[k] + pwe_lpdf(data$y0, eta0Mat[, k], lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
-    })
+      for( k in 1:K ){
+        prior_lp = prior_lp + sum( dnorm(betaMat[, k], mean = as.numeric(data$beta_mean),
+                                         sd = as.numeric(data$beta_sd), log = T) ) +
+          sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
+                     sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
+      }
+      eta0Mat  = data$X0 %*% betaMat
+
+      # log likelihood contribution for the non-cured population
+      contribs0 = sapply(1:K, function(k){
+        log_probs[k] + pwe_lpdf(data$y0, eta0Mat[, k], lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
+      })
+
+    }else{
+      for( k in 1:K ){
+        prior_lp = prior_lp + sum( dnorm(lambdaMat[, k], mean = as.numeric(data$hazard_mean),
+                                         sd = as.numeric(data$hazard_sd), log = T) ) - data$lognc_hazard
+      }
+
+      # log likelihood contribution for the non-cured population
+      contribs0 = sapply(1:K, function(k){
+        log_probs[k] + pwe_lpdf(data$y0, 0, lambdaMat[, k], data$breaks, data$intindx0, data$J, data$death_ind0)
+      })
+    }
     contribs0   = as.matrix(contribs0, ncol = K)
     noncured_lp = apply(contribs0, 1, log_sum_exp)
-
     data_lp     = cbind(log_p_cured0 + log(1 - data$death_ind0),
                         log1m_p_cured0 + noncured_lp)
     data_lp     = sum( apply(data_lp, 1, log_sum_exp) )
 
     if( !data$is_prior ){
-      eta           = data$X1 %*% betaMat[, 1]
+      if( p > 0 ){
+        eta = data$X1 %*% betaMat[, 1]
+      }else{
+        eta = 0
+      }
       logit_p_cured = as.numeric( pars[["logit_p_cured"]] ) # logit of p_cured
       log1m_p_cured = -log1p_exp(logit_p_cured) # log(1 - p_cured)
       log_p_cured   = logit_p_cured + log1m_p_cured # log(p_cured)
@@ -170,9 +187,9 @@ curepwe.leap.lognc = function(
       ## prior on logit_p_cured
       prior_lp = prior_lp + dnorm(logit_p_cured, mean = data$logit_p_cured_mean, sd = data$logit_p_cured_sd, log = T)
 
-      contribs      = cbind(log_p_cured + log(1 - data$death_ind),
-                            log1m_p_cured + pwe_lpdf(data$y1, eta, lambdaMat[, 1], data$breaks, data$intindx, data$J, data$death_ind))
-      data_lp       = data_lp + sum( apply(contribs, 1, log_sum_exp) )
+      contribs = cbind(log_p_cured + log(1 - data$death_ind),
+                       log1m_p_cured + pwe_lpdf(data$y1, eta, lambdaMat[, 1], data$breaks, data$intindx, data$J, data$death_ind))
+      data_lp  = data_lp + sum( apply(contribs, 1, log_sum_exp) )
     }
 
     return(data_lp + prior_lp)
