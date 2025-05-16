@@ -1,13 +1,16 @@
-# hdbayes (development version)
+# hdbayes 0.2.0 (development version)
 
 ## Enhancements
 
 * Added functions for sampling from the posterior distributions of various survival models, including an accelerated failure 
-time (AFT) model, a piecewise exponential (PWE) model, and a standard cure rate (CurePWE) model.
+time (AFT) model, a piecewise exponential (PWE) model, and a mixture cure rate (CurePWE) model.
 
 * Added functions to compute the log marginal likelihoods of the AFT model, PWE model, and CurePWE model under various priors.
 
 * Added lower and upper bounds for probability of being exchangeable for LEAP implementation for GLM models.
+
+* Modified the output of the `glm.rmap()` function to include the updated mixture weight for the posterior density under the MAP prior.
+
 
 # hdbayes 0.1.1
 
