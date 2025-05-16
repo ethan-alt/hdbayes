@@ -97,8 +97,10 @@ The function returns a \code{list} with the following objects
 \describe{
 \item{post.samples}{an object of class \code{draws_df} giving posterior samples under the robust meta-analytic predictive prior (RMAP)}
 
-\item{post.samples.bhm}{an object of class \code{draws_df} giving posterior samples under the Bayesian hierarchical model (BHM),
-obtained from using \code{\link[=glm.bhm]{glm.bhm()}}}
+\item{post.weight.bhm}{a scalar between 0 and 1 giving the updated mixture weight for posterior density under the MAP prior}
+
+\item{post.samples.bhm}{an object of class \code{draws_df} giving posterior samples under the Bayesian hierarchical model (BHM) (equivalently,
+the MAP prior), obtained from using \code{\link[=glm.bhm]{glm.bhm()}}}
 
 \item{post.samples.vague}{an object of class \code{draws_df} giving posterior samples under the vague/non-informative prior, obtained
 from using \code{\link[=glm.post]{glm.post()}}}
