@@ -65,8 +65,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
-#'  the list of variables specified in the data block of the Stan program.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @references
 #'  Wang, C., Li, H., Chen, W.-C., Lu, N., Tiwari, R., Xu, Y., & Yue, L. Q. (2019). Propensity score-integrated power prior approach for incorporating real-world evidence in single-arm clinical studies. Journal of Biopharmaceutical Statistics, 29(5), 731–748.
@@ -183,5 +188,7 @@ curepwe.stratified.pp = function(
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "curepwe_stratified_pp"
   return(d)
 }

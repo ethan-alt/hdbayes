@@ -51,8 +51,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
-#'  the list of variables specified in the data block of the Stan program.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @examples
 #' if (instantiate::stan_cmdstan_exists()) {
@@ -148,5 +153,7 @@ curepwe.post = function(
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "curepwe_post"
   return(d)
 }

@@ -47,8 +47,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
-#'  the list of variables specified in the data block of the Stan program.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @references
 #'  Alt, E. M., Chang, X., Jiang, X., Liu, Q., Mo, M., Xia, H. M., and Ibrahim, J. G. (2024). LEAP: The latent exchangeability prior for borrowing information from historical data. Biometrics, 80(3).
@@ -136,5 +141,7 @@ aft.leap = function(
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "aft_leap"
   return(d)
 }

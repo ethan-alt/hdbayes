@@ -80,8 +80,13 @@ cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
-the list of variables specified in the data block of the Stan program.
+The function returns an object of class \code{draws_df} containing posterior samples. The object has two attributes:
+
+\describe{
+\item{data}{a list of variables specified in the data block of the Stan program}
+
+\item{model}{a character string indicating the model name}
+}
 }
 \description{
 Sample from the posterior distribution of an accelerated failure time (AFT) model using the
