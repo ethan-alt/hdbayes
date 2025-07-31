@@ -39,7 +39,7 @@ from \code{\link[=aft.logml.post]{aft.logml.post()}}.
 If the power prior parameters (\eqn{a_0}) is non-zero, the function will return a \code{list} with the following objects
 
 \describe{
-\item{model}{"PP"}
+\item{model}{"aft_pp"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

@@ -36,7 +36,7 @@ in cmdstanr package.}
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"MAP"}
+\item{model}{"curepwe_bhm"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

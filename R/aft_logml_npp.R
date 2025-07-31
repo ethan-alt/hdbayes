@@ -18,7 +18,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"NPP"}
+#'    \item{model}{"aft_npp"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -172,7 +172,7 @@ aft.logml.npp = function(
 
   ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
   res = list(
-    'model' = "NPP",
+    'model' = "aft_npp",
     'logml' = bs$logml,
     'bs'    = bs
   )

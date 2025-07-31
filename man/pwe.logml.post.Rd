@@ -18,7 +18,7 @@ pass onto \code{\link[bridgesampling:bridge_sampler]{bridgesampling::bridge_samp
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"Normal/Half-Normal"}
+\item{model}{"pwe_post"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

@@ -28,7 +28,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"Commensurate"}
+#'    \item{model}{"curepwe_commensurate"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -126,7 +126,7 @@ curepwe.logml.commensurate = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "Commensurate",
+    'model'        = "curepwe_commensurate",
     'logml'        = res.all$lognc - res.hist$lognc,
     'bs'           = res.all$bs,
     'bs.hist'      = res.hist$bs,

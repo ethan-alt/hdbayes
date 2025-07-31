@@ -39,7 +39,7 @@ from \code{\link[=pwe.logml.post]{pwe.logml.post()}}.
 If the power prior parameters (\eqn{a_0}) is non-zero, the function will return a \code{list} with the following objects
 
 \describe{
-\item{model}{"PP"}
+\item{model}{"pwe_pp"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

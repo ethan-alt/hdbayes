@@ -16,7 +16,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"Normal/Half-Normal"}
+#'    \item{model}{"pwe_post"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -122,7 +122,7 @@ pwe.logml.post = function(
 
   ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
   res = list(
-    'model' = "Normal/Half-Normal",
+    'model' = "pwe_post",
     'logml' = bs$logml,
     'bs'    = bs
   )

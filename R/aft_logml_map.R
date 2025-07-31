@@ -30,7 +30,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"MAP"}
+#'    \item{model}{"aft_bhm"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -121,7 +121,7 @@ aft.logml.map = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "MAP",
+    'model'        = "aft_bhm",
     'logml'        = res.all$lognc - res.hist$lognc,
     'bs'           = res.all$bs,
     'bs.hist'      = res.hist$bs,

@@ -36,7 +36,7 @@ in cmdstanr package.}
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"Stratified PP"}
+\item{model}{"curepwe_stratified_pp"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
