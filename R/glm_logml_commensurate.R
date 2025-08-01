@@ -30,7 +30,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"Commensurate"}
+#'    \item{model}{"glm_commensurate"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -219,7 +219,7 @@ glm.logml.commensurate = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "Commensurate",
+    'model'        = "glm_commensurate",
     'logml'        = bs$logml - res.hist$lognc,
     'bs'           = bs,
     'bs.hist'      = res.hist$bs,

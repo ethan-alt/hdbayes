@@ -30,7 +30,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"LEAP"}
+#'    \item{model}{"glm_leap"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -210,7 +210,7 @@ glm.logml.leap = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "LEAP",
+    'model'        = "glm_leap",
     'logml'        = bs$logml - res.hist$lognc,
     'bs'           = bs,
     'bs.hist'      = res.hist$bs,

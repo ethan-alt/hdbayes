@@ -30,7 +30,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"MAP"}
+#'    \item{model}{"glm_bhm"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood of the meta-analytic predictive (MAP) prior}
 #'
@@ -102,6 +102,7 @@ glm.logml.map = function(
   hist.stan.data$disp_mean = stan.data$disp_mean[-1]
   hist.stan.data$disp_sd   = stan.data$disp_sd[-1]
   hist.stan.data$offs      = stan.data$offs[-(1:n)]
+  hist.stan.data$log_lik   = 0
 
   ## fit BHM using historical data sets
   glm_bhm = instantiate::stan_package_model(
@@ -137,7 +138,7 @@ glm.logml.map = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "MAP",
+    'model'        = "glm_bhm",
     'logml'        = res.all$lognc - res.hist$lognc,
     'bs'           = res.all$bs,
     'bs.hist'      = res.hist$bs,

@@ -17,7 +17,7 @@
 #'  The function returns a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"NAPP"}
+#'    \item{model}{"glm_napp"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -132,7 +132,7 @@ glm.logml.napp = function(
 
   ## Return a list of model name, estimated log marginal likelihood, and output from bridgesampling::bridge_sampler
   res = list(
-    'model' = "NAPP",
+    'model' = "glm_napp",
     'logml' = bs$logml,
     'bs'    = bs
   )

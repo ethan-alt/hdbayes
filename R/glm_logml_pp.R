@@ -34,7 +34,7 @@
 #'  If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a `list` with the following objects
 #'
 #'  \describe{
-#'    \item{model}{"PP"}
+#'    \item{model}{"glm_pp"}
 #'
 #'    \item{logml}{the estimated logarithm of the marginal likelihood}
 #'
@@ -125,6 +125,7 @@ glm.logml.pp = function(
   hist.stan.data$X         = stan.data$X[-(1:n), ]
   hist.stan.data$offs      = stan.data$offs[-(1:n)]
   hist.stan.data$a0_vals   = a0_vals[-1]
+  hist.stan.data$log_lik   = 0
 
   ## fit PP using historical data sets
   glm_pp     = instantiate::stan_package_model(
@@ -155,7 +156,7 @@ glm.logml.pp = function(
   ## Return a list of model name, estimated log marginal likelihood, outputs from bridgesampling::bridge_sampler,
   ## the minimum estimated bulk effective sample size of the MCMC sampling, and the maximum Rhat
   res = list(
-    'model'        = "PP",
+    'model'        = "glm_pp",
     'logml'        = res.all$lognc - res.hist$lognc,
     'bs'           = res.all$bs,
     'bs.hist'      = res.hist$bs,

@@ -18,7 +18,7 @@ specified in the data block of the Stan program.}
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"NPP"}
+\item{model}{"glm_npp"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

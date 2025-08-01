@@ -36,7 +36,7 @@ in cmdstanr package.}
 The function returns a \code{list} with the following objects
 
 \describe{
-\item{model}{"Commensurate"}
+\item{model}{"glm_commensurate"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 

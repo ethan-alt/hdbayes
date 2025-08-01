@@ -39,7 +39,7 @@ one data set (the current data), then the function will return the same result a
 If at least one of the power prior parameters (\eqn{a_0}'s) is non-zero, the function will return a \code{list} with the following objects
 
 \describe{
-\item{model}{"PP"}
+\item{model}{"glm_pp"}
 
 \item{logml}{the estimated logarithm of the marginal likelihood}
 
