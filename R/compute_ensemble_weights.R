@@ -3,7 +3,7 @@
 #' Compute model averaging weights for a set of Bayesian models using Bayesian model averaging (BMA), pseudo-BMA,
 #' pseudo-BMA+ (pseudo-BMA with the Bayesian bootstrap), or stacking. This function takes a list of model fit objects,
 #' each containing posterior samples from a generalized linear model (GLM) or survival model, and returns normalized
-#' weights that can be used for model comparison or combining posterior samples using functions like [sample.ensemble.posterior()].
+#' weights that can be used for model comparison or combining posterior samples using functions like [sample.ensemble()].
 #'
 #' The input `fit.list` should be a list of outputs from model fitting functions in the `hdbayes` package, such as [glm.pp()]
 #' (for generalized linear models), [aft.pp()] (for accelerated failure time models), [pwe.pp()] (for piecewise exponential (PWE)
@@ -65,7 +65,7 @@
 #'    \item{loo.list}{a list of outputs from [loo::loo()], returned only when `type` is "pseudobma", "pseudobma+", or "stacking"}
 #'  }
 #'
-#' @seealso [sample.ensemble.posterior()]
+#' @seealso [sample.ensemble()]
 #'
 #' @references
 #'  Yao, Y., Vehtari, A., Simpson, D., and Gelman, A. (2018). Using stacking to average Bayesian predictive distributions. Bayesian Analysis, 13(3), 917–1007.

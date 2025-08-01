@@ -78,7 +78,7 @@ or "stacking")}
 Compute model averaging weights for a set of Bayesian models using Bayesian model averaging (BMA), pseudo-BMA,
 pseudo-BMA+ (pseudo-BMA with the Bayesian bootstrap), or stacking. This function takes a list of model fit objects,
 each containing posterior samples from a generalized linear model (GLM) or survival model, and returns normalized
-weights that can be used for model comparison or combining posterior samples using functions like \code{\link[=sample.ensemble.posterior]{sample.ensemble.posterior()}}.
+weights that can be used for model comparison or combining posterior samples using functions like \code{\link[=sample.ensemble]{sample.ensemble()}}.
 }
 \details{
 The input \code{fit.list} should be a list of outputs from model fitting functions in the \code{hdbayes} package, such as \code{\link[=glm.pp]{glm.pp()}}
@@ -147,5 +147,5 @@ Yao, Y., Vehtari, A., Simpson, D., and Gelman, A. (2018). Using stacking to aver
 Vehtari, A., Gelman, A., and Gabry, J. (2017). Practical Bayesian model evaluation using leave-one-out cross-validation and WAIC. Statistics and Computing, 27(5), 1413–1432.
 }
 \seealso{
-\code{\link[=sample.ensemble.posterior]{sample.ensemble.posterior()}}
+\code{\link[=sample.ensemble]{sample.ensemble()}}
 }
