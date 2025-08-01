@@ -36,7 +36,8 @@ Imports:
     posterior,
     enrichwith,
     bridgesampling,
-    mvtnorm
+    mvtnorm,
+    loo
 Suggests:
     cmdstanr (>= 0.6.0),
     ggplot2,
@@ -85,6 +86,7 @@ Collate:
     'aft_post.R'
     'aft_pp.R'
     'aft_stratified_pp.R'
+    'compute_ensemble_weights.R'
     'data_checks_pwe.R'
     'get_stan_data_pwe.R'
     'curepwe_bhm.R'
@@ -152,5 +154,6 @@ Collate:
     'pwe_post.R'
     'pwe_pp.R'
     'pwe_stratified_pp.R'
+    'sample_ensemble.R'
     'zzz.R'
 VignetteBuilder: knitr

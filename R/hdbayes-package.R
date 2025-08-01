@@ -17,4 +17,5 @@
 #' @importFrom enrichwith enrich
 #' @importFrom bridgesampling bridge_sampler
 #' @importFrom mvtnorm dmvnorm
+#' @importFrom loo loo pseudobma_weights stacking_weights
 NULL
