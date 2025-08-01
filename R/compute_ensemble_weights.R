@@ -138,6 +138,9 @@ compute.ensemble.weights = function(
   models = sapply(fit.list, function(d){
     attr(d, "model")
   })
+  if (any(models == "lm_npp")) {
+    stop("The model lm_npp is not supported for this function.")
+  }
   K      = length(models)
   dots   = list(...)
 
