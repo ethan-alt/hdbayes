@@ -44,7 +44,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g. seed, refresh, init).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @references
 #'  Duan, Y., Ye, K., and Smith, E. P. (2005). Evaluating water quality using power priors to incorporate historical information. Environmetrics, 17(1), 95–106.
@@ -179,6 +185,10 @@ lm.npp = function(
 
   oldnames = c(oldnames, paste0('a0s[', 1:K, ']'))
   newnames = c(newnames, paste0('a0_hist_', 1:K))
-  posterior::variables(d)[posterior::variables(d) %in% oldnames] = newnames
+  d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
+  ## add data used for the variables specified in the data block of the Stan program as an attribute
+  attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "lm_npp"
   return(d)
 }
