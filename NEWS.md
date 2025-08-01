@@ -2,10 +2,19 @@
 
 ## Enhancements
 
-* Added functions for sampling from the posterior distributions of various survival models, including an accelerated failure 
-time (AFT) model, a piecewise exponential (PWE) model, and a mixture cure rate (CurePWE) model.
+* Added functions for computing model averaging weights using Bayesian model averaging (BMA), pseudo-BMA, pseudo-BMA+ (pseudo-BMA 
+with the Bayesian bootstrap), and stacking. Also added a function for generating samples from the ensemble of posterior distributions 
+based on the computed weights.
 
-* Added functions to compute the log marginal likelihoods of the AFT model, PWE model, and CurePWE model under various priors.
+* Added functions for sampling from the posterior distributions of various several models, including the accelerated failure 
+time (AFT) model, the piecewise exponential (PWE) model, and the mixture cure rate model with a PWE component for the non-cured 
+popluation (CurePWE). For all survival model implementations, multiple historical data sets are now stacked into a single 
+combined data set for model fitting.
+
+* Added functions to compute the log marginal likelihood for the AFT, PWE, and CurePWE models under various prior specifications.
+
+* Updated the implementation of generalized linear models (GLMs) to support computation of the pointwise log-likelihood matrix. This 
+enables downstream use in model comparison and averaging procedures, such as computing pseudo-BMA and stacking weights. 
 
 * Added lower and upper bounds for probability of being exchangeable for LEAP implementation for GLM models.
 
