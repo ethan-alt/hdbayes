@@ -48,6 +48,7 @@
 #' @param a0.upper          a scalar or a vector whose dimension is equal to the number of historical data sets giving the
 #'                          upper bounds for each element of the \eqn{a_0} vector. If a scalar is provided, same as for `a0.lower`.
 #'                          Defaults to a vector of 1s.
+#' @param get.loglik        whether to generate log-likelihood matrix. Defaults to FALSE.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup`
 #'                          in `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -57,8 +58,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
-#'  the list of variables specified in the data block of the Stan program.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @seealso [glm.npp.lognc()]
 #'
@@ -128,6 +134,7 @@ glm.npp = function(
     a0.shape2         = 1,
     a0.lower          = NULL,
     a0.upper          = NULL,
+    get.loglik        = FALSE,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -148,7 +155,8 @@ glm.npp = function(
     a0.shape1      = a0.shape1,
     a0.shape2      = a0.shape2,
     a0.lower       = a0.lower,
-    a0.upper       = a0.upper
+    a0.upper       = a0.upper,
+    get.loglik     = get.loglik
   )
 
   glm_npp_posterior = instantiate::stan_package_model(
@@ -177,5 +185,7 @@ glm.npp = function(
   d        = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "glm_npp"
   return(d)
 }

@@ -12,7 +12,8 @@ get.stan.data.pp = function(
     beta.mean         = NULL,
     beta.sd           = NULL,
     disp.mean         = NULL,
-    disp.sd           = NULL
+    disp.sd           = NULL,
+    get.loglik        = FALSE
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -83,7 +84,8 @@ get.stan.data.pp = function(
     'disp_sd'         = disp.sd,
     'dist'            = dist,
     'link'            = link,
-    'offs'            = offset
+    'offs'            = offset,
+    'get_loglik'      = as.integer(get.loglik)
   )
   return(standat)
 }
@@ -104,7 +106,8 @@ get.stan.data.bhm = function(
     meta.sd.mean      = NULL,
     meta.sd.sd        = NULL,
     disp.mean         = NULL,
-    disp.sd           = NULL
+    disp.sd           = NULL,
+    get.loglik        = FALSE
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -181,7 +184,8 @@ get.stan.data.bhm = function(
     'disp_sd'         = disp.sd,
     'dist'            = dist,
     'link'            = link,
-    'offs'            = offset
+    'offs'            = offset,
+    'get_loglik'      = as.integer(get.loglik)
   )
   return(standat)
 }
@@ -198,7 +202,8 @@ get.stan.data.napp = function(
     data.list,
     offset.list       = NULL,
     a0.shape1         = 1,
-    a0.shape2         = 1
+    a0.shape2         = 1,
+    get.loglik        = FALSE
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -273,7 +278,8 @@ get.stan.data.napp = function(
     'a0_shape2'    = a0.shape2,
     'dist'         = dist,
     'link'         = link,
-    'offs'         = offset.curr
+    'offs'         = offset.curr,
+    'get_loglik'   = as.integer(get.loglik)
   )
   return(standat)
 }
@@ -297,7 +303,8 @@ get.stan.data.cp = function(
     spike.mean        = 200,
     spike.sd          = 0.1,
     slab.mean         = 0,
-    slab.sd           = 5
+    slab.sd           = 5,
+    get.loglik        = FALSE
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -377,7 +384,8 @@ get.stan.data.cp = function(
     'sigma_slab'      = slab.sd,
     'dist'            = dist,
     'link'            = link,
-    'offs'            = offset
+    'offs'            = offset,
+    'get_loglik'      = as.integer(get.loglik)
   )
   return(standat)
 }
@@ -401,6 +409,7 @@ get.stan.data.leap = function(
     disp.sd           = NULL,
     gamma.lower       = 0,
     gamma.upper       = 1,
+    get.loglik        = FALSE,
     all.hist          = FALSE ## indicator for whether data.list consists of historical data sets only
 ) {
   data.checks.leap(formula, family, data.list, K, offset.list)
@@ -537,7 +546,8 @@ get.stan.data.leap = function(
       'dist'        = dist,
       'link'        = link,
       'offs'        = offset,
-      'offs0'       = offset0
+      'offs0'       = offset0,
+      'get_loglik'  = as.integer(get.loglik)
     )
   }
   return(standat)
@@ -562,7 +572,8 @@ get.stan.data.npp = function(
     a0.shape1         = 1,
     a0.shape2         = 1,
     a0.lower          = NULL,
-    a0.upper          = NULL
+    a0.upper          = NULL,
+    get.loglik        = FALSE
 ) {
   data.checks(formula, family, data.list, offset.list)
 
@@ -655,7 +666,8 @@ get.stan.data.npp = function(
     'a0_upper'        = a0.upper,
     'dist'            = dist,
     'link'            = link,
-    'offs'            = offset
+    'offs'            = offset,
+    'get_loglik'      = as.integer(get.loglik)
   )
   return(standat)
 }
@@ -674,7 +686,8 @@ get.stan.data.post = function(
     beta.mean         = NULL,
     beta.sd           = NULL,
     disp.mean         = NULL,
-    disp.sd           = NULL
+    disp.sd           = NULL,
+    get.loglik        = FALSE
 ) {
   if( length(data.list) > 1 ){
     data.list   = list(data.list[[1]])
@@ -698,7 +711,8 @@ get.stan.data.post = function(
     beta.mean   = beta.mean,
     beta.sd     = beta.sd,
     disp.mean   = disp.mean,
-    disp.sd     = disp.sd
+    disp.sd     = disp.sd,
+    get.loglik  = get.loglik
   )
 
   standat = list(
@@ -712,7 +726,8 @@ get.stan.data.post = function(
     'disp_sd'         = standat_pp$disp_sd,
     'dist'            = standat_pp$dist,
     'link'            = standat_pp$link,
-    'offs'            = standat_pp$offs
+    'offs'            = standat_pp$offs,
+    'get_loglik'      = standat_pp$get_loglik
   )
   return(standat)
 }

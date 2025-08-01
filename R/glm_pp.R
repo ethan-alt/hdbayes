@@ -29,6 +29,7 @@
 #'                          vector should be between 0 and 1. If a scalar is provided, same as for `beta.mean`.
 #' @param disp.mean         location parameter for the half-normal prior on dispersion parameter. Defaults to 0.
 #' @param disp.sd           scale parameter for the half-normal prior on dispersion parameter. Defaults to 10.
+#' @param get.loglik        whether to generate log-likelihood matrix. Defaults to FALSE.
 #' @param iter_warmup       number of warmup iterations to run per chain. Defaults to 1000. See the argument `iter_warmup` in
 #'                          `sample()` method in cmdstanr package.
 #' @param iter_sampling     number of post-warmup iterations to run per chain. Defaults to 1000. See the argument `iter_sampling`
@@ -38,8 +39,13 @@
 #' @param ...               arguments passed to `sample()` method in cmdstanr package (e.g., `seed`, `refresh`, `init`).
 #'
 #' @return
-#'  The function returns an object of class `draws_df` giving posterior samples, with an attribute called 'data' which includes
-#'  the list of variables specified in the data block of the Stan program.
+#'  The function returns an object of class `draws_df` containing posterior samples. The object has two attributes:
+#'
+#'  \describe{
+#'    \item{data}{a list of variables specified in the data block of the Stan program}
+#'
+#'    \item{model}{a character string indicating the model name}
+#'  }
 #'
 #' @references
 #'  Chen, M.-H. and Ibrahim, J. G. (2000). Power prior distributions for Regression Models. Statistical Science, 15(1).
@@ -70,6 +76,7 @@ glm.pp = function(
     beta.sd           = NULL,
     disp.mean         = NULL,
     disp.sd           = NULL,
+    get.loglik        = FALSE,
     iter_warmup       = 1000,
     iter_sampling     = 1000,
     chains            = 4,
@@ -85,7 +92,8 @@ glm.pp = function(
     beta.mean   = beta.mean,
     beta.sd     = beta.sd,
     disp.mean   = disp.mean,
-    disp.sd     = disp.sd
+    disp.sd     = disp.sd,
+    get.loglik  = get.loglik
   )
 
   glm_pp     = instantiate::stan_package_model(
@@ -111,5 +119,7 @@ glm.pp = function(
   d = rename.params(fit = fit, oldnames = oldnames, newnames = newnames)
   ## add data used for the variables specified in the data block of the Stan program as an attribute
   attr(x = d, which = 'data') = standat
+  ## add model name as an attribute
+  attr(x = d, which = 'model') = "glm_pp"
   return(d)
 }

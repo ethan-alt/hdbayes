@@ -17,6 +17,7 @@ glm.leap(
   disp.sd = NULL,
   gamma.lower = 0,
   gamma.upper = 1,
+  get.loglik = FALSE,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -65,6 +66,8 @@ with subjects in current data. Defaults to 0.}
 \item{gamma.upper}{a scalar giving the upper bound for probability of subjects in historical data being exchangeable
 with subjects in current data. Defaults to 1.}
 
+\item{get.loglik}{whether to generate log-likelihood matrix. Defaults to FALSE.}
+
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
 
@@ -77,8 +80,13 @@ cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
-the list of variables specified in the data block of the Stan program.
+The function returns an object of class \code{draws_df} containing posterior samples. The object has two attributes:
+
+\describe{
+\item{data}{a list of variables specified in the data block of the Stan program}
+
+\item{model}{a character string indicating the model name}
+}
 }
 \description{
 Sample from the posterior distribution of a GLM using the latent exchangeability prior (LEAP) by Alt et al. (2024)

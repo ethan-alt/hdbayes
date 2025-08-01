@@ -18,6 +18,7 @@ glm.commensurate(
   spike.sd = 0.1,
   slab.mean = 0,
   slab.sd = 5,
+  get.loglik = FALSE,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -68,6 +69,8 @@ Defaults to 0.}
 \item{slab.sd}{a scalar giving the scale parameter for the half-normal prior (slab component) on \eqn{\tau}.
 Defaults to 5.}
 
+\item{get.loglik}{whether to generate log-likelihood matrix. Defaults to FALSE.}
+
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
 
@@ -80,8 +83,13 @@ cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
-the list of variables specified in the data block of the Stan program.
+The function returns an object of class \code{draws_df} containing posterior samples. The object has two attributes:
+
+\describe{
+\item{data}{a list of variables specified in the data block of the Stan program}
+
+\item{model}{a character string indicating the model name}
+}
 }
 \description{
 Sample from the posterior distribution of a GLM using the commensurate prior (CP) by Hobbs et al. (2011) \url{doi:10.1111/j.1541-0420.2011.01564.x}.

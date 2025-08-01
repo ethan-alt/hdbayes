@@ -15,6 +15,7 @@ glm.bhm(
   meta.sd.sd = NULL,
   disp.mean = NULL,
   disp.sd = NULL,
+  get.loglik = FALSE,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -58,6 +59,8 @@ If a scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector
 data) giving the scale parameters for the half-normal priors on the dispersion parameters. If a
 scalar is provided, same as for \code{meta.mean.mean}. Defaults to a vector of 10s.}
 
+\item{get.loglik}{whether to generate log-likelihood matrix. Defaults to FALSE.}
+
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup} in
 \code{sample()} method in cmdstanr package.}
 
@@ -70,8 +73,13 @@ cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
-the list of variables specified in the data block of the Stan program.
+The function returns an object of class \code{draws_df} containing posterior samples. The object has two attributes:
+
+\describe{
+\item{data}{a list of variables specified in the data block of the Stan program}
+
+\item{model}{a character string indicating the model name}
+}
 }
 \description{
 Sample from the posterior distribution of a GLM using the Bayesian hierarchical model (BHM).

@@ -19,6 +19,7 @@ glm.npp(
   a0.shape2 = 1,
   a0.lower = NULL,
   a0.upper = NULL,
+  get.loglik = FALSE,
   iter_warmup = 1000,
   iter_sampling = 1000,
   chains = 4,
@@ -70,6 +71,8 @@ vector of repeated elements of the given scalar. Defaults to a vector of 0s.}
 upper bounds for each element of the \eqn{a_0} vector. If a scalar is provided, same as for \code{a0.lower}.
 Defaults to a vector of 1s.}
 
+\item{get.loglik}{whether to generate log-likelihood matrix. Defaults to FALSE.}
+
 \item{iter_warmup}{number of warmup iterations to run per chain. Defaults to 1000. See the argument \code{iter_warmup}
 in \code{sample()} method in cmdstanr package.}
 
@@ -82,8 +85,13 @@ in cmdstanr package.}
 \item{...}{arguments passed to \code{sample()} method in cmdstanr package (e.g., \code{seed}, \code{refresh}, \code{init}).}
 }
 \value{
-The function returns an object of class \code{draws_df} giving posterior samples, with an attribute called 'data' which includes
-the list of variables specified in the data block of the Stan program.
+The function returns an object of class \code{draws_df} containing posterior samples. The object has two attributes:
+
+\describe{
+\item{data}{a list of variables specified in the data block of the Stan program}
+
+\item{model}{a character string indicating the model name}
+}
 }
 \description{
 Sample from the posterior distribution of a GLM using the normalized power prior (NPP) by Duan et al.
