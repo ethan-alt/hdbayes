@@ -43,6 +43,7 @@ Imports:
 Suggests:
     cmdstanr (>= 0.6.0),
     ggplot2,
+    ggthemes,
     knitr,
     parallel,
     rmarkdown,

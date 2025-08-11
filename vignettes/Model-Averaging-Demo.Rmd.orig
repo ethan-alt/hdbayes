@@ -1,0 +1,415 @@
+---
+title: "Model-Averaging-Demonstration"
+output:
+  rmarkdown::html_vignette:
+    toc: yes
+    toc_depth: 2
+bibliography: hdbayes.bib
+vignette: >
+  %\VignetteIndexEntry{Model-Averaging-Demonstration}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+In this vignette, we demonstrate how to perform Bayesian model averaging using data from two melanoma clinical trials conducted by the Eastern Cooperative Oncology Group (ECOG): E1684 and E1690. The E1684 trial is treated as external data, while the E1690 trial serves as the current trial data. Both trials evaluated the effect of high-dose interferon alfa-2b (IFN) on relapse-free survival (RFS) compared to an observation arm (control). RFS is defined as the time from randomization to either cancer relapse or death.
+
+The goal of this analysis is to estimate the log hazard ratio (log HR) of RFS between the treated and control groups. To account for model uncertainty, we consider multiple combinations of outcome models and prior specifications, including a non-informative reference prior and several informative priors that incorporate external information. For these candidate models, we compute model averaging weights using approaches such as Bayesian model averaging (BMA, @madiganModelSelectionAccounting1994), pseudo-BMA, and stacking (@yaoUsingStackingAverage2018). We then draw posterior samples from the ensemble distribution to obtain model-averaged estimates of the treatment effect.
+
+```{r setup}
+library(hdbayes)
+library(survival)
+library(posterior)
+library(dplyr)
+library(ggplot2)
+library(ggthemes)
+```
+
+# Load Data
+
+```{r setup_data}
+## replace 0 failure times with 0.50 days
+E1684$failtime[E1684$failtime == 0] <- 0.50/365.25
+E1690$failtime[E1690$failtime == 0] <- 0.50/365.25
+data.list  <- list(currdata = E1690, histdata = E1684)
+
+fmla <- survival::Surv(failtime, failcens) ~ treatment
+```
+
+
+For comparison, we first estimate the treatment effect (i.e., the log hazard ratio between the treated and control groups) by fitting a proportional hazards (PH) regression model that includes only the treatment indicator as a covariate, using the `coxph()` function from the **survival** package.
+
+```{r mle}
+## fit proportional hazards models on E1690 and E1684 data
+fit.mle.cur <- coxph(formula = fmla, data = data.list$currdata)
+
+summary(fit.mle.cur)
+suppressMessages(confint(fit.mle.cur))
+```
+
+
+# Fitting PWEPH Models with Different Priors
+
+We now proceed to the Bayesian analysis using the functions provided in the **hdbayes** package. For the outcome model, we consider a PH model with a piecewise constant baseline hazard, referred to as the piecewise exponential proportional hazards (PWEPH) model. The PWEPH model assumes a constant baseline hazard within each of $J$ prespecified time intervals, defined by the partition $0 = s_0 < s_1 < \ldots < s_{J-1} < s_J = \infty$. Let $\beta = (\beta_1, \ldots, \beta_p)'$ denote the vector of regression coefficients, and $\lambda = (\lambda_1, \ldots, \lambda_J)'$ denote the baseline hazards. The conditional survival function for a subject with covariate vector $x$ is given by
+$$
+\begin{align*}
+S(t \mid \beta, \lambda) = \exp\big\{-\sum_{j=1}^{J} \lambda_j \cdot \big[ (s_j - s_{j-1}) \cdot I(t > s_j) + (t - s_{j-1}) \cdot I(s_{j-1} < t \leq s_j)\big] \exp\{x'\beta\}\big\},
+\end{align*}
+$$
+where $I(\cdot)$ is the indicator function.
+
+In our analysis, we consider two values of the number of intervals $J$ in the PWEPH model: $J = 2$ and $J = 5$. For each $J$, the cutpoints are chosen so that each interval contains approximately the same number of events in the current trial (E1690). We then fit PWEPH models under three prior specifications for $(\beta, \lambda)$:
+
+1. Non-informative reference prior.
+
+2. Power prior (PP, @Ibrahim2000): Incorporates external data from E1684 with a discounting parameter $a_0 = 0.5$.
+
+3. Commensurate prior (CP, @Hobbs2012): Links the parameters of the external and current data models through commensurability parameters that determine the degree of borrowing from the external data.
+
+
+```{r compsetup}
+nchains       <- 4 # number of Markov chains
+ncores        <- 4 # maximum number of MCMC chains to run in parallel
+iter_warmup   <- 1000 # warmup per chain for MCMC sampling
+iter_sampling <- 2500 # number of samples post warmup per chain
+
+base.pars     <- "treatment"
+
+# function to pull out the posterior summaries in a convenient form
+get_summaries <- function(fit, pars.interest, digits = 2) {
+  out <- suppressWarnings(
+    fit %>%
+      select(all_of(pars.interest)) %>%
+      posterior::summarise_draws(
+        mean,
+        sd,
+        `q2.5` = ~ posterior::quantile2(.x, probs = 0.025),
+        `q97.5` = ~ posterior::quantile2(.x, probs = 0.975),
+        rhat,
+        ess_bulk,
+        ess_tail
+      ) %>%
+      mutate(across(where(is.numeric), \(x) round(x, digits)))
+  )
+  return(out)
+}
+```
+
+
+```{r}
+## determine breaks/cutpoints for PWEPH models
+
+## J = 2
+nbreaks   <- 2
+probs     <- 1:nbreaks / nbreaks
+breaks_J2 <- as.numeric(
+  quantile(E1690[E1690$failcens==1, ]$failtime, probs = probs)
+)
+breaks_J2 <- c(0, breaks_J2)
+## set the last cutpoint to a large value to cover the tail
+breaks_J2[length(breaks_J2)] <- max(10000, 1000 * breaks_J2[length(breaks_J2)])
+
+## J = 5
+nbreaks   <- 5
+probs     <- 1:nbreaks / nbreaks
+breaks_J5 <- as.numeric(
+  quantile(E1690[E1690$failcens == 1, ]$failtime, probs = probs)
+)
+breaks_J5 <- c(0, breaks_J5)
+breaks_J5[length(breaks_J5)] <- max(10000, 1000 * breaks_J5[length(breaks_J5)])
+```
+
+
+## Reference Prior
+
+In the reference prior, we specify $\beta_1, \ldots, \beta_p \sim N(0, 10^2)$ and $\lambda_1, \ldots, \lambda_J \sim N^{+}(0, 10^2)$, where $\beta = (\beta_1, \ldots, \beta_p)'$ is the vector of regression coefficients, $\lambda = (\lambda_1, \ldots, \lambda_J)'$ is the vector of baseline hazards, and $N^{+}$ denotes the half-normal distribution.
+
+```{r pwe_post, message=FALSE}
+if (instantiate::stan_cmdstan_exists()) {
+  fit_post_J2 <- pwe.post(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J2,
+    beta.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+  fit_post_J5 <- pwe.post(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J5,
+    beta.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+}
+
+summ_ref <- dplyr::bind_rows(
+  get_summaries(fit_post_J2, pars.interest = base.pars) %>%
+    mutate(prior = "Reference", J = 2),
+  get_summaries(fit_post_J5, pars.interest = base.pars) %>%
+    mutate(prior = "Reference", J = 5)
+) %>%
+  relocate(J, prior, .before = 1)
+
+summ_ref
+```
+
+
+## Power Prior
+
+The power prior (PP) takes the form:
+$$\pi_{\text{PP}}(\beta, \lambda) \propto \mathcal{L}(\beta, \lambda \mid D_0)^{a_0} ~\pi_0(\beta, \lambda),$$
+
+where $\mathcal{L}(\beta, \lambda \mid D_0)$ is the likelihood of the PWEPH model based on the external data $D_0$, and $\pi_0(\beta, \lambda)$ is the initial prior, taken here to be the same as the reference prior described above. The discounting parameter is set to $a_0 = 0.5$, which downweights the external information by $50\%$.
+
+```{r pwe_pp, message=FALSE}
+if (instantiate::stan_cmdstan_exists()) {
+  fit_pp_J2 <- pwe.pp(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J2,
+    a0 = 0.5,
+    beta.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+  fit_pp_J5 <- pwe.pp(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J5,
+    a0 = 0.5,
+    beta.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+}
+
+summ_pp <- dplyr::bind_rows(
+  get_summaries(fit_pp_J2, pars.interest = base.pars) %>%
+    mutate(prior = "PP", J = 2),
+  get_summaries(fit_pp_J5, pars.interest = base.pars) %>%
+    mutate(prior = "PP", J = 5)
+) %>%
+  relocate(J, prior, .before = 1)
+
+summ_pp
+```
+
+
+## Commensurate Prior
+
+Under the commensurate prior (CP), the parameters of the current and external data models are linked through commensurability parameters that determine the degree of borrowing from the external data. Let $\beta_0 = (\beta_{01}, \ldots, \beta_{0p})'$ and $\lambda_0 = (\lambda_{01}, \ldots, \lambda_{0J})'$ denote the vectors of regression coefficients and baseline hazards for the external data model, respectively. For $j = 1, \ldots, p$, we assume
+$$\beta_j \sim N(\beta_{0j}, \tau_j^{-1}),$$
+where $\tau_j$ is referred as the commensurability parameter. The $\tau_j$'s are treated as random and assigned a spike-and-slab prior, which is specified as a mixture of two half-normal priors. Specifically, for $j = 1, \ldots, p$, the priors on $\beta_{0j}$ and $\tau_j$ are
+
+$$
+\begin{align*}
+\beta_{0j} &\sim N(0, 10^2), \\
+\tau_j &\sim 0.1 \cdot N^{+}(200, 0.1^2) + 0.9 \cdot N^{+}(0, 5^2).
+\end{align*}
+$$
+
+```{r pwe_cp, message=FALSE}
+if (instantiate::stan_cmdstan_exists()) {
+  fit_cp_J2 <- pwe.commensurate(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J2,
+    beta0.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+  fit_cp_J5 <- pwe.commensurate(
+    formula = fmla, data.list = data.list,
+    breaks = breaks_J5,
+    beta0.sd = 10,
+    base.hazard.sd = 10,
+    get.loglik = TRUE,
+    chains = nchains, parallel_chains = ncores,
+    iter_warmup = iter_warmup, iter_sampling = iter_sampling,
+    refresh = 0
+  )
+}
+
+summ_cp <- dplyr::bind_rows(
+  get_summaries(fit_cp_J2, pars.interest = base.pars) %>%
+    mutate(prior = "CP", J = 2),
+  get_summaries(fit_cp_J5, pars.interest = base.pars) %>%
+    mutate(prior = "CP", J = 5)
+) %>%
+  relocate(J, prior, .before = 1)
+
+summ_cp
+```
+
+
+# Model Averaging and Ensemble Inference
+
+We combine the fitted PWEPH models using several model averaging approaches: Bayesian model averaging (BMA), pseudo‐BMA, pseudo‐BMA+ (pseudo‐BMA with the Bayesian bootstrap), and stacking. In **hdbayes**, we provide the wrapper function `compute.ensemble.weights()` that use the **loo** package (@loo_package) to compute the pseudo‐BMA, pseudo‐BMA+, and stacking weights. Posterior samples are then drawn from the resulting ensemble distribution to produce model-averaged estimates of the log hazard ratio.
+
+```{r get_model_weights, message=FALSE}
+## Compute Model Weights
+fit.list <- list(fit_post_J2, fit_post_J5, fit_pp_J2, fit_pp_J5, fit_cp_J2, fit_cp_J5)
+
+## BMA
+wts_bma <- compute.ensemble.weights(
+  fit.list = fit.list,
+  type = "bma",
+  chains = nchains, parallel_chains = ncores,
+  iter_warmup = iter_warmup + 1000, iter_sampling = iter_sampling,
+  refresh = 0
+)
+
+## Pseudo-BMA
+wts_pseudoBMA <- compute.ensemble.weights(
+  fit.list = fit.list,
+  type = "pseudobma",
+  loo.args = list(cores = ncores),
+  loo.wts.args = list(BB = FALSE, cores = ncores)
+)
+
+## Pseudo-BMA+
+wts_pseudoBMA_BB <- compute.ensemble.weights(
+  fit.list = fit.list,
+  type = "pseudobma+",
+  loo.args = list(cores = ncores),
+  loo.wts.args = list(BB = TRUE, cores = ncores)
+)
+
+## Stacking
+wts_stacking <- compute.ensemble.weights(
+  fit.list = fit.list,
+  type = "stacking",
+  loo.args = list(cores = ncores),
+  loo.wts.args = list(cores = ncores)
+)
+```
+
+
+The table below reports point estimates, (posterior) standard deviations, and $95\%$ credible intervals (Bayesian) or confidence intervals (frequentist) for the log hazard ratio from the Cox PH model and PWEPH models with $J = 2$ and $J = 5$ intervals under three prior specifications: reference, power prior (PP), and commensurate prior (CP). For the Bayesian models, model averaging weights from BMA, pseudo-BMA, pseudo-BMA+, and stacking are also provided.
+
+```{r}
+estim.tab <- rbind(summ_ref, summ_pp, summ_cp)
+estim.tab$J <- paste0("PWEPH (J = ", estim.tab$J, ")")
+colnames(estim.tab)[1] <- "model"
+estim.tab <- estim.tab[, c("model", "prior", "mean", "sd", "q2.5", "q97.5")]
+
+estim.tab <- rbind(
+  c("Cox PH", "MLE", round(as.numeric(fit.mle.cur$coefficients), 2),
+    round(summary(fit.mle.cur)$coefficients[, "se(coef)"], 2),
+    round(suppressMessages(confint(fit.mle.cur))[1], 2),
+    round(suppressMessages(confint(fit.mle.cur))[2], 2)),
+  estim.tab
+) %>%
+  as.data.frame()
+
+tab               <- estim.tab
+tab$BMA           <- c("--", round(wts_bma$weights, 2))
+tab$`Pseudo-BMA`  <- c("--", round(wts_pseudoBMA$weights, 2))
+tab$`Pseudo-BMA+` <- c("--", round(wts_pseudoBMA_BB$weights, 2))
+tab$Stacking      <- c("--", round(wts_stacking$weights, 2))
+
+tab
+```
+
+
+## Posterior Summaries from Individual and Ensemble Methods
+
+Building on the results in the previous table, we now include model‐averaged estimates obtained by combining the Bayesian models using BMA, pseudo‐BMA, pseudo‐BMA+, and stacking. For each ensemble method, the table reports the posterior mean, posterior standard deviation, and $95\%$ credible interval for the log hazard ratio, alongside the corresponding results from the individual models shown earlier.
+
+```{r ensemble}
+samples.mtx <- lapply(fit.list, function(f){
+  f[["treatment"]]
+})
+samples.mtx <- do.call(cbind, samples.mtx)
+
+ensemble.bma          <- sample.ensemble(wts_bma$weights, samples.mtx)
+ensemble.pseudoBMA    <- sample.ensemble(wts_pseudoBMA$weights, samples.mtx)
+ensemble.pseudoBMA_BB <- sample.ensemble(wts_pseudoBMA_BB$weights, samples.mtx)
+ensemble.stacking     <- sample.ensemble(wts_stacking$weights, samples.mtx)
+
+## summarize ensemble posterior samples
+summ_ensemble <- function(samples, method) {
+  mean_val <- mean(samples)
+  sd_val   <- sd(samples)
+  ci_vals  <- as.numeric( quantile2(samples, probs = c(0.025, 0.975)) )
+
+  data.frame(
+    model  = paste0("Ensemble (", method, ")"),
+    prior  = "--",
+    mean   = round(mean_val, 2),
+    sd     = round(sd_val, 2),
+    q2.5   = round(ci_vals[1], 2),
+    q97.5  = round(ci_vals[2], 2)
+  )
+}
+
+## create table for each ensemble method
+estim.ens <- rbind(
+  summ_ensemble(ensemble.bma,          "BMA"),
+  summ_ensemble(ensemble.pseudoBMA,    "Pseudo-BMA"),
+  summ_ensemble(ensemble.pseudoBMA_BB, "Pseudo-BMA+"),
+  summ_ensemble(ensemble.stacking,     "Stacking")
+)
+
+## combine with previous table
+estim.combined <- rbind(estim.tab, estim.ens) %>%
+  as.data.frame()
+estim.combined
+```
+
+
+## Posterior Densities from Ensemble Methods
+
+We compare the posterior densities of the log hazard ratio obtained from the four ensemble methods, BMA, pseudo‐BMA, pseudo‐BMA+, and stacking, alongside the maximum likelihood estimate (MLE) from fitting the Cox PH model to the current data (shown as a dashed line). The posterior densities are largely similar across methods, suggesting that, in this example, the choice of ensemble weighting approach has little influence on the resulting posterior distribution.
+
+```{r}
+data.ens <- data.frame(
+  logHR = c(ensemble.bma, ensemble.pseudoBMA, ensemble.pseudoBMA_BB, ensemble.stacking),
+  method = rep(c("Ensemble (BMA)", "Ensemble (Pseudo-BMA)", "Ensemble (pseudo-BMA+)",
+                   "Ensemble (Stacking)"), each = length(ensemble.bma)))
+
+mle_curr <- as.numeric(coef(fit.mle.cur)["treatment"])
+
+ggplot(data.ens, aes(x = logHR, colour = method)) +
+  geom_density(linewidth = 0.9, adjust = 1) +
+  geom_vline(xintercept = mle_curr, linetype = 2) +
+  labs(
+    title = "Posterior densities of log HR from ensemble methods",
+    subtitle = "Dashed line = Cox PH MLE",
+    x = "Log hazard ratio (treatment vs control)",
+    y = "Posterior density",
+    colour = "Ensemble method"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    legend.position = "bottom",
+    legend.title = element_text(size = 10),
+    legend.text  = element_text(size = 9)
+  ) +
+  guides(colour = guide_legend(nrow = 2, byrow = TRUE)) +
+  scale_color_tableau("Superfishel Stone")
+```
+
+# References {-}
+
+<div id="refs"></div>
