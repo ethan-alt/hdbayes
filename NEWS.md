@@ -6,6 +6,8 @@
 with the Bayesian bootstrap), and stacking. Also added a function for generating samples from the ensemble of posterior distributions 
 based on the computed weights.
 
+* Added a vignette demonstrating model averaging methods and ensemble inference.
+
 * Added functions for sampling from the posterior distributions of various several models, including the accelerated failure 
 time (AFT) model, the piecewise exponential (PWE) model, and the mixture cure rate model with a PWE component for the non-cured 
 popluation (CurePWE). For all survival model implementations, multiple historical data sets are now stacked into a single 
