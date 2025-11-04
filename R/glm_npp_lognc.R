@@ -76,6 +76,10 @@ glm.npp.lognc = function(
     data.checks(formula, family, list(histdata), NULL)
   }
 
+  if( family$family == "gaussian" && family$link == "identity" ) {
+    message("NOTE: For the normal linear model, the normalizing constant is available in closed form. You can skip glm.npp.lognc() and use lm.npp() to sample from the posterior under the NPP, which is faster and does not require pre-estimation of the normalizing constant.")
+  }
+
   y0 = histdata[, all.vars(formula)[1]]
   y0 = unlist(y0)
   n0 = length(y0)
