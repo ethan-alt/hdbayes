@@ -7,10 +7,10 @@ Authors@R: c(person("Ethan M.", "Alt", email = "ethanalt@live.unc.edu", role = c
     person("Joseph G.", "Ibrahim", role = "aut"),
     person("Xiuya", "Chang", role = "ctb")
     )
-Description: User-friendly functions for Bayesian model averaging (BMA) and leveraging (multiple) historical data 
-    set(s) for generalized linear models (GLMs) and survival models. The package provides functions for sampling from 
-    posterior distributions under various informative priors, including the prior induced by the Bayesian 
-    hierarchical model, power prior by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>, normalized power prior by 
+Description: User-friendly functions for leveraging (multiple) historical data set(s) in Bayesian analysis of generalized 
+    linear models (GLMs) and survival models, along with support for Bayesian model averaging (BMA). The package provides 
+    functions for sampling from posterior distributions under various informative priors, including the prior induced by the 
+    Bayesian hierarchical model, power prior by Ibrahim and Chen (2000) <doi:10.1214/ss/1009212673>, normalized power prior by 
     Duan et al. (2006) <doi:10.1002/env.752>, normalized asymptotic power prior by Ibrahim et al. (2015) <doi:10.1002/sim.6728>, 
     commensurate prior by Hobbs et al. (2011) <doi:10.1111/j.1541-0420.2011.01564.x>, robust meta-analytic-predictive 
     prior by Schmidli et al. (2014) <doi:10.1111/biom.12242>, latent exchangeability prior by Alt et al. (2024) 
