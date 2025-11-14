@@ -15,6 +15,8 @@ combined data set for model fitting.
 
 * Added functions to compute the log marginal likelihood for the AFT, PWE, and CurePWE models under various prior specifications.
 
+* Added the implementation of stratified power prior.
+
 * Updated the implementation of generalized linear models (GLMs) to support computation of the pointwise log-likelihood matrix,
 consistent with the survival model implementations. This enables downstream use in model comparison and averaging procedures, 
 such as computing pseudo-BMA and stacking weights, as well as estimating the expected log predictive density (ELPD). 
