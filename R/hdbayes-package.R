@@ -11,8 +11,8 @@
 #' @importFrom instantiate stan_package_model
 #' @importFrom callr r
 #' @importFrom fs dir_copy
-#' @importFrom formula.tools is.two.sided lhs.vars
-#' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian dbeta pbeta rbinom dlogis plogis
+#' @importFrom formula.tools is.two.sided lhs.vars rhs.vars
+#' @importFrom stats model.matrix family glm binomial dgamma dnorm pnorm lm gaussian dbeta pbeta rbinom dlogis plogis qnorm ppois cor complete.cases sd
 #' @importFrom posterior variables merge_chains
 #' @importFrom enrichwith enrich
 #' @importFrom bridgesampling bridge_sampler
