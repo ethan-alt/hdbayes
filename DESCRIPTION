@@ -54,7 +54,7 @@ Additional_repositories:
     https://mc-stan.org/r-packages/
 SystemRequirements: CmdStan (https://mc-stan.org/users/interfaces/cmdstan)
 LazyData: true
-Collate: 
+Collate:
     'E1684-data.R'
     'E1690-data.R'
     'E1694-data.R'
@@ -114,11 +114,16 @@ Collate:
     'curepwe_pp.R'
     'curepwe_stratified_pp.R'
     'data_checks.R'
+    'data_checks_mc.R'
     'get_stan_data.R'
+    'missing_data_utils.R'
+    'get_stan_data_mc.R'
     'glm_bhm.R'
     'glm_bhm_lognc.R'
+    'glm_bhm_mc.R'
     'glm_commensurate.R'
     'glm_commensurate_lognc.R'
+    'glm_commensurate_mc.R'
     'glm_leap.R'
     'glm_leap_lognc.R'
     'glm_logml_commensurate.R'
@@ -133,7 +138,9 @@ Collate:
     'glm_npp_lognc.R'
     'glm_npp.R'
     'glm_post.R'
+    'glm_post_mc.R'
     'glm_pp.R'
+    'glm_pp_mc.R'
     'glm_rmap.R'
     'hdbayes-package.R'
     'lm_npp.R'
