@@ -106,6 +106,7 @@ data.checks.leap = function(
 #' @param data.list   a list of `data.frame`s. The first element in the list is the current data, and the rest
 #'                    are the historical data sets.
 #' @noRd
+#' @exportS3Method NULL
 stack.data = function(
     formula, data.list
 ) {

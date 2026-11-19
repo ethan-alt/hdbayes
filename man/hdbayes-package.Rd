@@ -23,6 +23,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Ethan M. Alt \email{ethanalt@live.unc.edu} (\href{https://orcid.org/0000-0002-6112-9030}{ORCID}) [copyright holder]
   \item Xinxin Chen
   \item Luiz M. Carvalho
   \item Joseph G. Ibrahim

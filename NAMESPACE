@@ -67,27 +67,35 @@ export(sample.ensemble)
 importFrom(bridgesampling,bridge_sampler)
 importFrom(callr,r)
 importFrom(enrichwith,enrich)
-importFrom(formula.tools,is.two.sided)
-importFrom(formula.tools,lhs.vars)
+importFrom(formula.tools,
+  is.two.sided,
+  lhs.vars
+)
 importFrom(fs,dir_copy)
 importFrom(instantiate,stan_package_model)
-importFrom(loo,loo)
-importFrom(loo,pseudobma_weights)
-importFrom(loo,stacking_weights)
+importFrom(loo,
+  loo,
+  pseudobma_weights,
+  stacking_weights
+)
 importFrom(mvtnorm,dmvnorm)
-importFrom(posterior,merge_chains)
-importFrom(posterior,variables)
-importFrom(stats,binomial)
-importFrom(stats,dbeta)
-importFrom(stats,dgamma)
-importFrom(stats,dlogis)
-importFrom(stats,dnorm)
-importFrom(stats,family)
-importFrom(stats,gaussian)
-importFrom(stats,glm)
-importFrom(stats,lm)
-importFrom(stats,model.matrix)
-importFrom(stats,pbeta)
-importFrom(stats,plogis)
-importFrom(stats,pnorm)
-importFrom(stats,rbinom)
+importFrom(posterior,
+  merge_chains,
+  variables
+)
+importFrom(stats,
+  binomial,
+  dbeta,
+  dgamma,
+  dlogis,
+  dnorm,
+  family,
+  gaussian,
+  glm,
+  lm,
+  model.matrix,
+  pbeta,
+  plogis,
+  pnorm,
+  rbinom
+)

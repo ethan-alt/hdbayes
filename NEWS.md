@@ -1,3 +1,10 @@
+# hdbayes 0.2.0.9000
+
+## Bug Fixes
+
+* Fixed unnecessary generation of pointwise log-likelihoods in `glm.logml.map()` and `glm.logml.pp()` when fitting only 
+historical data.
+
 # hdbayes 0.2.0
 
 ## Enhancements

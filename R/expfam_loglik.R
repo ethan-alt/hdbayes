@@ -153,7 +153,7 @@ logit_beta_lp = function(x, shape1, shape2){
   -lbeta(shape1, shape2) - shape2 * x - (shape1 + shape2) * log1p( exp(-x) )
 }
 
-#' find index of x, j, such that x0 is closest to x[j] without going over. Uses binary search algorithm
+#' find index `j` such that `x[j]` is closest to `x0` without going over. Uses binary search algorithm
 #' @param x0 real number
 #' @param x vector, sorted in increasing order
 #' @noRd

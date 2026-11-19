@@ -1,6 +1,6 @@
 Package: hdbayes
 Title: Bayesian Analysis of Generalized Linear Models with Historical Data
-Version: 0.2.0
+Version: 0.2.0.9000
 Authors@R: c(person("Ethan M.", "Alt", email = "ethanalt@live.unc.edu", role = c("aut", "cre", "cph"), comment = c(ORCID = "0000-0002-6112-9030")), 
     person("Xinxin", "Chen", role = "aut"), 
     person("Luiz M.", "Carvalho", role = "aut"),
@@ -27,7 +27,6 @@ URL: https://github.com/ethan-alt/hdbayes
 BugReports: https://github.com/ethan-alt/hdbayes/issues
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Depends: R (>= 4.2.0)
 Imports:
     instantiate (>= 0.1.0),
@@ -160,3 +159,4 @@ Collate:
     'sample_ensemble.R'
     'zzz.R'
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.1

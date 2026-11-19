@@ -102,7 +102,7 @@ glm.logml.map = function(
   hist.stan.data$disp_mean = stan.data$disp_mean[-1]
   hist.stan.data$disp_sd   = stan.data$disp_sd[-1]
   hist.stan.data$offs      = stan.data$offs[-(1:n)]
-  hist.stan.data$log_lik   = 0
+  hist.stan.data$get_loglik = 0
 
   ## fit BHM using historical data sets
   glm_bhm = instantiate::stan_package_model(

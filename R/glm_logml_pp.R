@@ -125,7 +125,7 @@ glm.logml.pp = function(
   hist.stan.data$X         = stan.data$X[-(1:n), ]
   hist.stan.data$offs      = stan.data$offs[-(1:n)]
   hist.stan.data$a0_vals   = a0_vals[-1]
-  hist.stan.data$log_lik   = 0
+  hist.stan.data$get_loglik = 0
 
   ## fit PP using historical data sets
   glm_pp     = instantiate::stan_package_model(
